@@ -44,4 +44,3 @@ gl_FragColor = texture(texImage,texCoord)
   return tex2Dproj(bgTex,ComputeGrabScreenPos(objectDistorted.clipPos));
 ```
 
-
