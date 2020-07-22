@@ -1,5 +1,3 @@
-
-
 # 记录一些好玩的网站
 
 [Wolframaplha](https://www.wolframalpha.com/) : Mathematica公司制作的网站，是一个高级版的搜索引擎，包括但不限于一些Mathematica的功能，现在只用来做一些简单的符号计算。

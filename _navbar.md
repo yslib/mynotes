@@ -1,2 +1,3 @@
 * [Home](/)
-* [Gallery](https://visysl.com)
+
+* [Photo Gallery](https://visysl.com)
