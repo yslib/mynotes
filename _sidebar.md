@@ -7,7 +7,7 @@
    * [All about 3D translation](/graphics/translation/ "All about 3d translation")
    * [Camera](/graphics/camera/ "Camera")
    * [Color](/graphics/color/ "Color")
-   * [Shader](/graphics/shader/ "Shader")
+   * [Shader](/graphics/shader/noise.md "Shader")
 * [Cheating Sheet](/cheatingsheet/ "CheatingSheet")
 * [Git](/git/ "Git")
 * [Network](/network/ "Network")
