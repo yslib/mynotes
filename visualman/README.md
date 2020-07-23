@@ -45,8 +45,7 @@ vkGetPhysicalDeviceFeatures()
 #### 关于 Vulkan
 
 在Vulkan中，函数的Create 和Enumerate的函数是不一样的。Create 创建的示例需要销毁。枚举的对象不需要。
-比如，vulkan实例需要销毁，而物理设备是枚举出来的。逻辑设备也是创建出来，需要销毁。
-
+比如，vulkan实例需要销毁，而物理设备是枚举出来的。逻辑设备是创建出来，需要销毁。
 
 因为vulkan有一个内存分配器，所以在设计api的时候也要考虑这个。对于OpenGL来说，这一项自动忽略。
 
@@ -62,7 +61,7 @@ vulkan 的图形管线是静态的，对于一个渲染流程，管线是需要�
 
 物理设备相关的特性：格式，队列簇，表面
 
-# 分配器
+#分配器
 # 缓冲区
 vkCreateBuffer()
 可以创建不同类型的buffer，有Index Buffer, Vertex Buffer, Uniform Buffer,Storage Buffer, Uniform Texel Buffer, Storage Texel Buffer。
@@ -82,7 +81,6 @@ UsageFlags: 可采样，可写入，颜色附件，深度和模板附件，临�
 layout:这个概念比较复杂。后面详细讲解。创建的时候只能是UNDEFINED 或者 PREINITIALIZED
 
 # 视图
-
 BufferView: 
 vkCreateBufferView()
 vkDestroyBufferView()
@@ -93,7 +91,10 @@ ImageView:
 vkCreateImageView()
 vkDestroyImageView()
 
-# 内存
+#内存
+
+  内存涉及到了**堆类型** 和** 内存属性**
+
 vkAllocateMemory()
 需要指定大小和内存类型，用内存类型索引指定。
 vkFreeMemory()
