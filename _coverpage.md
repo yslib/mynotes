@@ -2,4 +2,5 @@
 
 # YSLucida
 
+[Album](<https://visysl.com>)
 [GitHub](<https://github.com/yslib>)
