@@ -1,4 +1,4 @@
- 
+
 <!-- docs/_sidebar.md -->
 
 * [C++](/cppnotes/ "C++")
@@ -10,6 +10,7 @@
    * [Noise](/graphics/shader/noise.md "Noise")
    * [GLSL Snippets](/graphics/shader/codesnippets.md "Snippets")
    * [FBM](/graphics/shader/fbm.md "FBM")
+   * [Vulkan](/graphics/vulkan/)
 * [Cheating Sheet](/cheatingsheet/ "CheatingSheet")
 * [Git](/git/ "Git")
 * [Network](/network/ "Network")
