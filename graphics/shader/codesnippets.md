@@ -61,16 +61,19 @@ vec2 tiling(vec2 st,float factor){
     return fract(st);
 }
 ```
+> from The book of Shader
+
 2. #### 砖块式平铺
 
 ```
 vec2 brickTiling(vec2 st,float factor){
     st *= factor;
-    if(mod(floor(st.y),2.0) == 1.0){st.x += 0.5;} // or _st.x += step(1., mod(_st.y,2.0)) * 0.5;
+    if(mod(floor(st.y),2.0) == 1.0){st.x += 0.5;} // or st.x += step(1., mod(_st.y,2.0)) * 0.5;
     return fract(st);
 }
 
 ```
+> from The book of Shader
 
 * ### 变换
 ---
@@ -82,6 +85,7 @@ mat2 rotate2d(float _angle){
                 sin(_angle),cos(_angle));
 }
 ```
+> from The book of Shader
 
 2. #### 缩放
 ```
@@ -90,6 +94,7 @@ mat2 scale(vec2 _scale){
                 0.0,_scale.y);
 }
 ```
+> from The book of Shader
 
 ---
 
