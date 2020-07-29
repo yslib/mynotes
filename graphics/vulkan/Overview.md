@@ -1,12 +1,37 @@
-# Vulkan 总揽
+# Vulkan Overview
 ---
- Vulkan相比于OpenGL，更为地层，接口更为一般化。通过观察Vulkan的接口设计我们会发现，Vulkan不希望可以进行图形绘制，在将来还要将通用计算纳入进来，所以接口设计的更加通用和复杂。
+
+```mermaid
+graph BT
+linkStyle default interpolate basis
+subgraph Vulkan Context
+A[VkDevice] --> B[VkPhysicalDevice]
+B --> C[VkInstance]
+D[VkSurfaceKHR]:::khr-->B
+D-->C
+D-->W{{NativeWindowHandle}}
+S[VkSwapchainKHR]:::khr-->D
+S-->A
+%%safd sadf
+end
+
+subgraph Vulkan Resources 
+VkImage-->A
+VkBuffer-->A
+end
+
+classDef khr fill:#369f;
+style W fill:#fff0,stroke-dasharray:4
+
+
+```
 
 ## 实例(vkInstance)
 
 ### 简介
 
 Vulkan实例隔离了不同的vulkan环境，在一个应用程序中，可以创建多个实例。但是实例之间的对象不能共享，如内存。（在不涉及扩展的情况下）
+
 
 ### 功能
 

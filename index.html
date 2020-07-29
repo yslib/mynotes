@@ -7,6 +7,9 @@
   <meta name="description" content="Description">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
   <link rel="stylesheet" href="//unpkg.com/docsify/themes/dark.css">
+  <link rel="stylesheet" href="//unpkg.com/mermaid/dist/mermaid.min.css">
+
+
 </head>
 <body>
   <div id="app"></div>
@@ -17,10 +20,34 @@
       subMaxLevel:3,
       name: '',
       repo: '',
-      coverpage:true
+      coverpage:true,
+      plugins: [
+    function(hook, vm) {
+      hook.ready(function () {
+        mermaid.initialize({startOnLoad: false});
+      });
+      hook.doneEach(function () {
+        mermaid.init(undefined,'.mermaid');
+      });
+    }
+  ],
+  markdown: {
+    renderer: {
+      code: function(code, lang) {
+        var html = '';
+        if(code.match(/^sequenceDiagram/) || code.match(/^graph/) || code.match(/^gantt/)){
+          html = '<div class="mermaid">' + code + '</div>';
+        }
+        var hl = Prism.highlight(code, Prism.languages[lang] || Prism.languages.markup)
+        return html;// +'<pre v-pre data-lang="' + lang + '"><code class="lang-' + lang + '">'+hl+'</code></pre>'
+      }
+    }
+  }
     }
   </script>
   <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
+<script type="text/javascript" src="//unpkg.com/mermaid/dist/mermaid.min.js"></script>
+
 <script type="text/javascript" async
         src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
     MathJax.Hub.Config({
