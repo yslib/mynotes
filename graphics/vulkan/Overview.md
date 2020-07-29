@@ -5,32 +5,51 @@
 graph BT
 linkStyle default interpolate basis
 subgraph Vulkan Context
-A[VkDevice] --> B[VkPhysicalDevice]
-B --> C[VkInstance]
-D[VkSurfaceKHR]:::khr-->B
+A(VkDevice) --> B(VkPhysicalDevice)
+B --> C(VkInstance)
+D(VkSurfaceKHR):::khr-->B
 D-->C
 D-->W{{NativeWindowHandle}}
-S[VkSwapchainKHR]:::khr-->D
+S(VkSwapchainKHR):::khr-->D
 S-->A
-%%safd sadf
 end
 
 subgraph Vulkan Resources 
-VkImage-->A
-VkBuffer-->A
+i(VkImage)-.->A
+b(VkBuffer)-.->A
 end
 
 classDef khr fill:#369f;
 style W fill:#fff0,stroke-dasharray:4
-
-
 ```
 
 ## 实例(vkInstance)
+---
 
 ### 简介
 
 Vulkan实例隔离了不同的vulkan环境，在一个应用程序中，可以创建多个实例。但是实例之间的对象不能共享，如内存。（在不涉及扩展的情况下）
+
+```mermaid
+graph LR
+linkStyle default interpolate basis
+ci[CreateInfo]
+i(VkInstance)
+o([应用]):::none--查询当前Vulkan支持的扩展-->b([指定扩展]):::field
+subgraph 功能
+b -->ci:::cistyle
+c([指定验证层]):::field-->ci
+d([指定Vulkan对象的全局内存分配器]):::field-->ci
+z([...]):::field-->ci
+end
+
+ci--VkCreateInstance-->i
+
+classDef field fill:#369
+classDef cistyle fill:#482
+classDef none fill:#0000
+
+```
 
 
 ### 功能
@@ -51,9 +70,22 @@ Vulkan实例隔离了不同的vulkan环境，在一个应用程序中，可以�
   Vulkan提供了一个全局内存分配器回调，让用户可以接管Vulkan对象的所需要使用主机端的内存的分配。
 
 ## 物理设备(vkPhysicalDevice)
+---
 
 ### 简介
-在初始化Vulkan的物理设备时，除了选择需要的物理设别外，还应该获取关于物理设备的一些属性供之后使用：
+
+在初始化Vulkan的物理设备时，除了选择需要的物理设别外，还应该获取关于物理设备的一些属性供之后使用
+```mermaid
+graph LR
+linkStyle default interpolate basis
+
+p(VkPhysicalDevice) --> a{{1. Query supported image format}}
+p --> b{{2. Maximum sample count}}
+p --> c{{3. Query supported device memory}}
+p --> d{{4. Query supported queue family}}
+p --> z{{5. ...}}
+```
+
 
 ### 功能
 1. 图像格式：
@@ -102,6 +134,7 @@ Vulkan实例隔离了不同的vulkan环境，在一个应用程序中，可以�
 
 
 ## 逻辑设备(vkDevice)
+---
 
 ### 简介
 
@@ -119,6 +152,7 @@ Vulkan实例隔离了不同的vulkan环境，在一个应用程序中，可以�
      如果需要绘制流水线功能就指定图形队列，如果要使用计算着色器的功能，就指定计算队列。
 
 ## 表面（vkSurfaceKHR, 扩展）
+---
 
 ### 简介
 
@@ -131,10 +165,12 @@ Vulkan实例隔离了不同的vulkan环境，在一个应用程序中，可以�
 
 
 ## 平面(Plane,扩展)
+---
 
 ### 简介
 
 ## 交换链(vkSwapchainKHR, 扩展)
+---
 
 ### 简介
 
@@ -144,12 +180,14 @@ Vulkan实例隔离了不同的vulkan环境，在一个应用程序中，可以�
 创建交换链需要一下信息：
 
 ## 缓冲(VkBuffer)
+---
 
 ### 简介
 
   与OpenGL中glCreateBuffer创建出来的对象等价。需要指名Buffer 的用法。与opengl不同的是，这里创建好的buffer没有内存，需要绑定到另外的内存对象上。
 
 ## 图像(VkImage)
+---
 
 ### 简介
   在Vulkan 里创建图像的一般方式也是先把图像数据放入暂存缓冲，然后从暂存缓冲复制到GPU中。然而与OpenGL不同的是这里的图像需要指定

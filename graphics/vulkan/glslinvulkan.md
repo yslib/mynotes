@@ -16,6 +16,9 @@ gl_InstanceID 改为 gl_InstanceIndex
 2. 所有的变量声明都需要布局操作符。在OpenGL里也推荐使用布局操作符，所有行为都需显式指定，这也是Vulkan的特点之一。
 
 
->这里有一篇讲如何将OpenGL 移植到Vulkan 上的实践。就算不使用Vulkan,在OpenGL里也应该这样使用。
->https://on-demand.gputechconf.com/gtc/2016/events/vulkanday/Migrating_from_OpenGL_to_Vulkan.pdf
+这里有一篇讲如何将OpenGL 移植到Vulkan 上的实践。就算不使用Vulkan,在OpenGL里也应该这样使用。
+
+```pdf
+     https://on-demand.gputechconf.com/gtc/2016/events/vulkanday/Migrating_from_OpenGL_to_Vulkan.pdf
+```
 
