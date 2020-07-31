@@ -6,11 +6,11 @@
 ### 简单的随机函数
 
 在一些着色器中，经常见到这样的hash函数:
-```
+```glsl
 float rand(float n){return fract(sin(n) * 43758.5453123);}
 ```
 或者：
-```
+```glsl
 fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 ```
 如果用函数画图工具画一下的话就会发现，这些函数值看起来很像是随机的，通过把周期函数的振幅设置的很大，用fract把函数值取小数部分，就可以得到看起来非常杂乱无章的分布。二维的同样如此。只不过让人迷惑的Magic Number的最早出处确实找不到了。以下是两个讨论这两个数的链接
@@ -61,6 +61,7 @@ fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 
 下面是我的机器上的运行结果:
 
+```output
         GL vendor:     NVIDIA Corporation
         GL renderer:   GeForce GTX 1060 6GB/PCIe/SSE2
         GL version:    4.6.0 NVIDIA 445.87
@@ -81,7 +82,7 @@ fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
         Textureless 4D simplex noise, 2996.7 Msamples/s
         Texture LUT 4D classic noise, 3465.4 Msamples/s
         Textureless 4D classic noise, 2117.6 Msamples/s
-
+```
 TextureLess是完全不用查表的方法。Texture LUT是有一些预设的数据数纹理。
 可以看到，在3维及其以上的的噪声中，单纯形噪声的效率提升较为明显。二维的情况下柏林噪声就足够了，因为实现起来较为简单。
     

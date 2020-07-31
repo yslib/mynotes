@@ -1,47 +1,35 @@
 # 常用的GLSL代码片段
 
-* ## 伪随机
-
-```
+## 伪随机
+```glsl
 float hash(vec2 st)
 {
-       return fract(sin(dot(st.xy,
-                         vec2(12.9898,78.233)))*
-        43758.5453123);
+       return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
 }
 ```
 
-* ## 颜色转换
----
-* ### HSV 与 RGB互转 
-
-```c++
+## 颜色转换
+### HSV 与 RGB互转 
+```glsl
 vec3 hsv2rgb( in vec3 c )
 {
     vec3 rgb = clamp( abs(mod(c.x*6.0+vec3(0.0,4.0,2.0),6.0)-3.0)-1.0, 0.0, 1.0 );
-
 	return c.z * mix( vec3(1.0), rgb, c.y);
 }
 // Smooth HSV to RGB conversion 
 vec3 hsv2rgb_smooth( in vec3 c )
 {
     vec3 rgb = clamp( abs(mod(c.x*6.0+vec3(0.0,4.0,2.0),6.0)-3.0)-1.0, 0.0, 1.0 );
-
 	rgb = rgb*rgb*(3.0-2.0*rgb); // cubic smoothing	
-
 	return c.z * mix( vec3(1.0), rgb, c.y);
 }
 ```
-
 From https://www.shadertoy.com/view/MsS3Wc by iq
 
 
-* ## 过程式着色器
----
-
-* ### 基本图形
+## 过程式着色器
+### 基本图形
 1. #### 正方形
-
 ```
 float box(vec2 st,vec2 size) // st in [0,1]^2, size in [0,1]^2
 {
@@ -52,58 +40,43 @@ float box(vec2 st,vec2 size) // st in [0,1]^2, size in [0,1]^2
 }
 ```
 
-
-* ### 基本操作
----
-
+### 基本操作
 1. #### 平铺
 ```
 vec2 tiling(vec2 st,float factor){
     st *= factor;
     return fract(st);
-}
+} // from the book of shader
 ```
-> from The book of Shader
 
 2. #### 砖块式平铺
-
 ```
 vec2 brickTiling(vec2 st,float factor){
     st *= factor;
     if(mod(floor(st.y),2.0) == 1.0){st.x += 0.5;} // or st.x += step(1., mod(_st.y,2.0)) * 0.5;
     return fract(st);
-}
-
+} // from The book of Shader
 ```
-> from The book of Shader
 
-* ### 变换
----
-
+### 变换
 1. #### 旋转
 ```
 mat2 rotate2d(float _angle){
     return mat2(cos(_angle),-sin(_angle),
                 sin(_angle),cos(_angle));
-}
+} //from The book of Shader
 ```
-> from The book of Shader
 
 2. #### 缩放
 ```
 mat2 scale(vec2 _scale){
     return mat2(_scale.x,0.0,
                 0.0,_scale.y);
-}
+}// from The book of Shader
 ```
-> from The book of Shader
-
----
 
 # 例子
-
-* 移动的砖块
-
+## 移动的砖块
 ```
 float box(vec2 st,vec2 size){
     size = (1.0-size)/2.0;
@@ -137,8 +110,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 }
 ```
 
-* 简单的FBM
-
+## 简单的FBM
 ```
 float hash(vec2 st)
 {
@@ -179,7 +151,6 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     fragColor = vec4(col,1.0);
 }
 ```
-
 ```
 float hash(vec2 st)
 {

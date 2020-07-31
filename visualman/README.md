@@ -1,9 +1,7 @@
-
-
 # Vulkan 基本概念
 
 
-##### 设计参考
+#### 设计参考
 - [Designing a Modern Cross-Platform Low-Level Graphics Library](https://www.gamasutra.com/blogs/EgorYusov/20171130/310274/Designing_a_Modern_CrossPlatform_LowLevel_Graphics_Library.php "Designing a Modern Cross-Platform Low-Level Graphics Library")
 - [Diligent Graphics](https://github.com/DiligentGraphics/DiligentEngine)
 
@@ -177,6 +175,3 @@ vkCmdBlitImage()
 
 # 命令列表
 如果要设计多线程的图形接口，就必须暴露一个指令列表，其扮演着执行绘制指令的角色。但是这个命令列表没有任何实现，只能作为一个句柄。
-
-
-
