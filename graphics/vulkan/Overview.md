@@ -5,8 +5,8 @@
 graph BT
 linkStyle default interpolate basis
 subgraph Vulkan Context
-A(VkDevice) --> B(VkPhysicalDevice)
-B --> C(VkInstance)
+A(VkDevice):::vkobj --> B(VkPhysicalDevice):::vkobj
+B --> C(VkInstance):::vkobj
 D(VkSurfaceKHR):::khr-->B
 D-->C
 D-->W{{NativeWindowHandle}}
@@ -14,27 +14,28 @@ S(VkSwapchainKHR):::khr-->D
 S-->A
 end
 
-subgraph Vulkan Resources 
-i(VkImage)-.->A
-b(VkBuffer)-.->A
+subgraph vulkan resources 
+i(vkimage):::vkobj-.->A
+b(vkbuffer):::vkobj-.->A
 end
 
 classDef khr fill:#369f;
+classDef vkobj fill:#93bfe1
 style W fill:#fff0,stroke-dasharray:4
 ```
 
-## 实例(vkInstance)
+## 实例(vkinstance)
 ---
 
 ### 简介
 
-Vulkan实例隔离了不同的vulkan环境，在一个应用程序中，可以创建多个实例。但是实例之间的对象不能共享，如内存。（在不涉及扩展的情况下）
+vulkan实例隔离了不同的vulkan环境，在一个应用程序中，可以创建多个实例。但是实例之间的对象不能共享，如内存。（在不涉及扩展的情况下）
 
 ```mermaid
 graph LR
 linkStyle default interpolate basis
 ci[CreateInfo]
-i(VkInstance)
+i(VkInstance):::vkobj
 o([应用]):::none--查询当前Vulkan支持的扩展-->b([指定扩展]):::field
 subgraph 功能
 b -->ci:::cistyle
@@ -45,9 +46,10 @@ end
 
 ci--VkCreateInstance-->i
 
-classDef field fill:#369
-classDef cistyle fill:#482
-classDef none fill:#0000
+classDef vkobj fill:#93BFE1
+classDef field fill:#FEBF63
+classDef cistyle fill:#ADE498
+classDef none fill:#7FDBDA
 
 ```
 
@@ -75,28 +77,28 @@ classDef none fill:#0000
 ### 简介
 
 在初始化Vulkan的物理设备时，除了选择需要的物理设别外，还应该获取关于物理设备的一些属性供之后使用
+
 ```mermaid
 graph LR
 linkStyle default interpolate basis
+i(vkInstance):::vkobj--VkEnumeratePhysicalDevices-->p(vkPhysicalDevice):::vkobj
+p-->a([vkGetPhysicalDeviceFormatProperties]):::get
+p-->c([vkGetPhysicalDeviceMemoryProperties]):::get
+p-->d([vkGetPhysicalDeviceQueueFamilyProperties]):::get
+p-->e([vkGetPhysicalDeviceFeatures]):::get
 
-p(VkPhysicalDevice) --> a{{1. Query supported image format}}
-p --> b{{2. Maximum sample count}}
-p --> c{{3. Query supported device memory}}
-p --> d{{4. Query supported queue family}}
-p --> z{{5. ...}}
+classDef vkobj fill:#93BFE1
+classDef get fill::#282828
+classDef none fill:#7FDBDA
 ```
 
-
 ### 功能
-1. 图像格式：
 
-  包括交换链格式，图像格式和深度格式，以及深度模板格式。因为这些格式（例如R8G8B8A8）都是硬件级别支持的，所以需要询问物理设备是不是支持。
+1. 图像格式属性(vkGetPhysicalDeviceFormatProperties)：
 
-2. 最大采样数：
+  通常，为了完整性，在创建一个需要指定格式的Vulkan对象时，比如创建一个R8B8GBA8格式的纹理，或者格式为24位的深度缓冲，需要查询物理设备是不是支持这种格式。但是一个格式还有附加的属性，比如这个格式是不是支持
 
-  反走样的采样数。
-
-3. 设备内存：
+2. 设备内存：
 
   Vulkan的内存类型比较复杂，任何需要设备内存的对象的创建都需要指定内存类型。如Image和Buffer。内存类型有很多，并且每种类型都由某种类型的堆负责创建。
   当使用vkGetPhysicalDeviceMemoryProperty 查询相应物理设备支持的内存时，获取到的内存属性包括两个数组。第一个是支持的内存类型，
@@ -104,33 +106,46 @@ p --> z{{5. ...}}
   的堆所在数组的索引。
   分配设备内存的时候需要指定内存类型和堆类型
 
-  - 内存类型
+    - 内存类型
        
-    内存类型标志位大概有这几种类型：（其余见官方规范手册）
+      内存类型标志位大概有这几种类型：（其余见官方规范手册）
 
-    1. DEVICE_LOCAL_BIT： 设备专用内存，一般是纹理或者顶点缓冲使用的内存
+      1. DEVICE_LOCAL_BIT： 设备专用内存，一般是纹理或者顶点缓冲使用的内存
 
-    2. HOST_VISIBLE_BIT： 主机可见内存，表明内从可以被主机端映射，可以在主机端像访问CPU内存一样直接存取
+      2. HOST_VISIBLE_BIT： 主机可见内存，表明内从可以被主机端映射，可以在主机端像访问CPU内存一样直接存取
 
-    3. COHERENT_BIT：对于主机可见内存的访问保持一致性，否则需要手动更新内存。
+      3. COHERENT_BIT：对于主机可见内存的访问保持一致性，否则需要手动更新内存。
 
-    4. HOST_CACHED_BIT：这种内存会缓存在cpu端，但是主机端的访问可能会慢一些。
+      4. HOST_CACHED_BIT：这种内存会缓存在cpu端，但是主机端的访问可能会慢一些。
 
-    5. LAZILY_ALLOCATED_BIT：延迟分配。
+      5. LAZILY_ALLOCATED_BIT：延迟分配。
 
-    这几种并不是随意组合的，合法的组合请参照Vulkan规范手册
+      这几种并不是随意组合的，合法的组合请参照Vulkan规范手册
 
-  - 堆类型
+    - 堆类型
 
-    堆类型标志位大概由这几种类型：（其余见官方规范手册）
+      堆类型标志位大概由这几种类型：（其余见官方规范手册）
 
-    1. DEVICE_LOCAL_BIT: 设备中的堆，一般位于是运行Vulkan的硬件设备，比如GPU。这种就是大多数情况。
+      1. DEVICE_LOCAL_BIT: 设备中的堆，一般位于是运行Vulkan的硬件设备，比如GPU。这种就是大多数情况。
 
-    2. MULTI_INSTANCE_BIT: 当一个逻辑设备是由多个物理设备构成时，分配内存的时候会重复分配到每个物理设备中。（用在分布式上？）
+      2. MULTI_INSTANCE_BIT: 当一个逻辑设备是由多个物理设备构成时，分配内存的时候会重复分配到每个物理设备中。（用在分布式上？）
 
-4. 支持的队列族：
+3. 支持的队列族：
 
   同样也用索引来标识，创建逻辑设备时需要指定。队列也是不同于之前传统API的新特性。
+
+4. 物理设备属性(VkPhysicalDeviceProperties via vkGetPhysicalDeviceProperties)
+
+  物理设备属性字段中有一个设备限制（VkPhysicalDeviceLimits）字段，这个字段给出了当前物理设备支持的各种属性的极限或者说是最大值。
+  其中比较基础的有以下几项：
+    
+    - 最大采样数
+
+    - 
+
+5. 物理设备特性(VkPhysicalDeviceFeatures via vkGetPhysicalDeviceFeatures)
+
+  注意物理属性做区分，这个字段当中都是Bool变量，描述了此物理设备是否支持某一个特性。在之后创建逻辑设备中，要指定一些特性，这些特性必须是物理设备支持的。
 
 
 ## 逻辑设备(vkDevice)
