@@ -14,7 +14,8 @@ float hash(vec2 st)
 * ## 颜色转换
 ---
 * ### HSV 与 RGB互转 
-```
+
+```c++
 vec3 hsv2rgb( in vec3 c )
 {
     vec3 rgb = clamp( abs(mod(c.x*6.0+vec3(0.0,4.0,2.0),6.0)-3.0)-1.0, 0.0, 1.0 );
@@ -31,6 +32,7 @@ vec3 hsv2rgb_smooth( in vec3 c )
 	return c.z * mix( vec3(1.0), rgb, c.y);
 }
 ```
+
 From https://www.shadertoy.com/view/MsS3Wc by iq
 
 
