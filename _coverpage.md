@@ -2,5 +2,5 @@
 
 # YSLucida
 
-[Album](<https://visysl.com>)
+[Photography](<https://yslphotos.com>)
 [GitHub](<https://github.com/yslib>)
