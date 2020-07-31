@@ -2,5 +2,5 @@
 
 # visysl
 
-[Photography](<https://yslphotos.com>)
+[Photography](<https://picysl.com>)
 [GitHub](<https://github.com/yslib>)
