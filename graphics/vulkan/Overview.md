@@ -1,10 +1,10 @@
 # Vulkan Overview
----
-
 ```mermaid
 graph BT
-linkStyle default interpolate basis
-subgraph Vulkan Context
+linkStyle default interpolate basis;
+subgraph g0[Vulkan]
+subgraph g1[Vulkan Context]
+
 A(VkDevice):::vkobj --> B(VkPhysicalDevice):::vkobj
 B --> C(VkInstance):::vkobj
 D(VkSurfaceKHR):::khr-->B
@@ -14,42 +14,54 @@ S(VkSwapchainKHR):::khr-->D
 S-->A
 end
 
-subgraph vulkan resources 
+subgraph g2[Resources]
 i(vkimage):::vkobj-.->A
 b(vkbuffer):::vkobj-.->A
 end
+end
 
-classDef khr fill:#369f;
-classDef vkobj fill:#93bfe1
-style W fill:#fff0,stroke-dasharray:4
+classDef khr fill:#98971a,stroke-width:0px;
+classDef vkobj fill:#d79921,stroke-width:0px;
+style g1 fill:#928374,stroke-width:0px,color:#ebdbb2;
+style g2 fill:#928374,stroke-width:0px,color:#ebdbb2;
+style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
+style W fill:#4585ff55,stroke-dasharray:4
+
+
 ```
 
+**Explicit, Explicit, Explicit**
+
 ## 实例(vkinstance)
----
-
 ### 简介
-
 vulkan实例隔离了不同的vulkan环境，在一个应用程序中，可以创建多个实例。但是实例之间的对象不能共享，如内存。（在不涉及扩展的情况下）
 
 ```mermaid
 graph LR
+subgraph g0[vkInstance]
 linkStyle default interpolate basis
 ci[CreateInfo]
 i(VkInstance):::vkobj
 o([应用]):::none--查询当前Vulkan支持的扩展-->b([指定扩展]):::field
-subgraph 功能
+subgraph g1[功能]
 b -->ci:::cistyle
 c([指定验证层]):::field-->ci
 d([指定Vulkan对象的全局内存分配器]):::field-->ci
 z([...]):::field-->ci
 end
 
+end
+
 ci--VkCreateInstance-->i
 
-classDef vkobj fill:#93BFE1
-classDef field fill:#FEBF63
-classDef cistyle fill:#ADE498
-classDef none fill:#7FDBDA
+classDef field fill:#689d6a,stroke-width:0px;
+classDef vkobj fill:#d79921,stroke-width:0px;
+classDef cistyle fill:#b16286,stroke-width:0px;
+style o fill:#fe8019,stroke-width:0px;
+style g1 fill:#928374,stroke-width:0px,color:#ebdbb2;
+style g2 fill:#928374,stroke-width:0px,color:#ebdbb2;
+style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
+
 
 ```
 
@@ -72,39 +84,60 @@ classDef none fill:#7FDBDA
   Vulkan提供了一个全局内存分配器回调，让用户可以接管Vulkan对象的所需要使用主机端的内存的分配。
 
 ## 物理设备(vkPhysicalDevice)
----
-
 ### 简介
-
 在初始化Vulkan的物理设备时，除了选择需要的物理设别外，还应该获取关于物理设备的一些属性供之后使用
 
 ```mermaid
 graph LR
+subgraph g0[VkPhysicalDevice]
 linkStyle default interpolate basis
 i(vkInstance):::vkobj--VkEnumeratePhysicalDevices-->p(vkPhysicalDevice):::vkobj
+subgraph g1[物理设备的Get 查询]
 p-->a([vkGetPhysicalDeviceFormatProperties]):::get
 p-->c([vkGetPhysicalDeviceMemoryProperties]):::get
 p-->d([vkGetPhysicalDeviceQueueFamilyProperties]):::get
 p-->e([vkGetPhysicalDeviceFeatures]):::get
+end
+end
 
-classDef vkobj fill:#93BFE1
-classDef get fill::#282828
-classDef none fill:#7FDBDA
+classDef field fill:#689d6a,stroke-width:0px;
+classDef vkobj fill:#d79921,stroke-width:0px;
+classDef cistyle fill:#b16286,stroke-width:0px;
+classDef get fill:#458588,stroke-width:0px;
+style g1 fill:#928374,stroke-width:0px,color:#ebdbb2;
+style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
 ```
 
 ### 功能
-
 1. 图像格式属性(vkGetPhysicalDeviceFormatProperties)：
+
+  图像格式属性的描述结构体为：
+
+
 
   通常，为了完整性，在创建一个需要指定格式的Vulkan对象时，比如创建一个R8B8GBA8格式的纹理，或者格式为24位的深度缓冲，需要查询物理设备是不是支持这种格式。但是一个格式还有附加的属性，比如这个格式是不是支持
 
 2. 设备内存：
 
-  Vulkan的内存类型比较复杂，任何需要设备内存的对象的创建都需要指定内存类型。如Image和Buffer。内存类型有很多，并且每种类型都由某种类型的堆负责创建。
+  Vulkan的内存属性比较复杂，任何需要设备内存的对象的创建都需要指定内存类型。如Image和Buffer。内存类型有很多，并且每种类型都由某种类型的堆负责创建。
   当使用vkGetPhysicalDeviceMemoryProperty 查询相应物理设备支持的内存时，获取到的内存属性包括两个数组。第一个是支持的内存类型，
-  第二个是支持的内存堆。支持的内存类型是由一系列bitflags决定的，并且支持的内存类型里还包括了一个索引，这个索引就是由相应支持分配
-  的堆所在数组的索引。
-  分配设备内存的时候需要指定内存类型和堆类型
+  第二个是支持的内存堆。支持的内存类型是由一系列bitflags决定的，并且支持的内存类型里还包括了一个索引，这个索引就是由相应支持分配的堆所在数组的索引。
+
+  总的来说，Vulkan的设备内存属性用**堆类型**和**内存类型**两个维度来描述。从设计上来说，这两个维度是正交的。实际上考虑到实现，这两个维度并不是完全独立的。关于内存这一块，
+  下面会有详细的介绍，这里只是简要的引出内存属性这个概念。
+  分配设备内存的时候需要指定**内存类型**和**堆类型**
+
+  ```mermaid
+  graph LR
+  subgraph g0[VkPhysicalDeviceMemoryProperties]
+  i-->a([memoryType])
+  i-->b([memoryHeap])
+  end
+  style g1 fill:#928374,stroke-width:0px,color:#ebdbb2;
+  style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
+  end
+
+  ```
 
     - 内存类型
        
@@ -149,8 +182,6 @@ classDef none fill:#7FDBDA
 
 
 ## 逻辑设备(vkDevice)
----
-
 ### 简介
 
   逻辑设备是Vulkan对物理设备的抽象。可以从一个物理设备上创建多个逻辑设备。逻辑设备对象负责vulkan的设备资源分配。
@@ -167,7 +198,6 @@ classDef none fill:#7FDBDA
      如果需要绘制流水线功能就指定图形队列，如果要使用计算着色器的功能，就指定计算队列。
 
 ## 表面（vkSurfaceKHR, 扩展）
----
 
 ### 简介
 
@@ -180,12 +210,9 @@ classDef none fill:#7FDBDA
 
 
 ## 平面(Plane,扩展)
----
-
 ### 简介
 
 ## 交换链(vkSwapchainKHR, 扩展)
----
 
 ### 简介
 
@@ -195,17 +222,27 @@ classDef none fill:#7FDBDA
 创建交换链需要一下信息：
 
 ## 缓冲(VkBuffer)
----
-
 ### 简介
 
   与OpenGL中glCreateBuffer创建出来的对象等价。需要指名Buffer 的用法。与opengl不同的是，这里创建好的buffer没有内存，需要绑定到另外的内存对象上。
 
 ## 图像(VkImage)
----
 
 ### 简介
   在Vulkan 里创建图像的一般方式也是先把图像数据放入暂存缓冲，然后从暂存缓冲复制到GPU中。然而与OpenGL不同的是这里的图像需要指定
   图像布局(ImageLayout)。图像布局描述了当前图像所扮演的角色。图像的布局大概分为一下几种：
 
   1. PRESENT (VK_IMAGE_LAYOUT_PRESENT_SRC_KHR): 用来作为呈现图像，这个布局可以绘制到屏幕上。
+
+## 资源绑定
+
+### 简介
+  无论在诸如传统的图形API中还是Vulkan中，资源绑定都是一件不太容易操作的事，虽然概念上比较简单，但是操作的API 是非常琐碎的。这也就导致了在编码初期免不了进行让人头大的调试过程。
+  所以，对于图形API 接口的设计，资源绑定的易用性非常重要。在这里我们不讨论如何设计一个易用的资源绑定接口。结合本文的主要目的，通过Vulkan的资源绑定过程了解一般的图形API的各种资源的概念。
+  拿OpenGL来说，由于其接口设计的原因，对于初学OpenGL的人，无法理清这些资源的各个概念也是比较正常的。虽然Vulkan相比于OpenGL接口更加复杂，但是由于是面向对象的接口风格，反而使人更容易理解
+  资源绑定的整个过程。
+
+  简单来说，资源绑定就是描述了如何描述管线各个着色阶段所使用到的顶点、图像以及缓冲等数据，并且怎么把数据传递给管线的各个阶段。
+
+  在官现阶段中的数据分为两种，一种是属性，一种是uniform
+
