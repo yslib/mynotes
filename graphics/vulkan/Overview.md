@@ -1,4 +1,7 @@
 # Vulkan Overview
+
+Explicitly,Statically,Seperately
+
 ```mermaid
 graph BT
 linkStyle default interpolate basis;
@@ -224,7 +227,7 @@ style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
 ## 缓冲(VkBuffer)
 ### 简介
 
-  与OpenGL中glCreateBuffer创建出来的对象等价。需要指名Buffer 的用法。与opengl不同的是，这里创建好的buffer没有内存，需要绑定到另外的内存对象上。
+  与OpenGL中glCreateBuffer创建出来的对象等价。需要指名Buffer 的用法。与OpenGL不同的是，这里创建好的buffer没有内存，需要绑定到另外的内存对象上。
 
 ## 图像(VkImage)
 
@@ -237,12 +240,68 @@ style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
 ## 资源绑定
 
 ### 简介
-  无论在诸如传统的图形API中还是Vulkan中，资源绑定都是一件不太容易操作的事，虽然概念上比较简单，但是操作的API 是非常琐碎的。这也就导致了在编码初期免不了进行让人头大的调试过程。
-  所以，对于图形API 接口的设计，资源绑定的易用性非常重要。在这里我们不讨论如何设计一个易用的资源绑定接口。结合本文的主要目的，通过Vulkan的资源绑定过程了解一般的图形API的各种资源的概念。
-  拿OpenGL来说，由于其接口设计的原因，对于初学OpenGL的人，无法理清这些资源的各个概念也是比较正常的。虽然Vulkan相比于OpenGL接口更加复杂，但是由于是面向对象的接口风格，反而使人更容易理解
-  资源绑定的整个过程。
 
-  简单来说，资源绑定就是描述了如何描述管线各个着色阶段所使用到的顶点、图像以及缓冲等数据，并且怎么把数据传递给管线的各个阶段。
+  着色器的模型就是典型的SIMD模型，只不过每个线程是面向几何顶点或者屏幕上的片元调度的。一个SIMD模型的代码结构如下：
 
-  在官现阶段中的数据分为两种，一种是属性，一种是uniform
+  ```
+
+  global shared_var1,shared_var2
+
+  thread(var1, var2)
+  {
+    // do something with var1, var2
+
+    // do something with shared_var1 shared_var2
+  }
+  ```
+
+  可以看到，当一个线程被调度时,有属于当前线程自己的资源以所有线程都能访问的共享资源。同样，在着色器中，也有这两种资源。
+  局部变量对应逐顶点属性(Attribute)，共享资源对应统一变量(Uniform)。至于属性(Attribute) 和统一变量(Uniform)只是glsl中的修饰符。不同API名字虽然不同，
+  但对应的都是这两个概念。
+
+  ```table
+  （不同API中两种资源类型的对照表）
+  ```
+
+  在Vulkan 的API中，着色器局部变量也就是Attribute，用属性(Attribute)来描述。着色器共享变量(Uniform)信息用描述符(Descriptor)来描述。区分这两个概念有助于理清繁琐的Vulkan API。
+
+  ```
+  （示意图）
+  ```
+
+### 功能
+
+  描述符集布局（以下简称描述符布局）是描述都有哪些Uniform变量的对象，创建描述符布局需要一个CreateInfo（VkDescriptorSetLayoutCreateInfo）,其中一个数组字段包含了每个Uniform变量的信息（VkDescriptorSetLayoutBinding）。
+
+  注意，描述符集和描述符布局的区别是，描述符**布局**并没有和具体的数据关联，而**集**却关联了数据。例如，布局只是说这个集有一个uniform buffer 和 一个 uniform sampler。
+  而在这个布局的基础上通过池分配出来的集需要关联哪一个uniform buffer和uniform sampler数据。
+
+  + 描述符集布局绑定（单个变量的信息对象）
+  + 描述符集布局（单个变量信息对象的集和）
+  + 描述符池: 创建这个池需要指定将要从这个池中分配多少个描述符以及多少个描述符集。分配方式为描述符个数以最大描述符集个数的一个划分。
+  + 描述符集（根据布局通过池分配出来的带有真正数据的对象）
+    描述符集属于管线资源，在绘制指令的时候进行绑定。绑定的这个描述符集要和
+
+  如果直接从API翻译，这几个概念对应的中文很拗口。他们几个之间的关系如下图
+
+  ```
+  （示意图）
+  ```
+
+  顶点属性的buffer 也是要通过绘制指令绑定到管线。顶点属性一般指定：
+  + 对应的顶点缓冲数组的索引（Buffer Index）
+  + 指定着色其中的绑定点（Binding）
+  + 步长（Stride）
+  + 偏移 (Offset)
+  + 格式（Format） （在OpenGL中，这一步通过分量格式和分量个数表示）
+
+  ```
+  (示意图)
+  ```
+
+
+
+
+
+
 
