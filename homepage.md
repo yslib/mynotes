@@ -11,6 +11,23 @@
 
 [VimAwesome](https://vimawesome.com/?q=tag:coc.nvim) : vim的插件推荐网站
 
+[The Architecture of Open Source Applications](http://aosabook.org/en/index.html) : 这本书收录了许多知名开源软件作者对他们的软件的详细剖析。
+
+
+# TODO-List
+
+以下是自己收集的待整理的资料，将来会整理到自己的文章当中。
+
+|Link|Title|
+|:----:|:----:|
+|https://developer.nvidia.com/opengl-vulkan|像Vulkan一样用OpenGL|
+|https://www.khronos.org/assets/uploads/developers/library/2016-vulkan-devday-uk/10-Porting-to-Vulkan.pdf|移植到Vulkan|
+|https://on-demand.gputechconf.com/gtc/2016/events/vulkanday/Migrating_from_OpenGL_to_Vulkan.pdf|从OpenGL迁移到Vulkan|
+|http://diligentgraphics.com/2016/03/23/resource-binding-model-in-diligent-engine-2-0/|D3D12资源绑定模型|
+|http://diligentgraphics.com/diligent-engine/architecture/cross-platform/reference-counting/|侵入式引用计数|
+
+
+
 # 关于配色
 ---
 
