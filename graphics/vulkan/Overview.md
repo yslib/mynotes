@@ -323,7 +323,7 @@ style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
   + 格式（Format） （在OpenGL中，这一步通过分量格式和分量个数表示）
   
 
-在vulkan中，上面5个属性的指定被分配在了两个结构体中。分别是```VkVertexInputBindingDescription``` 和 ```VkVertexInputAttributeDescription```其中前者指定了绑定索引(binding),这个也就是在后续进行绘制指令提交时指定的缓冲区数组的索引。以及步长(stride),即每一个被解释的元素的大小。后者指定了绑定的着色器中的变量（location）
+在vulkan中，上面5个属性的指定被分配在了两个结构体中。分别是```VkVertexInputBindingDescription``` 和 ```VkVertexInputAttributeDescription```其中前者指定了绑定索引(binding),这个也就是在后续进行绘制指令提交时指定的缓冲区数组的索引。以及步长(stride),即每一个被解释的元素的大小。后者指定了绑定的着色器中的变量（location）。这两个描述结构体是的参数正交地描述了顶点属性的配置。
 
 ```dot
 digraph g {
@@ -331,23 +331,46 @@ digraph g {
 rankdir = "LR"
 graph [
 rankdir = "LR"
-bgcolor = "white:lightblue"
+bgcolor="#665c54"
 style="filled"
-gradientangle = 270];
+];
 node [
 fontsize = "16"
-shape = "ellipse"
 style="filled"
 gradientangle=90
 ];
 edge [
 ];
+subgraph cluster0
+{
+label="VkPipelineVertexInputStateCreateInfo"
+bgcolor="#928374"
+"node2" [label=" VkVertexInputBindingDescription* | VkVertexInputAttributeDescription* " shape= "record"];
+}
+subgraph cluster1
+{
+bgcolor="#928374"
+label = "VkVertexInputBindingDescription];"
+"c11"[ label = "{<b1>binding| stride | InputRate}" shape = "record"]
+"c12"[ label = "{<b2>binding| stride | InputRate}" shape = "record"]
+}
+subgraph cluster2
+{
+bgcolor="#928374"
+"c21"[label="{location | binding | format | offset}" shape="record"]
+"c22"[label="{location | binding | format | offset}" shape="record"]
+label="VkInputVertexAttributeDescription"
+}
 
-"node0" [
-label = "<n0>binding|<n1>stride"
-shape = "record"
-];
-"node1"[label="" shape="record"]
+node2->c11
+node2->c21
+
+subgraph cluster_buffer{
+  label="Array of VkBuffer"
+"buffer0"[label="{<f0> 0|<f1> 1|<f2> 2|<f3> 3 |<f4> 4 | <f5> 5 | <f6> 6 | <f7> 7 | <f8> 8 | <f9> 9 | <f10> 10 | <f11>...}" shape="record"]
+"buffer1"[label="{<f0> 0|<f1> 1|<f2> 2|<f3> 3 |<f4> 4 | <f5> 5 | <f6> 6 | <f7> 7 | <f8> 8 | <f9> 9 | <f10> 10 | <f11>...}" shape="record"]
+}
+
 
 }
 
