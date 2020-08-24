@@ -259,14 +259,20 @@ style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
   局部变量对应逐顶点属性(Attribute)，共享资源对应统一变量(Uniform)。至于属性(Attribute) 和统一变量(Uniform)只是glsl中的修饰符。不同API名字虽然不同，
   但对应的都是这两个概念。
 
-  ```table
-  （不同API中两种资源类型的对照表）
-  ```
+  
+  |Vulkan(OpenGL)|D3D12|说明|
+  |------|-----|----|
+  |UBO(Uniform Buffer Object)|Constant Buffer|全局统一变量|
+  |Texel Buffer |typed buffer | 纹素缓冲|
+  |SSBO|UAV buffer(Unordered Access View)|通用缓冲 |
+  |Image|UAV texture | 可写的图像类型|
 
   在Vulkan 的API中，着色器局部变量也就是Attribute，用属性(Attribute)来描述。着色器共享变量(Uniform)信息用描述符(Descriptor)来描述。区分这两个概念有助于理清繁琐的Vulkan API。
 
-  ```
-  （示意图）
+  ```dot
+  digraph g{
+    "node0"[shape="record" label="Attribute"];
+  }
   ```
 
 ### 功能
@@ -284,8 +290,29 @@ style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
 
   如果直接从API翻译，这几个概念对应的中文很拗口。他们几个之间的关系如下图
 
-  ```
-  （示意图）
+  ```dot
+  digraph g{
+    splines=true
+    rankdir="LR"
+    bgcolor="#665c54"
+    node[style="filled" color="#ebdbb2"]
+    "layout0"[shape="record" label="VkDescirptorSetLayout"];
+    "layout1"[shape="record" label="VkDescirptorSetLayout"];
+    "binding0"[shape="record" label="VkDescirptorBinding(Buffer) | VkDescriptorBinding(Texture) | ..."];
+    "binding1"[shape="record" label="VkDescirptorBinding(Buffer) | VkDescriptorBinding(Sampler) | ..."];
+    "playout0"[shape="record" label="VkPipelineSetLayout"]
+    subgraph cluster2{
+      label="VkDescriptorPool"
+      "set0"[shape="record" label="VkDescriptorSet"]
+      "set1"[shape="record" label="VkDescriptorSet"]
+    }
+    playout0->layout0
+    playout0->layout1
+    layout0->binding0
+    layout1->binding1
+    layout0->set0
+    layout1->set1
+  }
   ```
 
   顶点属性的buffer 也是要通过绘制指令绑定到管线。顶点属性一般指定：
@@ -294,6 +321,45 @@ style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
   + 步长（Stride）
   + 偏移 (Offset)
   + 格式（Format） （在OpenGL中，这一步通过分量格式和分量个数表示）
+  
+
+在vulkan中，上面5个属性的指定被分配在了两个结构体中。分别是```VkVertexInputBindingDescription``` 和 ```VkVertexInputAttributeDescription```其中前者指定了绑定索引(binding),这个也就是在后续进行绘制指令提交时指定的缓冲区数组的索引。以及步长(stride),即每一个被解释的元素的大小。后者指定了绑定的着色器中的变量（location）
+
+```dot
+digraph g {
+
+rankdir = "LR"
+graph [
+rankdir = "LR"
+bgcolor = "white:lightblue"
+style="filled"
+gradientangle = 270];
+node [
+fontsize = "16"
+shape = "ellipse"
+style="filled"
+gradientangle=90
+];
+edge [
+];
+
+"node0" [
+label = "<n0>binding|<n1>stride"
+shape = "record"
+];
+"node1"[label="" shape="record"]
+
+}
+
+```
+
+  + 下图为Vulkan和OpenGL 中进行逐顶点属性绑定API的对比表格
+
+|Vulkan|OpenGL(DSA version)|OpenGL(non-DSA)|
+|------|------|------|
+|VkVertexInputBindingDescription|glVertexArrayVertexBuffer|glVertexAttribPointer|
+|VkVertexInputAttributeDescription|glVertexAttribFormat|
+
 
   ```
   (示意图)
