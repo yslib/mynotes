@@ -290,6 +290,7 @@ style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
 
   如果直接从API翻译，这几个概念对应的中文很拗口。他们几个之间的关系如下图
 
+
   ```dot
   digraph g{
     splines=true
@@ -327,14 +328,13 @@ style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
 
 ```dot
 digraph g {
-
-rankdir = "LR"
+rankdir=LR
 graph [
-rankdir = "LR"
 bgcolor="#665c54"
 style="filled"
 ];
 node [
+shape="record"
 fontsize = "16"
 style="filled"
 gradientangle=90
@@ -345,31 +345,46 @@ subgraph cluster0
 {
 label="VkPipelineVertexInputStateCreateInfo"
 bgcolor="#928374"
-"node2" [label=" VkVertexInputBindingDescription* | VkVertexInputAttributeDescription* " shape= "record"];
+"node2" [label= "VkVertexInputBindingDescription* | VkVertexInputAttributeDescription* " shape= "record"];
 }
-subgraph cluster1
+subgraph cluster_vertex{
+  label = "Vertex"
+  "pos"[label="{pos[0] | pos[1] | pos[2]}" ]
+  "col"[label="{col[0] | col[1] | col[2]}" ]
+  "tex"[label="{tex[0] | tex[1]}"]
+  compound=true
+}
+
+subgraph cluster_binding
 {
 bgcolor="#928374"
-label = "VkVertexInputBindingDescription];"
-"c11"[ label = "{<b1>binding| stride | InputRate}" shape = "record"]
-"c12"[ label = "{<b2>binding| stride | InputRate}" shape = "record"]
+label = "VkVertexInputBindingDescription[]"
+"binding0"[ label = "{<b1>binding=0| stride=sizeof(Vertex) | InputRate}"]
+"binding1"[ label = "{<b1>binding=0| stride=sizeof(Vertex) | InputRate}"]
 }
-subgraph cluster2
+subgraph cluster_attr
 {
 bgcolor="#928374"
-"c21"[label="{location | binding | format | offset}" shape="record"]
-"c22"[label="{location | binding | format | offset}" shape="record"]
-label="VkInputVertexAttributeDescription"
+"attr0"[label="{location=0 | binding=0 | format=RGB | offset=offsetof(Vertex,pos)}"]
+"attr1"[label="{location=1 | binding=0 | format=RGB | offset=offsetof(Vertex,col)}"]
+"attr2"[label="{location=2 | binding=0 | format=RG | offset=offsetof(Vertex,tex)}"]
+label="VkInputVertexAttributeDescription[]"
+compound=true
+}
+
+subgraph cluster_buffer
+{
+  label="VkBuffer[]"
+  "buffer0"[label="{<f0> pos|<f1> col|<f2> tex|<f3> pos|<f4> col | <f5> tex | <f6>...}" shape="record"]
+  "buffer1"[label="{<f0> pos|<f1> col|<f2> tex|<f3> pos|<f4> col | <f5> tex | <f6>...}" shape="record"]
+  compound=true
+  lhead="cb"
 }
 
 node2->c11
 node2->c21
-
-subgraph cluster_buffer{
-  label="Array of VkBuffer"
-"buffer0"[label="{<f0> 0|<f1> 1|<f2> 2|<f3> 3 |<f4> 4 | <f5> 5 | <f6> 6 | <f7> 7 | <f8> 8 | <f9> 9 | <f10> 10 | <f11>...}" shape="record"]
-"buffer1"[label="{<f0> 0|<f1> 1|<f2> 2|<f3> 3 |<f4> 4 | <f5> 5 | <f6> 6 | <f7> 7 | <f8> 8 | <f9> 9 | <f10> 10 | <f11>...}" shape="record"]
-}
+"c11":b1->"buffer0":f0[label="VkBuffer[0]"]
+cluster_buffer:cb->cluster_vertex
 
 
 }
@@ -390,6 +405,7 @@ subgraph cluster_buffer{
 
 
 
+  ![dia1](../../res/vertexattr.svg)
 
 
 
