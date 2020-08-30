@@ -130,7 +130,8 @@ style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
   下面会有详细的介绍，这里只是简要的引出内存属性这个概念。
   分配设备内存的时候需要指定**内存类型**和**堆类型**
 
-  ```mermaid
+
+```mermaid
   graph LR
   subgraph g0[VkPhysicalDeviceMemoryProperties]
   i-->a([memoryType])
@@ -139,8 +140,7 @@ style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
   style g1 fill:#928374,stroke-width:0px,color:#ebdbb2;
   style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
   end
-
-  ```
+```
 
     - 内存类型
        
