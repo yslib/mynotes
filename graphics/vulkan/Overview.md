@@ -10,7 +10,7 @@ subgraph g1[Vulkan Context]
 
 A(VkDevice):::vkobj --> B(VkPhysicalDevice):::vkobj
 B --> C(VkInstance):::vkobj
-D(VkSurfaceKHR):::khr-->B
+D(VkSurfaceKHR):::khr--Present support-->B
 D-->C
 D-->W{{NativeWindowHandle}}
 S(VkSwapchainKHR):::khr-->D
@@ -100,6 +100,7 @@ p-->a([vkGetPhysicalDeviceFormatProperties]):::get
 p-->c([vkGetPhysicalDeviceMemoryProperties]):::get
 p-->d([vkGetPhysicalDeviceQueueFamilyProperties]):::get
 p-->e([vkGetPhysicalDeviceFeatures]):::get
+p-->f([vkGetPhysicalDeviceXXXKHR]):::get2
 end
 end
 
@@ -107,6 +108,7 @@ classDef field fill:#689d6a,stroke-width:0px;
 classDef vkobj fill:#d79921,stroke-width:0px;
 classDef cistyle fill:#b16286,stroke-width:0px;
 classDef get fill:#458588,stroke-width:0px;
+classDef get2 fill:#fb4934,stroke-width:0px
 style g1 fill:#928374,stroke-width:0px,color:#ebdbb2;
 style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
 ```
@@ -130,7 +132,8 @@ style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
   下面会有详细的介绍，这里只是简要的引出内存属性这个概念。
   分配设备内存的时候需要指定**内存类型**和**堆类型**
 
-  ```mermaid
+
+```mermaid
   graph LR
   subgraph g0[VkPhysicalDeviceMemoryProperties]
   i-->a([memoryType])
@@ -139,8 +142,8 @@ style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
   style g1 fill:#928374,stroke-width:0px,color:#ebdbb2;
   style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
   end
+ ```
 
-  ```
 
     - 内存类型
        
@@ -204,25 +207,119 @@ style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
 
 ### 简介
 
-  表面是展示渲染结果的那个对象，可以不严谨地理解为呈现绘制结果的那个窗口区域。表面不是Vulkan核心的一部分。因为显示窗口不具备跨平台性，所以vulkan没有义务去做这个限制。
-  （其实OpenGL也没有）。首先查询物理设备的队列族是不是支持表面。输入参数为物理设备和所使用的队列族索引。
-  创建表面需要从实例创建，创建表面除了需要实例，还需要一个显示表面的窗口句柄，这个窗口句柄取决于平台。
+  表面是展示渲染结果的那个窗口对象，可以不严谨地理解为呈现绘制结果的区域。表面不是Vulkan核心的一部分。因为显示窗口不具备跨平台特性。
 
 ### 功能
 
+  表面并且和表面相关的API带有**KHR**后缀。
+
+  - 表面的创建需要依赖与实例(VkInstance)。
+  - 表面是否被支持取决于于物理设备(VkPhysicalDevice)(vkGetPhysicalDeviceSurfaceSupportKHR)。可见物理设备章节的说明图中红色的部分。
+  - 表面的创建需要依赖于一个平台相关的窗口句柄。
+
+  以Windows上的平台为例，下面是创建表面所需要的信息
+
+```c++
+// Provided by VK_KHR_win32_surface
+typedef struct VkWin32SurfaceCreateInfoKHR {
+  VkStructureType sType;
+  const void* pNext;
+  VkWin32SurfaceCreateFlagsKHR flags;
+  HINSTANCE hinstance;
+  HWND hwnd;            // win32 native window handle
+} VkWin32SurfaceCreateInfoKHR;
+
+```
+创建函数,需要用到Vulkan实例
+
+```c++
+// Provided by VK_KHR_win32_surface
+VkResult vkCreateWin32SurfaceKHR(
+  VkInstance instance,                 // vulkan instance is needed
+  const VkWin32SurfaceCreateInfoKHR* pCreateInfo,
+  const VkAllocationCallbacks* pAllocator,
+  VkSurfaceKHR* pSurface);
+
+```
 
 
 ## 平面(Plane,扩展)
 ### 简介
+  
+  与平面平行的概念是窗口句柄。根据Vulkan规范，这个扩展由VK_KHR_display提供。这个对象用来代替之前创建表面(VkSurface)用的平台相关的窗口句柄来创建一个表面。也就是说，这个扩展可以实现在没有窗口系统上直接把结果绘制到显示器上的功能。（目前为止，没见过使用这个扩展的任何Demo，我自己也没考察过）
+  
+  可以通过与之前创建表面的结构体以及API做对比
+
+  ```c++
+typedef struct VkDisplaySurfaceCreateInfoKHR {
+  VkStructureType sType;
+  const void* pNext;
+  VkDisplaySurfaceCreateFlagsKHR flags;
+  VkDisplayModeKHR displayMode;
+  uint32_t planeIndex;
+  uint32_t planeStackIndex;
+  VkSurfaceTransformFlagBitsKHR transform;
+  float globalAlpha;
+  VkDisplayPlaneAlphaFlagBitsKHR alphaMode;
+  VkExtent2D imageExtent;
+} VkDisplaySurfaceCreateInfoKHR;
+// no need for native window handle
+  ```
+
+  ```c++
+// Provided by VK_KHR_display
+VkResult vkCreateDisplayPlaneSurfaceKHR(
+  VkInstance instance,
+  const VkDisplaySurfaceCreateInfoKHR* pCreateInfo,
+  const VkAllocationCallbacks* pAllocator,
+  VkSurfaceKHR* pSurface);
+  ```
 
 ## 交换链(vkSwapchainKHR, 扩展)
 
 ### 简介
 
-交换链提供和管理表面中的数据，一般情况下是一个环形的缓冲，一些表面用来显示在窗口上，一些表面用来接受绘制的结果供接下来的展示用。
-不严谨地说就是帧缓冲的管理器。为什么不严谨，因为表面的数据不是Vulkan所管理的，而是操作系统。
+交换链提供和管理表面中的绘制结果数据，一般情况下是一个环形的缓冲，一些表面用来显示在窗口上，一些表面用来接受绘制的结果供接下来的展示用。相当于帧缓冲的管理器，把绘制完成的数据呈现到表面上。
 创建交换链需要指定之前创建的表面以及逻辑设备。因此交换链是被逻辑设备所拥有的。
-创建交换链需要一下信息：
+交换链由**VK_KHR_swapchain**扩展提供，因此如果需要交换链，创建逻辑设备时需要启用这个扩展。
+
+创建交换链时，至少有三个属性是有必要检查的。
+
+```c++
+// Provided by VK_KHR_swapchain
+typedef struct VkSwapchainCreateInfoKHR {
+  VkStructureType sType;
+  const void* pNext;
+  VkSwapchainCreateFlagsKHR flags;
+  VkSurfaceKHR surface;               // create before
+  uint32_t minImageCount;             // check
+  VkFormat imageFormat;               // check
+  VkColorSpaceKHR imageColorSpace;    // check
+  VkExtent2D imageExtent;             // check
+  uint32_t imageArrayLayers;
+  VkImageUsageFlags imageUsage;
+  VkSharingMode imageSharingMode;
+  uint32_t queueFamilyIndexCount;
+  const uint32_t* pQueueFamilyIndices;
+  VkSurfaceTransformFlagBitsKHR preTransform;
+  VkCompositeAlphaFlagBitsKHR compositeAlpha;
+  VkPresentModeKHR presentMode;         // check
+  VkBool32 clipped;
+  VkSwapchainKHR oldSwapchain;
+} VkSwapchainCreateInfoKHR;
+```
+
+  - 交换链的图像个数（缓冲个数），图像大小(```vkGetPhysicalDeviceSurfaceCapabilitiesKHR```)
+  - 支持的表面格式(```vkGetPhysicalDeviceSurfaceFormatsKHR```)
+  - 呈现模式(立即刷新，三缓冲等)(```vkGetPhysicalDeviceSurfacePresentModesKHR```)
+
+```c++
+VkResult vkCreateSwapchainKHR(
+  VkDevice device,
+  const VkSwapchainCreateInfoKHR* pCreateInfo,
+  const VkAllocationCallbacks* pAllocator,
+  VkSwapchainKHR* pSwapchain);
+```
 
 ## 缓冲(VkBuffer)
 ### 简介
