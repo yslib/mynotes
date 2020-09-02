@@ -118,55 +118,11 @@ style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
 
   图像格式属性的描述结构体为：
 
-
-
   通常，为了完整性，在创建一个需要指定格式的Vulkan对象时，比如创建一个R8B8GBA8格式的纹理，或者格式为24位的深度缓冲，需要查询物理设备是不是支持这种格式。但是一个格式还有附加的属性，比如这个格式是不是支持
 
 2. 设备内存：
 
-  Vulkan的内存属性比较复杂，任何需要设备内存的对象的创建都需要指定内存类型。如Image和Buffer。内存类型有很多，并且每种类型都由某种类型的堆负责创建。
-  当使用vkGetPhysicalDeviceMemoryProperty 查询相应物理设备支持的内存时，获取到的内存属性包括两个数组。第一个是支持的内存类型，
-  第二个是支持的内存堆。支持的内存类型是由一系列bitflags决定的，并且支持的内存类型里还包括了一个索引，这个索引就是由相应支持分配的堆所在数组的索引。
 
-  总的来说，Vulkan的设备内存属性用**堆类型**和**内存类型**两个维度来描述。从设计上来说，这两个维度是正交的。实际上考虑到实现，这两个维度并不是完全独立的。关于内存这一块，
-  下面会有详细的介绍，这里只是简要的引出内存属性这个概念。
-  分配设备内存的时候需要指定**内存类型**和**堆类型**
-
-
-```mermaid
-  graph LR
-  subgraph g0[VkPhysicalDeviceMemoryProperties]
-  i-->a([memoryType])
-  i-->b([memoryHeap])
-  end
-  style g1 fill:#928374,stroke-width:0px,color:#ebdbb2;
-  style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
-  end
- ```
-
-    - 内存类型
-       
-      内存类型标志位大概有这几种类型：（其余见官方规范手册）
-
-      1. DEVICE_LOCAL_BIT： 设备专用内存，一般是纹理或者顶点缓冲使用的内存
-
-      2. HOST_VISIBLE_BIT： 主机可见内存，表明内从可以被主机端映射，可以在主机端像访问CPU内存一样直接存取
-
-      3. COHERENT_BIT：对于主机可见内存的访问保持一致性，否则需要手动更新内存。
-
-      4. HOST_CACHED_BIT：这种内存会缓存在cpu端，但是主机端的访问可能会慢一些。
-
-      5. LAZILY_ALLOCATED_BIT：延迟分配。
-
-      这几种并不是随意组合的，合法的组合请参照Vulkan规范手册
-
-    - 堆类型
-
-      堆类型标志位大概由这几种类型：（其余见官方规范手册）
-
-      1. DEVICE_LOCAL_BIT: 设备中的堆，一般位于是运行Vulkan的硬件设备，比如GPU。这种就是大多数情况。
-
-      2. MULTI_INSTANCE_BIT: 当一个逻辑设备是由多个物理设备构成时，分配内存的时候会重复分配到每个物理设备中。（用在分布式上？）
 
 3. 支持的队列族：
 
@@ -320,26 +276,71 @@ VkResult vkCreateSwapchainKHR(
   VkSwapchainKHR* pSwapchain);
 ```
 
+
+
+## 缓冲(VkBuffer) 和 图像(VkImage)
+### 简介
+  需要指名Buffer 的用法。与OpenGL不同的是，这里创建好的buffer没有内存，需要绑定到另外的内存对象上。
+  Buffer通常用来存储线性的机构化或非结构化的数据。
+  相比于OpenGL，Vulkan中的Buffer设计的更为一般化和清晰，OpenGL由于沉重的历史包袱，各种版本的Buffer的API非常混乱。
+  从缓冲对象和图像对象我们可以观察到，Vulkan的概念反而更容易理解。下面的表格是关于缓冲对象的基本功能对应的API在Vulkan 和不同OpenGL版本之间的对比。
+
+  |功能|Vulkan|OpenGL(DSA)|OpenGL(non-DSA)|OpenGL(legacy)|
+  |------|------|----|----|----|
+  |创建缓冲对象|vkCreateBuffer|glCreateBuffers|glGenBuffers+glBindBuffer|----|
+  |分配缓冲存储空间|vkBindBufferMemory|glNamedBufferStorage|glBufferData|---|
+  |暂存缓冲(host visible)数据传输|memcpy+vkMapMemory|glMapNamedBufferRange|glMapBufferRange|---|
+  |设备缓冲(device local)数据传输|暂存缓冲+vkCmdCopyBuffer(*) | glNamedBufferData|glBufferData|---|
+  |创建图像对象|vkCreateImage|glCreateTextures|glGenTextures+glBindTexture|glGenTextures+glBindTexture|
+  |分配图像存储空间|vkBindBufferMemory|glTextureStorage{x}D|glTexStorage{x}D|glTexImage{x}D|
+  |设备本地图像数据传输1|暂存缓冲+vkCmdCopyImage(*)|glTextureSubImage{x}D|glTexSubImage{x}D|glTexImage{x}D|
+  |设备本地图像数据传输2|暂存缓冲+vkCmdCopyImage(*)|glMapNamedBufferRange+glReadPixel(PBO)|glMapBufferRange+glReadPixel|---|
+
+  这个表格基本上展示了Vulkan 的缓冲和图像的基本功能的API。但是图像的使用在Vulkan中更加复杂，因为Vulkan的特点之一，显式同步会在图像这里得到体现。具体来说就是图像的布局之间的转换需要自己编写代码进行转换。
+
+
+## 缓冲视图（VkBufferView）和 图像视图（VkImageView）
+### 简介
+
+资源视图是对资源的重新解释，并且赋予了这个资源更加具体的属性。尤其是对于图像来说，图像资源本身的信息并不多，如果要使用图像资源，还应该赋予更加具体的解释，这样才能实现资源的复用。
+
 ## 内存(VkMemory)
 ### 简介
+Vulkan的内存是Vulkan的重点特性之一。Vulkan中的资源对象与对应的内存是分离的。资源在使用之前，需要根据用途来绑定到不同的类型的内存对象。
 
+Vulkan的内存属性比较复杂，任何需要设备内存的对象的创建都需要指定内存类型。如Image和Buffer。内存类型有很多，并且每种类型都由某种类型的堆负责创建。
+当使用```vkGetPhysicalDeviceMemoryProperty``` 查询相应物理设备支持的内存时，获取到的内存属性包括两个数组。第一个是支持的内存类型，
+第二个是支持的内存堆。支持的内存类型是由一系列bitflags决定的，并且支持的内存类型里还包括了一个索引，这个索引就是由相应支持分配的堆所在数组的索引。
 
+总体来说，Vulkan的设备内存属性用**堆类型**和**内存类型**两个维度来描述。从设计上来说，这两个维度是正交的。实际上考虑到实现，这两个维度并不是完全独立的。关于内存这一块，
+下面会有详细的介绍，这里只是简要的引出内存属性这个概念。
+分配设备内存的时候需要指定**内存类型**和**堆类型**
 
-## 缓冲(VkBuffer)
-### 简介
+  - 内存类型
+      
+    内存类型标志位大概有这几种类型：（其余见官方规范手册）
 
-  与OpenGL中glCreateBuffer创建出来的对象等价。需要指名Buffer 的用法。与OpenGL不同的是，这里创建好的buffer没有内存，需要绑定到另外的内存对象上。
+    1. DEVICE_LOCAL_BIT： 设备专用内存，一般是纹理或者顶点缓冲使用的内存
 
-## 图像(VkImage)
+    2. HOST_VISIBLE_BIT： 主机可见内存，表明内从可以被主机端映射，可以在主机端像访问CPU内存一样直接存取
 
-### 简介
-  在Vulkan 里创建图像的一般方式也是先把图像数据放入暂存缓冲，然后从暂存缓冲复制到GPU中。然而与OpenGL不同的是这里的图像需要指定
-  图像布局(ImageLayout)。图像布局描述了当前图像所扮演的角色。图像的布局大概分为一下几种：
+    3. COHERENT_BIT：对于主机可见内存的访问保持一致性，否则需要手动更新内存。
 
-  1. PRESENT (VK_IMAGE_LAYOUT_PRESENT_SRC_KHR): 用来作为呈现图像，这个布局可以绘制到屏幕上。
+    4. HOST_CACHED_BIT：这种内存会缓存在cpu端，但是主机端的访问可能会慢一些。
+
+    5. LAZILY_ALLOCATED_BIT：延迟分配。
+
+    这几种并不是随意组合的，合法的组合请参照Vulkan规范手册
+
+  - 堆类型
+
+    堆类型标志位大概由这几种类型：（其余见官方规范手册）
+
+    1. DEVICE_LOCAL_BIT: 设备中的堆，一般位于是运行Vulkan的硬件设备，比如GPU。这种就是大多数情况。
+
+    2. MULTI_INSTANCE_BIT: 当一个逻辑设备是由多个物理设备构成时，分配内存的时候会重复分配到每个物理设备中。（用在分布式上？）
 
 ## 资源绑定
-
 ### 简介
 
   着色器的模型就是典型的SIMD模型，只不过每个线程是面向几何顶点或者屏幕上的片元调度的。一个SIMD模型的代码结构如下：
