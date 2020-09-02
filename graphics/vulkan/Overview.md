@@ -144,7 +144,6 @@ style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
   end
  ```
 
-
     - 内存类型
        
       内存类型标志位大概有这几种类型：（其余见官方规范手册）
@@ -320,6 +319,11 @@ VkResult vkCreateSwapchainKHR(
   const VkAllocationCallbacks* pAllocator,
   VkSwapchainKHR* pSwapchain);
 ```
+
+## 内存(VkMemory)
+### 简介
+
+
 
 ## 缓冲(VkBuffer)
 ### 简介
