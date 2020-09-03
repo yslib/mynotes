@@ -276,9 +276,7 @@ VkResult vkCreateSwapchainKHR(
   VkSwapchainKHR* pSwapchain);
 ```
 
-
-
-## 缓冲(VkBuffer) 和 图像(VkImage)
+## 资源：缓冲(VkBuffer) 和 图像(VkImage)
 ### 简介
   需要指名Buffer 的用法。与OpenGL不同的是，这里创建好的buffer没有内存，需要绑定到另外的内存对象上。
   Buffer通常用来存储线性的机构化或非结构化的数据。
@@ -298,8 +296,13 @@ VkResult vkCreateSwapchainKHR(
 
   这个表格基本上展示了Vulkan 的缓冲和图像的基本功能的API。但是图像的使用在Vulkan中更加复杂，因为Vulkan的特点之一，显式同步会在图像这里得到体现。具体来说就是图像的布局之间的转换需要自己编写代码进行转换。
 
+  资源这一部分属于各个Graphics API的核心内容，由于Vulkan的特性，这一部分更加复杂。在这里不做过多的说明。
 
-## 缓冲视图（VkBufferView）和 图像视图（VkImageView）
+  - [Modern OpenGL Functions](https://github.com/fendevel/Guide-to-Modern-OpenGL-Functions)
+
+
+
+## 资源视图：缓冲视图（VkBufferView）和 图像视图（VkImageView）
 ### 简介
 
 资源视图是对资源的重新解释，并且赋予了这个资源更加具体的属性。尤其是对于图像来说，图像资源本身的信息并不多，如果要使用图像资源，还应该赋予更加具体的解释，这样才能实现资源的复用。
@@ -320,15 +323,15 @@ Vulkan的内存属性比较复杂，任何需要设备内存的对象的创建�
       
     内存类型标志位大概有这几种类型：（其余见官方规范手册）
 
-    1. DEVICE_LOCAL_BIT： 设备专用内存，一般是纹理或者顶点缓冲使用的内存
+    1. **DEVICE_LOCAL_BIT**： 设备专用内存，一般是纹理或者顶点缓冲使用的内存
 
-    2. HOST_VISIBLE_BIT： 主机可见内存，表明内从可以被主机端映射，可以在主机端像访问CPU内存一样直接存取
+    2. **HOST_VISIBLE_BIT**： 主机可见内存，表明内从可以被主机端映射，可以在主机端像访问CPU内存一样直接存取
 
-    3. COHERENT_BIT：对于主机可见内存的访问保持一致性，否则需要手动更新内存。
+    3. **COHERENT_BIT**：对于主机可见内存的访问保持一致性，否则需要手动更新内存。
 
-    4. HOST_CACHED_BIT：这种内存会缓存在cpu端，但是主机端的访问可能会慢一些。
+    4. **HOST_CACHED_BIT**：这种内存会缓存在cpu端，但是主机端的访问可能会慢一些。
 
-    5. LAZILY_ALLOCATED_BIT：延迟分配。
+    5. **LAZILY_ALLOCATED_BIT**：延迟分配。
 
     这几种并不是随意组合的，合法的组合请参照Vulkan规范手册
 
@@ -336,9 +339,12 @@ Vulkan的内存属性比较复杂，任何需要设备内存的对象的创建�
 
     堆类型标志位大概由这几种类型：（其余见官方规范手册）
 
-    1. DEVICE_LOCAL_BIT: 设备中的堆，一般位于是运行Vulkan的硬件设备，比如GPU。这种就是大多数情况。
+    1. **DEVICE_LOCAL_BIT**: 设备中的堆，一般位于是运行Vulkan的硬件设备，比如GPU。这种就是大多数情况。
 
-    2. MULTI_INSTANCE_BIT: 当一个逻辑设备是由多个物理设备构成时，分配内存的时候会重复分配到每个物理设备中。（用在分布式上？）
+    2. **MULTI_INSTANCE_BIT**: 当一个逻辑设备是由多个物理设备构成时，分配内存的时候会重复分配到每个物理设备中。（用在分布式上？）
+
+
+Vulkan本身的内存分配次数有限制，鼓励分配大块内存作为内存池，然后在这个基础上进行二次分配。然后把资源绑定在分配的内存区间段上。所以，如果编写一个基于Vulkan的通用RHI，需要自己实现一个高效的内存分配器。
 
 ## 资源绑定
 ### 简介
