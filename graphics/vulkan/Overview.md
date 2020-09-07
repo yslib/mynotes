@@ -349,22 +349,22 @@ Vulkan本身的内存分配次数有限制，鼓励分配大块内存作为内�
 ## 资源绑定
 ### 简介
 
-  着色器的模型就是典型的SIMD模型，只不过每个线程是面向几何顶点或者屏幕上的片元调度的。一个SIMD模型的代码结构如下：
+  ```glsl
+  layout(location = 0) in vec3 pos;
+  layout(location = 1) in vec3 color;
+  layout(location = 2) in vec2 texCoord;
+
+  layout(binding = 0) uniform MVP{
+    mat4 model;
+    mat4 view;
+    mat4 proj;
+  }mvp;
+
+  layout(binding = 1) uniform Sampler2D tex;
 
   ```
-
-  global shared_var1,shared_var2
-
-  thread(var1, var2)
-  {
-    // do something with var1, var2
-
-    // do something with shared_var1 shared_var2
-  }
-  ```
-
-  可以看到，当一个线程被调度时,有属于当前线程自己的资源以所有线程都能访问的共享资源。同样，在着色器中，也有这两种资源。
-  局部变量对应逐顶点属性(Attribute)，共享资源对应统一变量(Uniform)。至于属性(Attribute) 和统一变量(Uniform)只是glsl中的修饰符。不同API名字虽然不同，
+  资源绑定就是如何为在渲染管线中的上述着色器代码中的变量指定数据。
+  局部变量对应逐顶点属性(Attribute)，共享变量对应统一变量(Uniform)。至于属性(Attribute) 和统一变量(Uniform)只是glsl中的修饰符。不同API名字虽然不同，
   但对应的都是这两个概念。
 
   
