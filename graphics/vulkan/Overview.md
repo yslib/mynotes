@@ -197,13 +197,15 @@ VkResult vkCreateWin32SurfaceKHR(
 
 ```
 
+从接口来看，判断设备是否支持交换链之后，在窗口系统下，我们就可以直接窗前表面（VkObject）对象了。
+
 
 ## 平面(Plane,扩展)
 ### 简介
   
   与平面平行的概念是窗口句柄。根据Vulkan规范，这个扩展由VK_KHR_display提供。这个对象用来代替之前创建表面(VkSurface)用的平台相关的窗口句柄来创建一个表面。也就是说，这个扩展可以实现在没有窗口系统上直接把结果绘制到显示器上的功能。（目前为止，没见过使用这个扩展的任何Demo，我自己也没考察过）
   
-  可以通过与之前创建表面的结构体以及API做对比
+  可以通过与之前创建表面的信息结构体做对比会发现，通过这种方法创建表面不许要窗口句柄。而是一个Plane，这个Plane对象直接从物理设备获得支持。
 
   ```c++
 typedef struct VkDisplaySurfaceCreateInfoKHR {
@@ -238,7 +240,11 @@ VkResult vkCreateDisplayPlaneSurfaceKHR(
 创建交换链需要指定之前创建的表面以及逻辑设备。因此交换链是被逻辑设备所拥有的。
 交换链由**VK_KHR_swapchain**扩展提供，因此如果需要交换链，创建逻辑设备时需要启用这个扩展。
 
-创建交换链时，至少有三个属性是有必要检查的。
+创建交换链时，至少有三个属性是有必要检查的。(或者说是必要的)
+
+  - 交换链的图像个数（缓冲个数），图像大小(```vkGetPhysicalDeviceSurfaceCapabilitiesKHR```)
+  - 支持的表面格式(```vkGetPhysicalDeviceSurfaceFormatsKHR```)
+  - 呈现模式(立即刷新，三缓冲等)(```vkGetPhysicalDeviceSurfacePresentModesKHR```)
 
 ```c++
 // Provided by VK_KHR_swapchain
@@ -263,10 +269,6 @@ typedef struct VkSwapchainCreateInfoKHR {
   VkSwapchainKHR oldSwapchain;
 } VkSwapchainCreateInfoKHR;
 ```
-
-  - 交换链的图像个数（缓冲个数），图像大小(```vkGetPhysicalDeviceSurfaceCapabilitiesKHR```)
-  - 支持的表面格式(```vkGetPhysicalDeviceSurfaceFormatsKHR```)
-  - 呈现模式(立即刷新，三缓冲等)(```vkGetPhysicalDeviceSurfacePresentModesKHR```)
 
 ```c++
 VkResult vkCreateSwapchainKHR(
@@ -507,14 +509,6 @@ cluster_buffer:cb->cluster_vertex
 |VkVertexInputAttributeDescription|glVertexAttribFormat|
 
 
-  ```
-  (示意图)
-  ```
-
-
-
-  ![dia1](../../res/vertexattr.svg)
-
-
-
+## 资源同步
+### 简介
 
