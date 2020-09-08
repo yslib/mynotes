@@ -174,7 +174,7 @@ style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
 
   以Windows上的平台为例，下面是创建表面所需要的信息
 
-```c++
+```cpp
 // Provided by VK_KHR_win32_surface
 typedef struct VkWin32SurfaceCreateInfoKHR {
   VkStructureType sType;
@@ -187,7 +187,7 @@ typedef struct VkWin32SurfaceCreateInfoKHR {
 ```
 创建函数,需要用到Vulkan实例
 
-```c++
+```cpp
 // Provided by VK_KHR_win32_surface
 VkResult vkCreateWin32SurfaceKHR(
   VkInstance instance,                 // vulkan instance is needed
@@ -207,7 +207,7 @@ VkResult vkCreateWin32SurfaceKHR(
   
   可以通过与之前创建表面的信息结构体做对比会发现，通过这种方法创建表面不许要窗口句柄。而是一个Plane，这个Plane对象直接从物理设备获得支持。
 
-  ```c++
+  ```cpp
 typedef struct VkDisplaySurfaceCreateInfoKHR {
   VkStructureType sType;
   const void* pNext;
@@ -223,14 +223,15 @@ typedef struct VkDisplaySurfaceCreateInfoKHR {
 // no need for native window handle
   ```
 
-  ```c++
+ 注意与之前的```vkCreateWin32SurfaceKHR``` 对比
+  ```cpp
 // Provided by VK_KHR_display
 VkResult vkCreateDisplayPlaneSurfaceKHR(
   VkInstance instance,
-  const VkDisplaySurfaceCreateInfoKHR* pCreateInfo,
+  const VkDisplaySurfaceCreateInfoKHR* pCreateInfo, // replace somthing like VkWin32SurfaceCreateInfoKHR that must be supported by window system
   const VkAllocationCallbacks* pAllocator,
   VkSurfaceKHR* pSurface);
-  ```
+```
 
 ## 交换链(vkSwapchainKHR, 扩展)
 
@@ -246,7 +247,7 @@ VkResult vkCreateDisplayPlaneSurfaceKHR(
   - 支持的表面格式(```vkGetPhysicalDeviceSurfaceFormatsKHR```)
   - 呈现模式(立即刷新，三缓冲等)(```vkGetPhysicalDeviceSurfacePresentModesKHR```)
 
-```c++
+```cpp
 // Provided by VK_KHR_swapchain
 typedef struct VkSwapchainCreateInfoKHR {
   VkStructureType sType;
@@ -270,18 +271,72 @@ typedef struct VkSwapchainCreateInfoKHR {
 } VkSwapchainCreateInfoKHR;
 ```
 
-```c++
+```cpp
 VkResult vkCreateSwapchainKHR(
   VkDevice device,
   const VkSwapchainCreateInfoKHR* pCreateInfo,
   const VkAllocationCallbacks* pAllocator,
   VkSwapchainKHR* pSwapchain);
 ```
-
-
-## 着色器模块
+## 管线状态
 ### 简介
-着色器相对来说是一个独立的模块。这个模块作为渲染管线状态的一部分，是创建管线必须的参数。
+在Vulkan当中，管线的所有状态被抽象成了一个对象，不再像OpenGL那样，是一个全局的隐式状态， 每个状态可以随时更改。而Vulkan需要在使用之前指定好所有的固定状态，
+然后创建管线状态对象(VkPipelineState)，这个管线状态需要绑定到一个渲染通道的子通道(VkSubpass of VkRenderPass)上使用。
+
+```dot
+digraph g {
+rankdir=TB
+graph [
+bgcolor="#665c54"
+style="filled"
+];
+node [
+shape="record"
+fontsize = "16"
+style = "filled"
+gradientangle=90
+];
+edge [];
+subgraph cluster0
+{
+label="PipelineStateObject"
+"node0"[ label= "Shader|PrimitiveType|Viewport|Scissor|Uniforms|Attributus|BlendState|DepthStencil|Rasterization|SampleState" ]
+}
+subgraph cluster1{
+  label="DynamicStates"
+  "node1"[label="...|LineWidth|..."]
+}
+}
+```
+### 组成
+1. #### 着色器模块
+着色器相对来说是一个独立的模块。这个模块作为渲染管线状态的一部分，是创建管线必须的参数。Vulkan核心功能中的着色器只支持SPIR-V字节码，NVDIA扩展支持GLSL。但是我们在编写着色器时一般都用高级的着色语言比如GLSL,HLSL。有很多工具可以把GLSL,HSLS先编译成字节码然后供Vulkan。[glslang](https://github.com/KhronosGroup/glslang)是Khronos官方维护的将GLSL（同时也支持HLSL）转换成AST的前端，以及将AST转换成SPIR-V的后端。通过这个除了可以实现把高级的着色语言转换成SPIR-V用来给Vulkan使用，还可以用来在不同的高级着色语言之间互转。除此之外，还有很多基于这个工具的二次封装的工具，更加易用。
+
+```dot
+
+digraph g {
+rankdir=LR
+graph [
+bgcolor="#665c54"
+style="filled"
+];
+node [
+shape="record"
+fontsize = "16"
+style="filled"
+gradientangle=90
+];
+edge [];
+subgraph cluster0{
+label="Shader"
+"node0"[label="... | VkShaderModule* |..."]
+}
+
+}
+```
+>[!TIP|style:flat]
+>当管线创建完成之后，着色器模块对象就可以被销毁了。
+
 
 ## 资源：缓冲(VkBuffer) 和 图像(VkImage)
 ### 简介
@@ -353,6 +408,9 @@ Vulkan的内存属性比较复杂，任何需要设备内存的对象的创建�
 
 Vulkan本身的内存分配次数有限制，鼓励分配大块内存作为内存池，然后在这个基础上进行二次分配。然后把资源绑定在分配的内存区间段上。所以，如果编写一个基于Vulkan的通用RHI，需要自己实现一个高效的内存分配器。
 
+![Memory](./res/memory.drawio.svg)
+
+
 ## 资源绑定
 ### 简介
 
@@ -384,11 +442,6 @@ Vulkan本身的内存分配次数有限制，鼓励分配大块内存作为内�
 
   在Vulkan 的API中，着色器局部变量也就是Attribute，用属性(Attribute)来描述。着色器共享变量(Uniform)信息用描述符(Descriptor)来描述。区分这两个概念有助于理清繁琐的Vulkan API。
 
-  ```dot
-  digraph g{
-    "node0"[shape="record" label="Attribute"];
-  }
-  ```
 
 ### 功能
 
@@ -516,3 +569,4 @@ cluster_buffer:cb->cluster_vertex
 
 ## 资源同步
 ### 简介
+
