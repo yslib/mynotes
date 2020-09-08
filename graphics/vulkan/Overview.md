@@ -278,6 +278,11 @@ VkResult vkCreateSwapchainKHR(
   VkSwapchainKHR* pSwapchain);
 ```
 
+
+## 着色器模块
+### 简介
+着色器相对来说是一个独立的模块。这个模块作为渲染管线状态的一部分，是创建管线必须的参数。
+
 ## 资源：缓冲(VkBuffer) 和 图像(VkImage)
 ### 简介
   需要指名Buffer 的用法。与OpenGL不同的是，这里创建好的buffer没有内存，需要绑定到另外的内存对象上。
