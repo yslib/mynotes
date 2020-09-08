@@ -511,4 +511,3 @@ cluster_buffer:cb->cluster_vertex
 
 ## 资源同步
 ### 简介
-
