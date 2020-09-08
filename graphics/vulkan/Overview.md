@@ -458,31 +458,7 @@ Vulkan本身的内存分配次数有限制，鼓励分配大块内存作为内�
 
   如果直接从API翻译，这几个概念对应的中文很拗口。他们几个之间的关系如下图
 
-
-  ```dot
-  digraph g{
-    splines=true
-    rankdir="LR"
-    bgcolor="#665c54"
-    node[style="filled" color="#ebdbb2"]
-    "layout0"[shape="record" label="VkDescirptorSetLayout"];
-    "layout1"[shape="record" label="VkDescirptorSetLayout"];
-    "binding0"[shape="record" label="VkDescirptorBinding(Buffer) | VkDescriptorBinding(Texture) | ..."];
-    "binding1"[shape="record" label="VkDescirptorBinding(Buffer) | VkDescriptorBinding(Sampler) | ..."];
-    "playout0"[shape="record" label="VkPipelineSetLayout"]
-    subgraph cluster2{
-      label="VkDescriptorPool"
-      "set0"[shape="record" label="VkDescriptorSet"]
-      "set1"[shape="record" label="VkDescriptorSet"]
-    }
-    playout0->layout0
-    playout0->layout1
-    layout0->binding0
-    layout1->binding1
-    layout0->set0
-    layout1->set1
-  }
-  ```
+![B](./res/layout.drawio.svg)
 
   顶点属性的buffer 也是要通过绘制指令绑定到管线。顶点属性一般指定：
   + 对应的顶点缓冲数组的索引（Buffer Index）
@@ -494,70 +470,6 @@ Vulkan本身的内存分配次数有限制，鼓励分配大块内存作为内�
 
 在vulkan中，上面5个属性的指定被分配在了两个结构体中。分别是```VkVertexInputBindingDescription``` 和 ```VkVertexInputAttributeDescription```其中前者指定了绑定索引(binding),这个也就是在后续进行绘制指令提交时指定的缓冲区数组的索引。以及步长(stride),即每一个被解释的元素的大小。后者指定了绑定的着色器中的变量（location）。这两个描述结构体是的参数正交地描述了顶点属性的配置。
 
-```dot
-digraph g {
-rankdir=LR
-graph [
-bgcolor="#665c54"
-style="filled"
-];
-node [
-shape="record"
-fontsize = "16"
-style="filled"
-gradientangle=90
-];
-edge [
-];
-subgraph cluster0
-{
-label="VkPipelineVertexInputStateCreateInfo"
-bgcolor="#928374"
-"node2" [label= "VkVertexInputBindingDescription* | VkVertexInputAttributeDescription* " shape= "record"];
-}
-subgraph cluster_vertex{
-  label = "Vertex"
-  "pos"[label="{pos[0] | pos[1] | pos[2]}" ]
-  "col"[label="{col[0] | col[1] | col[2]}" ]
-  "tex"[label="{tex[0] | tex[1]}"]
-  compound=true
-}
-
-subgraph cluster_binding
-{
-bgcolor="#928374"
-label = "VkVertexInputBindingDescription[]"
-"binding0"[ label = "{<b1>binding=0| stride=sizeof(Vertex) | InputRate}"]
-"binding1"[ label = "{<b1>binding=0| stride=sizeof(Vertex) | InputRate}"]
-}
-subgraph cluster_attr
-{
-bgcolor="#928374"
-"attr0"[label="{location=0 | binding=0 | format=RGB | offset=offsetof(Vertex,pos)}"]
-"attr1"[label="{location=1 | binding=0 | format=RGB | offset=offsetof(Vertex,col)}"]
-"attr2"[label="{location=2 | binding=0 | format=RG | offset=offsetof(Vertex,tex)}"]
-label="VkInputVertexAttributeDescription[]"
-compound=true
-}
-
-subgraph cluster_buffer
-{
-  label="VkBuffer[]"
-  "buffer0"[label="{<f0> pos|<f1> col|<f2> tex|<f3> pos|<f4> col | <f5> tex | <f6>...}" shape="record"]
-  "buffer1"[label="{<f0> pos|<f1> col|<f2> tex|<f3> pos|<f4> col | <f5> tex | <f6>...}" shape="record"]
-  compound=true
-  lhead="cb"
-}
-
-node2->c11
-node2->c21
-"c11":b1->"buffer0":f0[label="VkBuffer[0]"]
-cluster_buffer:cb->cluster_vertex
-
-
-}
-
-```
 
   + 下图为Vulkan和OpenGL 中进行逐顶点属性绑定API的对比表格
 
