@@ -458,7 +458,7 @@ Vulkan本身的内存分配次数有限制，鼓励分配大块内存作为内�
 
   如果直接从API翻译，这几个概念对应的中文很拗口。他们几个之间的关系如下图
 
-![B](./res/layout.drawio.svg)
+![B](./res/resbind.drawio.svg)
 
   顶点属性的buffer 也是要通过绘制指令绑定到管线。顶点属性一般指定：
   + 对应的顶点缓冲数组的索引（Buffer Index）
