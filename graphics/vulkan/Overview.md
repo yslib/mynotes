@@ -337,6 +337,10 @@ label="Shader"
 >[!TIP|style:flat]
 >当管线创建完成之后，着色器模块对象就可以被销毁了。
 
+2. #### 渲染通道
+
+![renderpass](./res/renderpass.drawio.svg)
+
 
 ## 资源：缓冲(VkBuffer) 和 图像(VkImage)
 ### 简介
