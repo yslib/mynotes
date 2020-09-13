@@ -482,7 +482,60 @@ Vulkan本身的内存分配次数有限制，鼓励分配大块内存作为内�
 |VkVertexInputBindingDescription|glVertexArrayVertexBuffer|glVertexAttribPointer|
 |VkVertexInputAttributeDescription|glVertexAttribFormat|
 
+## GPU指令和指令缓冲区
+### 简介
+在Vulkan当中，```vkCmd*```类型的GPU指令（比如数据传输，管线绑定，渲染通道操作，以及Drawcall）都是通过提交到指令缓冲(VkCommandBuffer)中异步执行的。
+指令缓冲需要从指令池中分配，指令池的创建需要指定队列族的索引。我们在创建逻辑设备的时候指定了这个逻辑设备所需要的队列族。因此创建指令池指定的队列族要是创建指令池的逻辑设备所包含队列族的子集。
+
+下面是一些常用的GPU指令，这些指令的上下文参数就是指令缓冲。调用每个指令的时候需要指定一个指令缓冲。当最终提交命令缓冲时，调用VkQueueSubmit提交相应的指令缓冲，指令开始真正地执行。
+
+
+|Vulkan|Render Pass Scope| Supported Queue Types|Pipeline Type|Level|
+|:----|:-----|:-----|:-----|:-----|
+|vkCmdCopyImage|Outside|Transfer Graphics Compute|Transfer|Primary Secondary|
+|vkCmdCopyBuffer|Outside|Transfer Graphics Compute|Transfer|Primary Secondary|
+|vkCmdCopyBufferToImage|Outside|Transfer Graphics Compute|Transfer|Primary Secondary|
+|vkCmdVertexBuffer|Both|Graphics||Primary Secondary|
+|vkCmdDraw|Inside|Graphics|Graphics|Primary Secondary|
+|vkCmdDrawIndexed|Inside|Graphics|Graphics|Primary Secondary|
+|vkCmdDrawIndirected|Inside|Graphics|Graphics|Primary Secondary|
+|vkCmdBindPipeline|Both|Graphics Compute||Primary Secondary|
+|vkCmdBeingRenderPass|Outside|Graphics|Graphics|Primary|
+|vkCmdEndRenderPass|Inside|Graphics|Graphics|Primary|
+|vkCmdNextSubpass|Inside|Grahpics|Graphics|Primary|
+|vkCmdPipelineBarrier|Both|Transfer Graphics Compute||Primary Secondary|
+|**vkQueueSubmit**|||||
+|**vkQueuePresentKHR**|
+
+执行指令的具体流程如下:
+
+在开始执行指令之前需要做以下操作
+- 创建指令池
+- 从指令池中分配相应的指令缓冲，并指定指令缓冲的级别
+  
+  指令缓冲级别表明这个指令缓冲对应的指令是否可以作为另外一个指令缓冲的子指令序列。也就是我们可以把一个标记为Secondary的指令缓冲作为标记为Primary指令缓冲的子指令序列(通过```vkBeginCommandBuffer```来指定)。这样的好处是，我们可以把一些列常用的指令预定义为一个Secondary指令缓冲，然后作为一个指令序列复用。
+
+执行指令时：
+所有```vkCmd*```类型的往指令缓冲中提交指令的API需要在```vkBeginCommandBuffer``` 和 ```vkEndCommandBuffer```之间调用，用指令缓冲对象作为上下文参数。
+```vkBeginCommandBuffer```为指令缓冲指定了一个很重要的参数，即指定这个指令缓冲的具体用法。其次，这个指令起到了重置指令缓冲的作用。
+- VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT: 提交后就被用来记录新的指令。适合存储一次性的指令序列，比如数据传输。
+- VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT:在渲染通道内使用的辅助指令缓冲。
+- VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT：在等待执行的时候，仍然可以提交指令。
+
+![Command](./res/cmd.drawio.svg)
+
+
 
 ## 资源同步
 ### 简介
+GPU的工作模式相对于CPU端来说是异步的，也就是当我们提交了指令缓冲的时候，API立即返回，并且执行。同时，我们CPU端也做了很多往GPU进行数据传输或者读写GPU中数据的工作。由于是异步的工作流，如果没有任何同步措施，我们无法保证GPU是否已经读取到我们传输的最新数据，或者CPU读取到GPU已经处理好的数据。因此，为了正确完成渲染工作，我们还需要让CPU和GPU之间在资源访问这一部分进行先后的配合，这就是同步。
 
+上一章介绍了Vulkan中的GPU指令的执行过程，由于Vulkan是一个完全显式的API，它的资源同步自然也需要应用程序来控制。Vulkan提供了三种不同粒度的同步方法。
+
+- 栅栏(VkFence)
+- 事件(VkEvent)
+- 信号量(VkSemophore)
+  
+
+除此之外，Vulkan为我们提供了一个非常重要的同步方法，那就是指令缓冲。指令缓冲中的指令是保证按提交顺序执行的，这也是指令缓冲的意义。但是提交的多个指令缓冲之间，以及每个指令缓冲中的GPU指令和CPU端的操作之间的
+逻辑上的依赖关系，是Vulkan不保证的。因为GPU要通过异步的方式实现高并发来达到最高的效率。
