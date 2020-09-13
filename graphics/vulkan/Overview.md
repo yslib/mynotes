@@ -529,13 +529,50 @@ Vulkan本身的内存分配次数有限制，鼓励分配大块内存作为内�
 ## 资源同步
 ### 简介
 GPU的工作模式相对于CPU端来说是异步的，也就是当我们提交了指令缓冲的时候，API立即返回，并且执行。同时，我们CPU端也做了很多往GPU进行数据传输或者读写GPU中数据的工作。由于是异步的工作流，如果没有任何同步措施，我们无法保证GPU是否已经读取到我们传输的最新数据，或者CPU读取到GPU已经处理好的数据。因此，为了正确完成渲染工作，我们还需要让CPU和GPU之间在资源访问这一部分进行先后的配合，这就是同步。
-
-上一章介绍了Vulkan中的GPU指令的执行过程，由于Vulkan是一个完全显式的API，它的资源同步自然也需要应用程序来控制。Vulkan提供了三种不同粒度的同步方法。
-
-- 栅栏(VkFence)
-- 事件(VkEvent)
-- 信号量(VkSemophore)
   
 
 除此之外，Vulkan为我们提供了一个非常重要的同步方法，那就是指令缓冲。指令缓冲中的指令是保证按提交顺序执行的，这也是指令缓冲的意义。但是提交的多个指令缓冲之间，以及每个指令缓冲中的GPU指令和CPU端的操作之间的
 逻辑上的依赖关系，是Vulkan不保证的。因为GPU要通过异步的方式实现高并发来达到最高的效率。
+
+
+上一章介绍了Vulkan中的GPU指令的执行过程，由于Vulkan是一个完全显式的API，它的资源同步自然也需要应用程序来控制。Vulkan提供了三种不同粒度的同步方法。
+
+- 栅栏(VkFence)
+  栅栏是同步GPU和CPU之间的一种方式。一般在```vkQueueSubmit```当中指定栅栏对象，CPU端负责查询栅栏状态，判断所提交的执行序列是否执行完成。是一种指令缓冲级别的同步对象。粒度较大。见而言之，栅栏就是CPU端去查询这个对象状态，然后判断伴随这个对象提交的一系列指令是否执行完成，并且栅栏可以以等待的方式判断栅栏的状态（挂起，线程切换），因此需要操作系统的支持。等待单一的栅栏和直接使用```vkQueueWaitIdle```本质上是一样的。
+
+  |Vulkan|Render Pass Scope| Supported Queue Types|Pipeline Type|Level|
+  |:----|:-----|:-----|:-----|:-----|
+  |vkQueueSubmit|||||
+  |vkQueuePresentKHR|||||
+- 事件(VkEvent)
+
+  事件是细粒度的同步方法。它可以同步一个指令缓冲内部之间的指令。因此，它除了在主机端可以查询事件状态之外，还可以在GPU端查询时间状态。同时，设备端是不能以等待的方式查询事件的状态的，只能自旋查询。
+  相反，事件在设备端以挂起的方式等待事件的完成。
+
+  |Vulkan|Render Pass Scope| Supported Queue Types|Pipeline Type|Level|
+  |:----|:-----|:-----|:-----|:-----|
+  |vkCmdSetEvent|Outside|Graphics Compute||Primary Secondary|
+  |vkCmdResetEvent|Outside|Graphics Compute||Primary Secondary|
+
+  
+- 信号量(VkSemophore)
+  信号量不能显式的设置或等待。它同步不同缓冲区之间的资源。使用```vkQueueSubmit```时，指定了需要等待信号和通知信号。所提交的指令还中只有在指定的等待信号被通知时执行，执行完成后通知指定的通知信号。
+  典型的应用是向不同的队列中提交指令缓冲，并且指令缓冲之间有逻辑上的先后顺序。比如绘制一些东西的时候需要依赖计算管线的结果，那么就向创建自计算队列的指令缓冲里提计算作指令，向创建自图形队列的指令缓冲里提交绘制指令。然后设置好决定先后依赖关系的信号量。然后一次性用```vkQueueSubmit```提交。
+
+  |Vulkan|Render Pass Scope| Supported Queue Types|Pipeline Type|Level|
+  |:----|:-----|:-----|:-----|:-----|
+  |vkQueueSubmit|||||
+  |vkQueuePresentKHR|||||
+
+
+下表列出了三种同步原语的对比。
+
+||栅栏(VkFence)|事件(VkEvent)|信号量(VkSemophore)|
+|:-----|:-----|:-----|:-----|
+|粒度|指令缓冲和主机端|指令缓冲之内|指令缓冲之间|
+|是否涉及主机端同步|是|是|否|
+
+
+图示：
+
+![Sync](./res/sync.drawio.svg)
