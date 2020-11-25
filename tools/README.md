@@ -41,3 +41,25 @@ systemctl start smb.service
   writable=yes
   read only=no
 ```
+
+7. X Forwarding to windows
+当（从Windows）ssh到服务器上时，有时候需要临时运行一下Linux下面的X11程序。我们需要设置X11转发。
+
+### X-Client配置：
+对于OpenSSH
+把sshd-config文件下的如下几项的注释去掉并重启ssh server
+
+```
+AllowTcpForwarding yes
+X11Forwarding yes
+X11DisplayOffset 10
+```
+
+并且导入环境变量
+```
+export DISPLAY=ip:0.0   # ip 是ssh客户端的ip
+```
+
+### X-Server配置：
+在Windows下，推荐使用VcXsrv 作为 X-Server
+链接时带上-X参数
