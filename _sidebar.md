@@ -1,4 +1,3 @@
-
 <!-- docs/_sidebar.md -->
 
 * [All About 3D Translation](/graphics/translation/ "All about 3d translation")
@@ -13,4 +12,5 @@
 * [Development & Debug](/d&d/includeandimport.md "D&D")
   * [Include and Import](/d&d/includeandimport.md "D&D")
   * [折腾](/d&d/env.md "env")
+  * [Quake2 Code Review](/d&d/quake2review.md "quake2review")
 * [Tools](/tools/ "Tools")
