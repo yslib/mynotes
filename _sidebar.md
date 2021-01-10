@@ -14,3 +14,5 @@
   * [折腾](/d&d/env.md "env")
   * [Quake2 Code Review](/d&d/quake2review.md "quake2review")
 * [Tools](/tools/ "Tools")
+
+* [Temporary](/mathematics/vocabulary.md "vocabulary")

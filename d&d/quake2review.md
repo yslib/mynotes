@@ -136,14 +136,23 @@ CPU性能，所以颜色位宽不能太大。
     {
       R_RenderWorld()
       {
-        // clip if need
+        ...
+          R_RecursiveWorldNode()
+          {
+              // clip if need
 
-        R_RecursiveWorldNode (front or back)
+              R_RecursiveWorldNode (front or back)
 
-        // Draw (Generate surface stack)
+              ...
+              R_RenderFace()
+              {
+                //Push the surface into stack
+              }
+              ...
 
-        R_RecursiveWorldNode (back or front)
-
+              R_RecursiveWorldNode (back or front)
+          }
+        ...
       }
 
       R_DrawBEnittiesOnLists(); //
