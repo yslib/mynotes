@@ -62,7 +62,7 @@ The note can be viewed at broswer, you can use dictionary plugin of broswer to l
 1. Compartments : 架子，舱室
 
 
-## DD-201
+## DD-200
 ### Sentence:
     Armageddon and how to survive it is currently trending. A lot of people wanna 
     know "how can they survive the events that lead up to the end of the world."
@@ -71,3 +71,23 @@ The note can be viewed at broswer, you can use dictionary plugin of broswer to l
 ### New and key words:
 1. Armageddon: 世界末日
 2. Trending: very popular right now
+
+## DD-201
+### Sentences
+    Oh, I've got lots of letters for santa today. And every years ,they are the same. 
+    Some ask for toys, but lot of ask questions like, you take this one :
+    "Dear Santa, why do you wear a red suit?",
+    "My turn, Dear Santa, why do you come down the chimney when I'm asleep.",
+    "Why do you have whiskers? ",
+    "Why do you live at North Pole? "
+
+
+### New and key words:
+1. Chimney: 烟囱
+2. Whiskers: 络腮胡
+3. North Pole: 北极
+
+### Note:
+    The connection "I have .." -> " I've .."
+    "You take this one"
+
