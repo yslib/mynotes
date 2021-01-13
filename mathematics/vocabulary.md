@@ -91,3 +91,16 @@ The note can be viewed at broswer, you can use dictionary plugin of broswer to l
     The connection "I have .." -> " I've .."
     "You take this one"
 
+
+## DD-205
+### Sentences
+    You know, Ronnie, folks who save hundreds of dollars by switching to Geico sure are happy?
+    How happy are they, Jimmy? I'd say they are happier than bodybuilder directing traffic.
+    He does looks happy.
+
+### New and key words:
+1. bodybuilder:
+
+### Note:
+    "Like a bodybuilder directing traffic", it's a great metephore that can descripte a person is very happy.
+

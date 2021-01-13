@@ -7,3 +7,11 @@
 6. Doppler Effects
 7. Staggering
 8. squasars
+accretion disk
+trajectory
+stress energy tenson
+oscillation
+nuclear fusion
+detuerium
+helium
+annihilate
