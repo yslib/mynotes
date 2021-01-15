@@ -16,3 +16,4 @@
 * [Tools](/tools/ "Tools")
 
 * [Temporary](/mathematics/vocabulary.md "vocabulary")
+* [Physics](/mathematics/physics.md "physics")
