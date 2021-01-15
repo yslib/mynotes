@@ -1,10 +1,10 @@
-# 最小作用量原理（哈密顿原理）
+# 哈密顿原理（最小作用量原理）
 
-最近学习理论力学，看朗道那本《力学》上来就是最小作用量原理，把人搞得非常晕。只看那本书是不行的，完全是毫无感情的客观描述，
+最近学习分析力学，朗道那本《力学》开篇就是最小作用量原理，把人搞得非常晕。只看那本书是不行的，完全是毫无感情的客观描述，
 对于理解这种抽象的定律毫无帮助。去年年初就打算学习理论力学，当时找了哈工大任延宇老师的理论力学公开课看，当时感觉讲得非常好，
-然而没耐心，看了几节就弃坑了。最近发现不得不用这些东西了，所以这次打算重新开始，并且坚持学完。
+然而没耐心，看了几节就弃坑了。最近打算坚持学完这门课。
 
-然而这门课程在最后才对哈密顿原理进行简单的讲解，但是讲得足够明白，比自己看书来的快多了，而且老师思维很清晰。鉴于哈密顿原理的
+然而这门课程在最后才对哈密顿原理进行简单的讲解，但是讲得足够明白，比自己看书来的快多了，而且老师讲得非常清晰。鉴于哈密顿原理的
 重要性，这里打算详细记录一下哈密顿原理的来龙去脉。下面的这些笔记主要是用来加深自己对哈密顿原理的理解，更推荐大家去看任老师的课程视频。
 
 由于哈密顿原理比较抽象，数学背景较强，直接入手的话没有任何东西能够带给我们直观的理解，所以还是要从应用入手。
@@ -21,7 +21,10 @@ $$
 f(x+\delta x,y + \delta y,z + \delta z) = f(x,y,z) + \delta{x}f'_x(x,y,z) + \delta{y}f'_y(x,y,z) + \delta{z}f'_z(x,y,z) + o^n
 $$
 
-
+3. 分部积分公式:
+$$
+\int{u(x)v'(x)dx} = u(x)v(x) - \int{u'(x)v(x)dx}
+$$
 
 ## 速降线问题
 
@@ -101,5 +104,27 @@ $$
 
 注意其中的 **微分的变分 $\delta y'$**, 这里是可以交换的,也就是 $\delta y'$可以先求导再变分 那就可以写成
 $$
-\delta J[y] = \int_{x_1}^{x_2}{(\frac{\partial F}{\partial y}\delta y+\frac{\partial F}{\partial y'}\frac{d(\delta y)}{dx})dx}
+\delta J[y] = \int_{x_1}^{x_2}{(\frac{\partial F}{\partial y}\delta y+\frac{\partial F}{\partial y'}\frac{d(\delta y)}{dx})dx} = \int_{x_1}^{x_2}{\frac{\partial F}{\partial y}\delta y dx}+\int_{x_1}^{x_2}{\frac{\partial F}{\partial y'}\frac{d(\delta y)}{dx}dx}
 $$
+
+看到这种被积函数是由一些因子相乘，且某一个因子和积分变量的积是某个函数的全微分的形式$\int_{x_1}^{x_2}{\frac{\partial F}{\partial y'}\frac{d(\delta y)}{dx}dx}$，比如这里的 **$\frac{d(\delta y)}{dx}dx$** 就是全微分 **$d(\delta y)$** ，那就使用分部积分：
+
+$$
+\int_{x_1}^{x_2}{\frac{\partial F}{\partial y'}\frac{d(\delta y)}{dx}dx} = \int_{x_1}^{x_2}{\frac{\partial F}{\partial y'}}d(\delta y) = \frac{\partial F}{\partial y'}\delta y \mid_{x_1}^{x_2} - \int_{x_1}^{x_2}{\delta y \frac{d}{dx}(\frac{\partial F}{\partial y'})}
+$$
+
+那么
+$$
+\delta J[y] =  \frac{\partial F}{\partial y'}\delta y \mid_{x_1}^{x_2} + \int_{x_1}^{x_2}{(\frac{\partial F}{\partial y} - \frac{d}{dx}\frac{\partial F}{\partial y'})}\delta ydx
+$$
+ 因为$\delta y(x_1) = \delta y(x_2) = 0$,所以第一项为0。要使$\delta J[y] = 0$,那就只能使后面的
+$$
+\int_{x_1}^{x_2}{(\frac{\partial F}{\partial y} - \frac{d}{dx}\frac{\partial F}{\partial y'})}\delta ydx \equiv 0
+$$
+
+因为$\delta y$是任意的，所以要使积分为0,则必要条件就是
+$$
+(\frac{\partial F}{\partial y} - \frac{d}{dx}\frac{\partial F}{\partial y'}) = 0
+$$
+
+这个方程就是力学中的 **拉格朗日方程**。
