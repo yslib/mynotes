@@ -15,5 +15,6 @@
   * [Quake2 Code Review](/d&d/quake2review.md "quake2review")
 * [Tools](/tools/ "Tools")
 
-* [Temporary](/mathematics/vocabulary.md "vocabulary")
-* [Physics](/mathematics/physics.md "physics")
+* [Temporary](/philosophy/vocabulary.md "vocabulary")
+* [Physics](/philosophy/physics.md "physics")
+* [Astronomy](/philosophy/astronomy.md "physics")
