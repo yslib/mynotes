@@ -15,6 +15,10 @@
   * [Quake2 Code Review](/d&d/quake2review.md "quake2review")
 * [Tools](/tools/ "Tools")
 
-* [Temporary](/philosophy/vocabulary.md "vocabulary")
-* [Physics](/philosophy/physics.md "physics")
-* [Astronomy](/philosophy/astronomy.md "physics")
+* [Temporary](/temporary/vocabulary.md "vocabulary")
+
+* [Principia]()
+  * [Hamillton's Principle](/principia/physics.md "physics")
+  * [Astronomy](/principia/astronomy.md "astronomy")
+  * [Centrol Force](/principia/centrolforce.md "centrolforce")
+  * [Coordinate](/principia/coordinates.md "coordinates")
