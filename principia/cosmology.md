@@ -70,3 +70,15 @@ The primordial nuclear reactions produced a universe of 25% Helium and 75% Hydro
 The microwave background is extremely uniform - fluctuations of only one part in 100,000. Gravitational instability turned that very smooth universe into the lumpy one we see today. These tiny fluctuations probably came from quantum fluctuations when the universe was VERY young. These were somehow amplified up to the sizes of galaxy super-clusters. We don't know why the fluctations are the size we observe.
 
 We also don't know why there is such a large imbalance between matter and antimatter in our universe.
+
+
+
+### Age of Universe
+If you assume that space is expanding at a uniform pace, you can estimate the age of the universe.
+
+One way is to look at an object at distance D, with redshift z. Its motion away from us is cz (speed of light times the redshift). So if you extrapolate backwards, it must have been right here on Earth a time  𝑡=𝐷𝑐𝑧  ago.
+
+An alternative way to think about it is that when light set out from an object at redshift z, the universe had a scale factor 
+$𝑎(𝑡)=\frac{1}/{1+𝑧}$ . The time t is just $\frac{D}{c}$. So if (for example) the scale factor 1 billion years ago was 0.9, then if the expansion was steady, the scale factor would have been 0 at a point in time ten billion years ago.
+
+Some objects were discovered that seemed, according to this theory, to be older than the universe. A universe that started off expanding fast then decelerated would make this worse.
