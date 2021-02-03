@@ -53,6 +53,29 @@ The note can be viewed at broswer, you can use dictionary plugin of broswer to l
 2. Sustain: 维持，支撑
 3. Late brother: 已故的兄弟
 
+## DD-59
+### Sentences:
+    This iceberg here, there's outcroppings under the water. And uh, 
+    sea ice, iceberg ice is very hard, so it's almost like, it could
+    almost be like a can opener. And when probably the Titanic went
+    by it, it just sliced a hole in it like you would with a manually can opener. 
+
+### New and key words:
+1. outcropping: 露出的部分，指山峰的顶端，这里说的是冰山的顶部在水的下面。
+
+## DD-60
+### Sentecnes:
+    It's snowing, it's beautiful we're out in the middle of nowhere.
+    I'm freezing.! And I'm about to be pulled by 8 dogs in a toboggan. Uh really, it doesn't get much more rermant than this.
+
+### New and key words
+1. toboggan: 雪橇, Sleigh (Sled)
+
+### Good Expression:
+    - in the middle of nowhere: nowhere 是一个比喻，雪地就像无人之境
+    - it doesn't get much more something that this: 没有比something 更地道了，表示非常正宗
+
+
 ## DD-199
 ### Sentence:
     Make sure your belongings are hidden away in the compartments above 
