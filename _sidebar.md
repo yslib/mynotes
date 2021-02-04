@@ -19,7 +19,7 @@
 
 * [Principia](/principia/content.md "content")
   * [Hamillton's Principle](/principia/physics.md "physics")
-  * [Cosmology](/principia/Cosmology.md "astronomy")
+  * [Cosmology](/principia/cosmology.md "cosmology")
   * [Coordinate](/principia/coordinates.md "coordinates")
   * [Conservation](/principia/conservation.md "conservation")
   * [Centrol Force](/principia/centrolforce.md "centrolforce")
