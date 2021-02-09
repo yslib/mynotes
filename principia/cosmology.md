@@ -236,6 +236,8 @@ If you distribute identical objects uniformly through space, the closer ones wil
 
 The number of these objects within range of your telescope will be proportional to the volume you survey, which is proportional to $r^3$ . Thus the number seen brighter than f is $∝f^{−3/2}$ . The number of Gamma ray bursts rises slower than this, meaning that they cannot be uniformly spread at all distances.
 
+> 这里我也不是很明白
+
 ### Counterpart
 
 New satellites gave accurate enough positions so that optical counterparts could be tracked down. This showed that the gamma-ray bursts were coming from cosmological distances, and hence had stupendous luminosities: up to  $10^{48}J$.
@@ -252,6 +254,35 @@ Long soft bursts seem to come from Type-2 supernova - when dying massive stars r
 
 Short-hard bursts are more mysterious but seem to come from merging compact objects. The recent discovery of gravity waves from a short-hard burst GW170817 showed that this one, at least, came from a pair of merging neutron stars.
 
+>通过更先进的卫星定位，我们能够发现伽马射线暴的具体位置，我们能够得到射线源的辐射能量，这个能量非常巨大。如果这个能量是均匀的往空间辐射，超出了我们的认知。所以可能是只超某个方向辐射具体大的能量。这一次的能量发射相当于太阳30亿年的能量总和。
+
 ### Fast Radio Bursts
 
 More recently, a lot of interest has focussed on a newly discovered and different phenomenon - fast radio bursts. These are really fast: milli-seconds or less. On Earth we see a radio pulse that sweeps downwards in frequency, but this is due to the lower frequency signals being delayed as they pass through ionised inter-galactic gas. These bursts are very common, and at least some of them come repeatedly from the same objects. Most likely they come from magnetic neutron stars of some type, though the details are obscure.
+
+## Dark Matter 
+
+### Measuring the mass of a galaxy
+One way is by adding up the starlight. Use the inverse square law to work out the luminosity from the observed flux. Multiply this by a mass-to-light ratio (typically around 4 solar masses per solar luminosity) to estimate the mass in stars. The mass-to-light ratio differs for different types of star - a value of around 4 is an average of the sort of stars in our own galaxy (massive stars put out a lot of light per unit mass, while smaller stars have lower masses but their luminosities are lower still).
+
+A second way is to find something orbiting around a galaxy and work out how strong the centripetal force needs to be to hold it in that orbit. Gravity must supply this centripetal force so you can work out how much mass needs to be present.
+
+Centripetal force is given by
+
+$$
+f = \frac{mv^2}{r}
+$$
+
+Set thie equal to the gravity...
+
+$$
+\frac{GMm}{r^2} = \frac{mv^2}{r}
+$$
+
+> 测量一个星系的质量有两种方法，第一个是通过已知的每单位质量的亮度的统计数据，来估计其他星系的质量，当然我们需要预先假设星系的组成，因为不同的行星每单位质量的光强不同。另一种是观察向心加速度来确定一个星系的质量。这里涉及到一个旋转速率分布曲线。内部的可以用光学望远镜测量红移，外部的气体可以用射电望远镜测量多普勒红移来测量速度。
+
+Thus if you know how far out the orbiting thing is, and how fast it is moving, you can work out the mass.
+
+Note that this technique tells you (approximately) only the mass at radii less than r. By combining measurements at different radii you can estimate how the mass is distributed.
+
+The gravitational technique finds much higher masses than counting starlight - so there must be something extra - dark matter. The discrepancy is greatest on larger scales - most of the dark matter is on the outskirts of galaxies.
