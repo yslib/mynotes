@@ -23,3 +23,5 @@
   * [Coordinate](/principia/coordinates.md "coordinates")
   * [Conservation](/principia/conservation.md "conservation")
   * [Centrol Force](/principia/centrolforce.md "centrolforce")
+  * [Mass Point Mechanics](/principia/masspoint.md "mass point mechanics")
+  * [Rigid Body](/principia/rigidbody.md "rigid body")
