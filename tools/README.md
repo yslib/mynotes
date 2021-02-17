@@ -63,3 +63,9 @@ export DISPLAY=ip:0.0   # ip 是ssh客户端的ip
 ### X-Server配置：
 在Windows下，推荐使用VcXsrv 作为 X-Server
 链接时带上-X参数
+
+
+### KDE 窗口模糊
+不需要通过安装Kvantum来实现全窗口的透明和模糊效果。 只需要默认的Breeze主题就行。
+实现方法的链接在这里
+https://userbase.kde.org/Tutorials/Force_Transparency_And_Blur#Keep_breeze_style
