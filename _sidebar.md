@@ -25,3 +25,4 @@
   * [Centrol Force](/principia/centrolforce.md "centrolforce")
   * [Mass Point Mechanics](/principia/masspoint.md "mass point mechanics")
   * [Rigid Body](/principia/rigidbody.md "rigid body")
+  * [2-Body](/principia/2-body.md "2-body")
