@@ -6,6 +6,7 @@
 * [Noise](/graphics/shader/noise.md "Noise")
 * [GLSL Snippets](/graphics/shader/codesnippets.md "Snippets")
 * [FBM](/graphics/shader/fbm.md "FBM")
+* [DiligentEngine](/graphics/diligentengine.md "diliegentengine")
 * [Vulkan](/graphics/vulkan/vulkan.md "Vulkan")
   * [Vulkan Overview](/graphics/vulkan/Overview.md "Overview")
   * [GLSL in Vulkan](/graphics/vulkan/glslinvulkan.md "GLSL in Vulkan")
