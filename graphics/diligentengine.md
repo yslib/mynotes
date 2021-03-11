@@ -9,7 +9,7 @@
 拿其中某个对象来举例，对于通用的**Buffer**类型，以接口**IBuffer**使用。
 对OpenGL后端实现一个**IBufferGL**接口类，对Vulkan实现一个**IBufferVk**接口类，来实现对不同API功能进行接口特化。
 
-```c++
+```cpp
 
 class IObject{
     virtual void QueryInterface(const IID & iid, void ** ppBuffer)=0;
@@ -36,7 +36,7 @@ class IBufferVk:IBuffer{
 
 然后使用CRTP的方式对不同后端的接口进行不同的实现
 
-```c++
+```cpp
 
 template<typenmae Interface>
 class BufferBase:public Interface{
@@ -61,7 +61,7 @@ class BufferGLImpl:public BufferBase<IBufferGL>{
 
 这个框架使用方式如下:
 
-```c++
+```cpp
 
 void Init(){
 
