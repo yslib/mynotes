@@ -82,18 +82,71 @@ void Update(){
 }
 ```
 
-## OpenGL Backend
+## Internels
+
+如何封装这种API? 首先需要明确两个问题，1）我们希望打算如何使用这个API 2)渲染一帧的主流程是什么样子的
+
+先回答第二个问题，第二个问题非常简单：
+
+```cpp
+while(true){
+    if(Initialized == false){
+        Init();
+        Initialized = true;
+    }
+    Update(){
+        // Update per frame data
+    }
+
+    Render(){
+        // Drawcalls
+    }
+
+    Submit(){
+        // Submit drawcalls
+    }
+}
+```
+
+所以我们的目的就是在```Init()```中初始化数据，在 ```Update()```里更新每帧的数据，在```Render()```中提交绘制指令。
+
+对于DiligentEngine，一般的渲染流程为
+
+```cpp
+Init(){
+    vertexBuffer = device->CreateBuffer(vertexData);
+    indexBuffer = device->CreateBuffer(indexData);
+    uniformBuffer = deice->CreateBuffer(uniformData);
+    pipelineState = device->CreatePipeline(pipelineDesc);
+    shaderResourcesBinding = pipeline->CreateShaderResourcesBinding(uniformDesc);
+}
+
+Update(){
+    uniformBuffer->SetData(uniformData);
+}
+
+Render(){
+    context->SetIndexBuffer(indexBuffer);
+    context->SetVertexBufffer(vertexBuffer);
+    context->SetPipelineState(pipelineState);
+}
+
+```
+
+![mapping1](./res/vkmapping1.drawio.svg)
+
+### OpenGL Backend
 
 由于OpenGL的Contexnt式全局隐式的，所以Device和 Context的实现就比较简单了，基本上Device的实现只是记录信息字段或者glGetIntegerv glGetString这种查询api，Context对应的函数如果有直接的OpenGL实现就直接调用。在OpenGL中没有显式的PipelineState这个对象，所以在这里的实现就只是记录下来接口传过来的管线状态。
 
-## Vulkan Backend
+### Vulkan Backend
 
 对于Vulkan来说，重点关注**手动同步**，**布局转换**以及**内存管理**。因为这些东西正是一个方便使用的接口所掩盖的。
 
-### RenderPass
+#### RenderPass
 
 
-## D3D11 Backend
+### D3D11 Backend
 
 
-## D3D12 Backend
+### D3D12 Backend
