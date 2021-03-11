@@ -13,6 +13,18 @@
 
 [The Architecture of Open Source Applications](http://aosabook.org/en/index.html) : 这本书收录了许多知名开源软件作者对他们的软件的详细剖析。
 
+# Featured Articles
+
+- [Vulkan Tutorials](/graphics/vulkan/Overview.md "Vulkan Totorials")
+
+- [Shader](/graphics/shader/content/content.md "Shader")
+
+- [Principia](/principia/content.md "Principia")
+
+- [DiligentEngine](/graphics/diligentengine.md "Diligent Engine")
+
+- [Quake2 Source Code Review](/d&d/quake2review.md "Quake2 Code Review")
+
 
 # TODO-List
 
