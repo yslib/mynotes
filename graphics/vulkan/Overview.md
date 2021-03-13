@@ -278,6 +278,65 @@ VkResult vkCreateSwapchainKHR(
   const VkAllocationCallbacks* pAllocator,
   VkSwapchainKHR* pSwapchain);
 ```
+
+## 如何使用 Vulkan
+前面所涉及的实例、物理设备逻辑设备、表面、交换链都是使用Vulkan之前必须要做的基础性工作，不涉及任何渲染的操作。我们把渲染一帧大概三部分
+```cpp
+
+ConfigureGraphicsAPI(){
+  // 对于Vulkan来说，枚举物理设备，创建物理设备，逻辑设备交换链等
+  // 创建窗口
+}
+while(true){
+  if(not Init){
+    Initialize(){
+      // 数据初始化工作，载入模型，建立渲染管线状态等
+      vertexBuffer = device->CreateBuffer(USAGE_VERTEX_BUFFER);
+      vertexBuffer->SetData(vertexData)
+      uniform = device->CreateBuffer(USAGE_SHADER_UNIFORM);
+      vertexBuffer->SetData(uniformData)
+
+      pipelineState = device->CreatePipelineState(pipelineDesc);
+    }
+  }
+  Update(){
+    // 更新每帧数据
+    context->UpdateBuffer()
+  }
+  Render(){
+    // 提交绘制指令
+    context->SetPipelineState(pip)
+  }
+}
+```
+
+我们之前所涉及的仅仅是在```ConfigGraphicsAPI()```中的需要进行的工作。完成了前几个章节的工作之后，我们就需要开始使用Vulkan来绘制东西了。但是由于Vulkan的复杂性，如果不清楚接下来要做什么，就会给接下来的学习带来困难。首先我们要明确Vulkan和OpenGL的最大的不同是什么。其中一个最明显的区别就是指令的显式执行。
+
+例如在OpenGL中，如果我们创建一个Buffer并且给Buffer传数据(对于纹理对象大体也是如此)，基本上只需要两个主要的API：
+```cpp
+
+// 其他工作
+glCreateBuffer(&bufferHandle);  // 创建缓冲对象
+glNamedBufferSubData(bufferHandle,vertexData) // 给缓冲对象传数据
+// 使用缓冲对象
+```
+然而在Vulkan中，要想完成同样的操作，需要更多的工作:
+- 创建Buffer对象的时候，我们需要给Buffer分配内存，这就需要提前创建一个Memory对象。然后从Memory中给Buffer分配内存，这样这个Buffer才能是一个完整可用的Buffer。
+
+上面的这个工作大致对应```glCreateBuffer```。
+
+接下来，要给Buffer数据，
+- 则需要建立一个命令缓冲池(**VkCommandPool**)
+
+- 从中分配命令缓冲(**VkCommandBuffer**)
+
+- 向命令缓冲中提交从SrcBuffer到DstBuffer的复制命令(**VkCmdCopyBuffer**)
+
+- 然后把这个命令缓冲提交到我们之前创建的图形队列中。(**VkQueueSubmit**)
+
+因为我们最终使用的顶点数据是以设备内存形式存在的，对CPU不可见。所以我们还需要需要构造一个暂存缓冲(Staging Buffer)作为可以直接传输数据的Buffer(其内存类型是CPU可见的内存类型，这种Buffer我们只要用memcpy就可以往里面写数据),然后通过GPU指令，把Staging复制到真正的顶点缓冲中。
+
+
 ## 管线状态
 ### 简介
 在Vulkan当中，管线的所有状态被抽象成了一个对象，不再像OpenGL那样，是一个全局的隐式状态， 每个状态可以随时更改。而Vulkan需要在使用之前指定好所有的固定状态，
