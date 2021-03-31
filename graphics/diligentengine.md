@@ -1,24 +1,24 @@
 # DiligentEngine
 
-https://www.gamasutra.com/blogs/EgorYusov/20171130/310274/Designing_a_Modern_CrossPlatform_LowLevel_Graphics_Library.php
+[Overview Blog](https://www.gamasutra.com/blogs/EgorYusov/20171130/310274/Designing_a_Modern_CrossPlatform_LowLevel_Graphics_Library.php)
 
-这个跨平台图形API是我在google上搜索如何设计RHI时候偶然发现的，个人认为其代码结构和设计比[BGFX](https://github.com/bkaradzic/bgfx)这个又名的开源底层渲染接口要好。
-其实现了不同的平台下的API封装，整体接口风格是按照DX11来的，因此，能够非常好的与Vulkan和DX12这种现代API适配。当然这个套API比较新，应用没有BGFX多。
 
-- 轻量级，低开销
+[Official Website](http://diligentgraphics.com/)
 
-这个轻量不是指代码少，而是它只关注封装不同的Graphics API而不过多考虑除此之外的任何其他任务。相比于其他项目，这个项目的代码并不少，而且其代码的质量也是这个项目的亮点。
+- **轻量级，低开销**
 
-- 方便使用
+这个轻量不是指代码少，而是它只关注封装不同的Graphics API而不过多考虑除此之外的任何其他任务。相比于其他项目，这个项目的代码并不少，而且他的代码的质量也是这个项目的亮点。
+
+- **方便使用**
 
 方便使用有时候和低开销是相互矛盾的，因为方便使用意味着要抽象更多的东西。虽然API的风格保持了和D3d11同样的底层，
 但在API能够反应硬件流水线的工作流程的同时，也不至于像直接操作具体的图形API那样繁琐。在简介和方便之间平衡性做的比较好。
 
-- 并行
+- **并行**
 
 在兼顾OpenGL等旧API的同时，也能够充分利用D3D12和Vulkan的并行特性。
 
-- 扩展性
+- **扩展性**
 
 良好的分层设计可以针对不同的后端做不同的优化。可以方便使用每个后端特有的功能，或者是为具体的后端编写合适的代码。
 这个项目提供了一个替换Unity Graphics API的插件实例。
@@ -30,7 +30,9 @@ https://www.gamasutra.com/blogs/EgorYusov/20171130/310274/Designing_a_Modern_Cro
 |bgfx|70000+|
 |LLGL|77000+|
 
-## 总揽
+## Overview
+
+DiligentEngine 通过把API封装成以下几个对象简化对Graphics API的使用。
 
 ### RenderDevice
 
@@ -38,10 +40,31 @@ Creates other objects (resources resources view, pipeline state, shader, shader 
 
 ### DeviceContext
 
-- ImmediateContext
-记录所有绘制指令
 
-- DeferredContext
+
+- **DeferredContext**
+
+只记录绘制指令，不执行。只能通过立即上下文执行。
+
+```cpp
+        // commit cmd to deferred context
+        // ...
+        // ...
+        //
+
+        RefCntAutoPtr<ICommandList> pCmdList;
+        pDeferredCtx->FinishCommandList(&pCmdList);
+        m_CmdLists[ThreadNum] = pCmdList;
+
+```
+
+- **ImmediateContext**
+
+```cpp
+        // Execute cmd list recorded by deferred contexts
+        m_pImmediateContext->ExecuteCommandLists(static_cast<Uint32>(m_CmdListPtrs.size()), m_CmdListPtrs.data());
+
+```
 
 ### Swapchain
 管理一系列帧缓冲，最后负责呈现到屏幕上
@@ -58,9 +81,52 @@ Texture 和 Buffer 的具体解释
 
 ### PipelineState
 
+管线状态对象
+
 ### Shader Resources Binding
-用来管理Shader uniform 资源绑定的抽象类。这个框架在Shader的使用上做了一些小抽象，让Shader可以使用文件系统，如在shader当中使用#include。这个工作是通过
-ShaderSourceStreamFactory的一个工厂对象实现的。
+用来管理Shader uniform 资源绑定的抽象类。
+
+
+```cpp
+    // Creates shader resources binding
+    m_pPSO->CreateShaderResourceBinding(&m_SRB, true);
+
+    // ...
+
+    // Binds shader resources
+    m_SRB->GetVariableByName(SHADER_TYPE_PIXEL, "g_Texture")->Set(m_TextureSRV);
+
+    // ...
+
+    // Commit shader resources
+
+    m_pImmediateContext->CommitShaderResources(m_SRB, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+
+
+```
+
+#### Shader Source Factory
+
+ShaderSourceFactory对象用来实现shader 的文件系统。可以在shader里面使用```#include```
+
+```cpp
+
+    RefCntAutoPtr<IShaderSourceInputStreamFactory> pShaderSourceFactory;
+    m_pEngineFactory->CreateDefaultShaderSourceStreamFactory(nullptr, &pShaderSourceFactory);
+    ShaderCI.pShaderSourceStreamFactory = pShaderSourceFactory;
+    // Create a vertex shader
+    RefCntAutoPtr<IShader> pVS;
+    {
+        ShaderCI.Desc.ShaderType = SHADER_TYPE_VERTEX;
+        ShaderCI.EntryPoint      = "main";
+        ShaderCI.Desc.Name       = "Cube VS";
+        ShaderCI.FilePath        = "cube.vsh";
+
+        m_pDevice->CreateShader(ShaderCI, &pVS);
+        // ...
+    }
+
+```
 
 > 这个框架直接支持GLSL, HLSL。然后转换到不同的后端。一般使用HLSL，因为GLSL不能转换到HLSL。
 
@@ -261,9 +327,6 @@ void Update(){
 
 ## Internels
 
-如何封装这种API? 首先需要明确两个问题，1）我们希望打算如何使用这个API 2)渲染一帧的主流程是什么样子的
-
-先回答第二个问题，第二个问题非常简单：
 
 ```cpp
 while(true){
@@ -306,10 +369,14 @@ Render(){
     context->SetIndexBuffer(indexBuffer);
     context->SetVertexBufffer(vertexBuffer);
     context->SetPipelineState(pipelineState);
+    context->DrawIndexed(0);
 }
 
 ```
 
+
+
+### API Mapping
 
 |Backend|Line of Code|
 |:----:|:----:|
@@ -318,34 +385,46 @@ Render(){
 |D3D11|8600+|
 |D3D12|15500+|
 
-### OpenGL Backend
-
-先把OpenGL的做一层封装ContextState，
-
-由于OpenGL的Contexnt是全局隐式的，所以Device和 Context的实现就比较简单了，基本上Device的实现只是记录信息字段或者glGetIntegerv glGetString这种查询api，Context对应的函数如果有直接的OpenGL实现就直接调用。在OpenGL中没有显式的PipelineState这个对象，所以在这里的实现就只是记录下来设置的管线状态。
-
+#### OpenGL
 
 ![Mapping in OpenGL](./res/glmapping.drawio.svg)
 
-
-### Vulkan Backend
-
-对于Vulkan来说，重点关注**手动同步**，**布局转换**以及**内存管理**。因为这些东西正是一个方便使用的接口所掩盖的。
-
-#### Memory
-
-![Memory](./res/memory.JPG)
-
-#### RenderPass
+#### Vulkan
 
 ![RenderTarget in Vulkan](./res/vkrendertarget.drawio.svg)
+
+- **RenderPass**
 
 ![RenderPass in Vulkan](./res/vkrenderpass.drawio.svg)
 
 显式指定的RenderPass这些信息可以允许驱动对绘制操作进行重排序，把每个Pass按照Tile绘制，把每个绘制完成再写入显存，避免了存储立即绘制时每个Pass产生的数据然后下个Pass需要时进行会读的操作。
 这种优化主要是针对于没有专用显存的统一内存架构的移动设备。即使桌面GPU也会从中受益。
 
-#### 必要的优化
-作为一个底层RHI，
-因为RenderPass只是一种描述，满足一定条件可以复用（通常是Attachment 数量和格式相同时），所以在基于RenderTarget使用时，其框架创建的RenderPass都是被放在Map中进行缓存的，能够唯一确定一个RenderPass的一些条件被用作Key，在调用指定RenderTarget的API时，SetRenderTarget时会先从缓存中去找是否有满足条件的RenderPass，如果存在就使用已有的，不存在就创建新的，然后缓存。对于Framebuffer也是同样的处理方式。
+- **Multithreading**
 
+每一个Context对应一个Commandbuffer, Device维护一个全局的CommandQueue
+
+- **Real Time Ray Tracing**
+
+
+### Necessary Optimazation
+在封装过的接口和原生接口之间直接做映射并不能兼顾开发效率和运行效率。因为对于绘制任务本身来讲是有状态的，原生接口相当于无状态的接口。如果直接使用无状态的接口，
+那么每次都要频繁设置状态，开销非常大。比如在OpenGL中设置管线状态是比较耗时的，因此之后的Vulkan都是预先编译静态管线。
+总之，接口封装需要维护必要的状态，实现易用性和性能之间的平衡。
+#### OpenGL
+
+封装接口时可以消除OpenGL本身比较低效的部分。比如OpenGL的管线状态的设置是比较耗时的，可以在封装的时候维护。
+
+![glcache](./res/glmappingcache.drawio.svg)
+
+#### Vulkan
+
+Vulkan需要封装的东西就比较复杂了，包括**同步机制**，**布局转换**以及**内存管理**。
+
+因为RenderPass只是一种描述，满足一定条件可以复用（通常是Attachment数量和格式相同时，所以在基于RenderTarget使用时，其框架创建的RenderPass都是被放在Map中进行缓存的，能够唯一确定一个RenderPass的一些条件被用作Key，在调用指定RenderTarget的API时，SetRenderTarget时会先从缓存中去找是否有满足条件的RenderPass，如果存在就使用已有的，不存在就创建新的，然后缓存。对于所有可以复用的对象都是这种处理方法。
+
+### Miscellaneous
+
+- [Diligent Engine D3D12 Perfermance](http://diligentgraphics.com/diligent-engine/architecture/d3d12/d3d12-performance/#Testing_Methodology)
+
+- [Integration With Unity](http://diligentgraphics.com/diligent-engine/integration-with-unity/)
