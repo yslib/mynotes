@@ -67,6 +67,9 @@ ShaderSourceStreamFactory的一个工厂对象实现的。
 
 ## 接口组织形式
 
+
+![interface](./res/interface.JPG)
+
 整个框架以面向接口（抽象基类，纯虚函数）的方式来组织，类似于COM技术。对于不同层次的API（不同渲染后端），类型提升为不同类型的接口实现，
 拿其中某个对象来举例，对于通用的**Buffer**类型，以接口**IBuffer**使用。
 对OpenGL后端实现一个**IBufferGL**接口类，对Vulkan实现一个**IBufferVk**接口类，来实现对不同API功能进行接口特化。
@@ -331,6 +334,7 @@ Render(){
 
 #### Memory
 
+![Memory](./res/memory.JPG)
 
 #### RenderPass
 
