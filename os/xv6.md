@@ -34,14 +34,41 @@
 
 ### Buffer Cache
 
-文件系统建立在磁盘和内存之间的一块缓存上。
-缓存以block为单位，双向链表做LRU。
+文件系统建立在磁盘和内存之间的一块缓存上。任何对文件的读写都要经过这层缓存，缓存以block为单位，双向链表做LRU。
+也就是读写磁盘的api是建立在buffer cache之上的。
+
+以下是bio.c文件中的主要api
+
+|API|Parameter|Description|
+|:----:|:----:|:----:|
+|bget|(uint dev,uint blockno)|合适的策略寻找一个缓存，引用计数+1|
+|bread|(uint dev,uint blockno)|同步磁盘数据到内存，并返回缓存对应的地址|
+|bwrite|struct buf *|同步内存数据到磁盘|
+|brelse|struct buf *|引用计数-1|
+
+上面这些API提供了完备的磁盘读写逻辑，这就是缓存层。
 
 请求一个磁盘block时，先在buffer cache中查找，
 
 key 为(dev,blockno), bget,
 
-如果没找到，就用LRU替换一块
+如果没找到，就用LRU替换一块。
+与
+### inode
+
+inode 相当于文件的metadata数据结构。其中的一个问题是，inode的个数是固定的，所以对于文件系统来说，文件个数是有上限的。
+
+这里我们以open系统调用的执行过程来举例，其实open就是打开或创建inode的过程，其中是建立在获取buffer cache的api的基础之上的。
+比如```open``` --> ```create``` --> ```ialloc``` --> ```bget``` 
+
+inode也有一层缓存结构，在```fs.c```中，对inode的操作与对block的操作的api几乎是对应的，多个inode存储在一个block中。
+
+|API|Parameter|Description|
+|:----:|:----:|:----:|
+|iget|(uint dev,uint blockno)|合适的策略寻找一个缓存，引用计数+1|
+|bread|(uint dev,uint blockno)|同步磁盘数据到内存，并返回缓存对应的地址|
+|bwrite|struct buf *|同步内存数据到磁盘|
+|brelse|struct buf *|引用计数-1|
 
 ### logging 
 
