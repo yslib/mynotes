@@ -32,7 +32,7 @@
 
 所以，从程序的角度来说，磁盘可以看作一个粒度比内存大的一个数组。而文件系统就是构建在这个数组上的一个数据结构。
 
-### Buffer Cache
+### Buffer Cache Layer
 
 文件系统建立在磁盘和内存之间的一块缓存上。任何对文件的读写都要经过这层缓存，缓存以block为单位，双向链表做LRU。
 也就是读写磁盘的api是建立在buffer cache之上的。
@@ -54,7 +54,7 @@ key 为(dev,blockno), bget,
 
 如果没找到，就用LRU替换一块。
 与
-### inode
+### Inode layer
 
 inode 相当于文件的metadata数据结构。其中的一个问题是，inode的个数是固定的，所以对于文件系统来说，文件个数是有上限的。
 
@@ -74,7 +74,10 @@ inode也有一层缓存结构，在```fs.c```中，对inode的操作与对block�
 
 因此，上文所表达的意思是，对于block，我们在```bread/bwrite```时的缓存和```iget\iput```的缓存是不相关的。虽然iget/iput的真实读取过程是通过bread/bwrite从它们存在于内存的缓存中复制到了iget\iput存在于内存中的缓冲中。看似好像从一块内存复制到另外一块内存似乎是多余的，并且iget/iput是建立在bread/bwrite之上的。但因为iget/iput 和bread/bwrite是两个无关(独立)的操作，所以缓存也必须无关（独立）。
 
-#### 文件目录在inode当中的组织方式 (Directory layer)
+
+![fs](res/fs.drawio.svg)
+
+上图是xv6文件系统的基本接口。
 
 我们知道，inode是一个文件的metadata, inode和文件之间是平坦的对应关系，但是树形的目录结构和以inode为核心的文件系统是如何映射的呢？
 

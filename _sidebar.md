@@ -15,6 +15,7 @@
   * [折腾](/d&d/env.md "env")
   * [Quake2 Code Review](/d&d/quake2review.md "quake2review")
 * [Tools](/tools/ "Tools")
+* [OS](/os/xv6.md 'xv6')
 
 * [Temporary](/temporary/vocabulary.md "vocabulary")
 
