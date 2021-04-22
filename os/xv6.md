@@ -79,8 +79,11 @@ inode也有一层缓存结构，在```fs.c```中，对inode的操作与对block�
 
 上图是xv6文件系统的基本接口。
 
+所有对文件的读写，都是通过buffer cache层给定的接口，在内存上做读取，buffer cache层通过缓存与磁盘交互。
+
 我们知道，inode是一个文件的metadata, inode和文件之间是平坦的对应关系，但是树形的目录结构和以inode为核心的文件系统是如何映射的呢？
 
+目录是一种特殊的文件，根据inode指定的文件类型为T_DIR，把inode中的数据段解释为一系列的Directory Entry。
 
 
 ### logging 
