@@ -14,6 +14,7 @@
   * [Include and Import](/d&d/includeandimport.md "D&D")
   * [折腾](/d&d/env.md "env")
   * [Quake2 Code Review](/d&d/quake2review.md "quake2review")
+  * [Smart Pointer](/d&d/smartpointer.md "smart pointer")
 * [Tools](/tools/ "Tools")
 * [OS](/os/xv6.md 'xv6')
 
@@ -28,3 +29,4 @@
   * [Mass Point Mechanics](/principia/masspoint.md "mass point mechanics")
   * [Rigid Body](/principia/rigidbody.md "rigid body")
   * [2-Body](/principia/2-body.md "2-body")
+  * [Tsiolkovsky](/principia/rocketequation.md "Tsiolkovsky Rocket Euqation")
