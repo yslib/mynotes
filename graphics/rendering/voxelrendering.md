@@ -18,6 +18,13 @@
 5. [](http://www.volumesoffun.com/)
 
 
+### OpenVDB
+
+1. Tree Height: 树的高度是固定的，一般取5
+2. Branch factor:
+3. 子节点数量很多。在实现上把节点分为三类做特化**LeafNode**, **InternalNode**, **RootNode**, 用模板参数直接确定节点的结构。
+4.
+
 ### 关于体素渲染
 1. raycasting
 [](https://medium.com/@calebleak/cube-voxel-rendering-bc5d87c24c3)
