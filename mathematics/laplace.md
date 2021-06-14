@@ -39,3 +39,50 @@ $v_1 w_1 + v_2 w_2 + ... + v_n w_n + ... = vw$
 
 $v(x)w(x) = \int_{a}_{b} v(x)w(x)dx$
 
+## GCN: Graph Convolution Network:
+
+Given a graph $G = (V, E)$
+
+- Feature Matrix: $X$: a $N \times D$ matrix, which represents $N$ nodes and its feature, a vector of $D$ dimensions.
+
+- Adjacent Matrix: $N \times N$, a symetric matrix.
+
+- Degree Matrix: $D$: $N \times N$, a diagnal matrix.
+
+
+### **Feature Extraction**:
+
+Like the filter in CNN by summizing and averaging, in GCN:
+
+$agg(X_i) = \sum_j{A_{ij}X_j}$
+
+for all nodes in the graph $G$, we can derive
+
+$agg(X) = AX$
+
+The procedure is called as **Aggregation**. (Think about in row space of X)
+
+But only adjacent nodes are considered above, if we want to considered the current node itself, just add the node into it:
+
+$agg(X_i) = \sum_j{A_{ij}X_j} + X_j$
+
+Then
+
+$agg(X) = AX+X = (A+I)X$
+
+Denotes $A+I$ as $\bar{A}$
+
+
+#### **Think in another way**
+
+We could consider the feature represented by the difference between the adjacent nodes and itself
+
+$agg(X_i) = \sum_j{A_{ij}(X_i-X_j)} = D_{ii}X_i - \sum_jA_{ij}X_j$
+
+for all nodes in graph $G$:
+
+$agg(X) = DX - AX = (D-A)X$
+
+where
+ $D-A$ is **Laplace Matrix**
+
