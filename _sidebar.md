@@ -3,6 +3,7 @@
 * [All About 3D Translation](/graphics/translation/ "All about 3d translation")
 * [Camera](/graphics/camera/ "Camera")
 * [Color](/graphics/color/ "Color")
+* [Rendering](/graphics/rendering/voxelrendering.md "Rendering")
 * [Noise](/graphics/shader/noise.md "Noise")
 * [GLSL Snippets](/graphics/shader/codesnippets.md "Snippets")
 * [FBM](/graphics/shader/fbm.md "FBM")

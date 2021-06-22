@@ -9,43 +9,63 @@
 
 虽然这里主要介绍体素的存储，并且体素的表现方式并不局限于Raycasting，但是对于体素来说，Raycasting终归是一个绕不开的话题。在这里简单的介绍一下Raycasting.
 
-[补图]()
+![Raycasting](./img/raycast0.jpg)
 
 对从当前像素发出的射线上每个点进行颜色累加作为这个像素最终的颜色，
 
 - 从前先后：
 
-$C_{dst} = C_{dst} + (1 - \Alpha_{dst})C_{src}$
-$\alpha_{dst} = \alpha_{dst} + (1 - \Alpha_{dst})C_{src}$
+$$
+C_{dst} = C_{dst} + (1 - \Alpha_{dst}) C_{src}
+$$
+
+$$
+\alpha_{dst} = \alpha_{dst} + (1 - \Alpha_{dst}) C_{src}
+$$
 
 - 从后向前：
 
-至于这个公式是怎么来的，可以参考[Real-Time Volume Graphics](http://www.real-time-volume-graphics.org/)这本书。总的来说，上面的两个形式就是在只考虑吸收和发散模型的光线在介质中的传播方程，经过离散化（积分->黎曼和）后的数值解法。
+至于这个公式是怎么来的，可以参考[Real-Time Volume Graphics](http://www.real-time-volume-graphics.org/)这本书。总的来说，上面的两个形式就是在只考虑吸收和发散模型的光线在介质中的传播方程，经过离散化（积分->黎曼和）后的[数值解法](https://www.cg.informatik.uni-siegen.de/data/Tutorials/EG2006/RTVG01_Theory.pdf)。
 
+![Raycasting1](./img/raycast_2.jpg)
+![Raycasting2](./img/raycast3.jpg)
 
 ### 关于体素存储的文章：
 #### storage
-- Efficient Sparse Voxel Octrees(SVO): [ShaderToy Implementation](https://www.shadertoy.com/view/3d2XRd)
+- [Efficient Sparse Voxel Octrees(SVO)](): [ShaderToy Implementation](https://www.shadertoy.com/view/3d2XRd)
 - High Resolution Sparse Voxel DAGs
-- GigaVoxels:[GigaVoxels: Ray-Guided Streaming for Efficient and Detailed Voxel Rendering](https://maverick.inria.fr/Publications/2009/CNLE09/CNLE09.pdf)
-- OpenVDB:[VDB: High-Resolution Sparse Volumes with Dynamic Topology](http://www.museth.org/Ken/Publications_files/Museth_TOG13.pdf)
+- GigaVoxels: [GigaVoxels: Ray-Guided Streaming for Efficient and Detailed Voxel Rendering](https://maverick.inria.fr/Publications/2009/CNLE09/CNLE09.pdf)
+- OpenVDB: [VDB: High-Resolution Sparse Volumes with Dynamic Topology](http://www.museth.org/Ken/Publications_files/Museth_TOG13.pdf)
 
 
 #### Application
-- Interactive Indirect Illumination Using Voxel Cone Tracing
-- **虚拟纹理**
+
+- [Interactive Indirect Illumination Using Voxel Cone Tracing](https://research.nvidia.com/sites/default/files/pubs/2011-09_Interactive-Indirect-Illumination/GIVoxels-pg2011-authors.pdf)
+
+![Cone Tracing](./img/cone2.jpg)
+
+![Cone Tracing](./img/cone.jpg)
+
+- **Vitual Texture**
 
 #### Others
-- Optimizing Memory Access on GPUs using Morton Order Indexing
+- [Optimizing Memory Access on GPUs using Morton Order Indexing](https://john.cs.olemiss.edu/~rhodes/papers/Nocentino10.pdf)
+- [Soring Spatial Data](https://www.cs.umd.edu/~hjs/pubs/geoencycl.pdf)
 
 ### 和体素有关的项目或工具:
-1. MagicaVoxel
-2. Goxel
-3. PolyVox
-4. Cubiquity 2
-5. [](http://www.volumesoffun.com/)
 
-### SVO
+- [MagicaVoxel](http://ephtracy.github.io/)
+
+- [Goxel](https://github.com/guillaumechereau/goxel)
+
+- [Volume of Fun](http://www.volumesoffun.com/)
+
+    - [PolyVox](http://www.volumesoffun.com/polyvox-about/)
+
+    - [Cubiquity 2](https://github.com/DavidWilliams81/cubiquity)
+
+
+### SVO(GPU)
 
 八叉树存储，重点是八叉树的遍历方式。这种类型的数据结构一般都是stackless遍历。
 比如对于kd-tree的有栈遍历方法(无递归):
@@ -57,6 +77,7 @@ $\alpha_{dst} = \alpha_{dst} + (1 - \Alpha_{dst})C_{src}$
 [KD-Tree Acceleration Structures for a GPU Raytracer](https://graphics.stanford.edu/papers/gpu_kdtree/kdtree.pdf)
 
 去掉这个栈操作有两个方法
+![](./img/kd_tree.jpg)
 1. 去掉压栈操作，并且在原算法需要出栈的时候，直接从(root, tMax, global_tMax)的地方**重新遍历树**。也就是直接从根节点寻找下个节点（不用栈存储了）(kd-restart)
 2. 去掉压栈操作，并且在原算法需要出栈的时候，直接回溯到第一个修改[tMin,tMax]的祖先的节点，然后继续遍历。（这种方法需要额外记录父节点信息）(kd-backtrace)
 
@@ -66,12 +87,15 @@ octree和kd-tree不同的地方在于，octree是局部规则的网格，在遍�
 
 [Stackless KD-Tree Traversal for High Performance GPU Ray Tracing](http://www.johannes-guenther.net/StacklessGPURT/StacklessGPURT.pdf)
 
-### GigaVoxels:
+### GigaVoxels(GPU):
 
 - N^3-Tree
+![](./img/n3.jpg)
 
 - 树的组织形式不是通常的指针（因为要在纹理里面存储），而是层次化的3d-texture cache。分为两个3d texture。 其中一个存放node metadata。每个node metadata里面有N^3个关于
 元素，按照对应的空间位置排列。可以看到，这本质上就是一个以direct accessed array方式存储的被层次化的hash table。指针被解释为block在texture 中的偏移。
+
+![](./img/n3_pool.jpg)
 
 - 表面是个树，其实是一个hash table。
 
@@ -81,13 +105,17 @@ octree和kd-tree不同的地方在于，octree是局部规则的网格，在遍�
 
 Feedback过程是关键。这里使用的是多个RT存储缺页id。组织成一个2d texture array。 就像实现OIT一样，每个像素对应一个链表（数组），用来存放这个像素对应的射线在遍历的时候发现的没有在显存中的block id。但是直接这样做有两个问题：
 
+![](./img/n3_pkg.jpg)
+
 1. 相邻像素发出的射线大概率会检测到相同的块，因此重复度很高。
 
 2. 一个像素对应一个链表可能会使空间分配不均因。
 
 基于以上两点考虑，可以让2x2四个像素公用四个链表的存储空间。
 
+![](./img/n3_feedback.jpg)
 CPU直接处理这几个RT里面的信息显然吃不消（除了回读的代价外，还需要无差别遍历这几个rt中的每个像素去找到所有的不重复的缺页id），因此需要一个mask来指示一个不重复的缺页id集合。这个mask也是一张2d texture。每个像素可以解释为一个bit vector(32bit almost)。然后在CPU端通过这个像素信息去索引记录缺页id的rt。当然为这个mask texture 的每个像素构造bit vector除了要去重之外还涉及到了另外一篇文章的方法（金字塔直方图，就是一个统计问题，主要用来压缩），这里不细讲。
+
 
 总结:
 其实这篇文章写作上对读者不太友好。有些地方不够详细。比如feedback的过程和遍历树的过程。因为这两个地方并不是引用的其他文章，这里应该详细描述才对。而且feedback的过程图示非常让人迷惑。
@@ -95,17 +123,21 @@ CPU直接处理这几个RT里面的信息显然吃不消（除了回读的代价
 
 实现了这篇文章的方法的开源项目有 (Voreen)
 
-### OpenVDB
+### OpenVDB(CPU)
 
-- fixed tree Height:
-- fixed branch factor:
-- A wide but low tree, very fat
+![](./img/vdb2.jpg)
+
+- 一个矮胖的树
+    - 树高固定
+    - 每个节点分支数固定
+
 
 - 子节点数量很多。在实现上把节点分为三类做特化**LeafNode**, **InternalNode**, **RootNode**, 用模板参数直接确定节点的结构。
 - 对于根节点，用了一个map把最上面的一层InternalNode打散，具体是hash map还是balanced tree map，还是看应用。虽然从时间复杂度上看hash map要好，
 但是hashing过程开销比较高，并且基于第一层InternalNode不是很多这个实时，直接用dense hash效果更好。虽然对于这种高度平衡的树来说，每次访问都是O(1)，但是毕竟
 还是要遍历树的。因此止步于此的话，O(1)的Random access也只是流于形式。所以还需要用到Accessor作为缓存。这个东西的设计思想类似于硬件TLB.
 
+![](./img/vdb.jpg)
 
 ### 虚拟纹理
 
@@ -133,6 +165,6 @@ CPU直接处理这几个RT里面的信息显然吃不消（除了回读的代价
 1. Ray casting
 
 2. Ray tracing(contour set, cube)
-
 [](https://medium.com/@calebleak/cube-voxel-rendering-bc5d87c24c3)
+
 3. Cube Rendering: [](https://medium.com/@calebleak/quads-all-the-way-down-simple-voxel-rendering-fea1e4488e26)
