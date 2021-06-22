@@ -133,11 +133,76 @@ CPU直接处理这几个RT里面的信息显然吃不消（除了回读的代价
 
 
 - 子节点数量很多。在实现上把节点分为三类做特化**LeafNode**, **InternalNode**, **RootNode**, 用模板参数直接确定节点的结构。
+
+![](./img/vdb_root.jpg)
+![](./img/vdb_internal.jpg)
+![](./img/vdb_leaf.jpg)
+
 - 对于根节点，用了一个map把最上面的一层InternalNode打散，具体是hash map还是balanced tree map，还是看应用。虽然从时间复杂度上看hash map要好，
 但是hashing过程开销比较高，并且基于第一层InternalNode不是很多这个实时，直接用dense hash效果更好。虽然对于这种高度平衡的树来说，每次访问都是O(1)，但是毕竟
 还是要遍历树的。因此止步于此的话，O(1)的Random access也只是流于形式。所以还需要用到Accessor作为缓存。这个东西的设计思想类似于硬件TLB.
 
+
 ![](./img/vdb.jpg)
+
+
+代码当中预定义的一些树
+
+```cpp
+
+using BoolTree     = tree::Tree4<bool,        5, 4, 3>::Type;
+using DoubleTree   = tree::Tree4<double,      5, 4, 3>::Type;
+using FloatTree    = tree::Tree4<float,       5, 4, 3>::Type;
+using Int32Tree    = tree::Tree4<int32_t,     5, 4, 3>::Type;
+using Int64Tree    = tree::Tree4<int64_t,     5, 4, 3>::Type;
+using MaskTree     = tree::Tree4<ValueMask,   5, 4, 3>::Type;
+using StringTree   = tree::Tree4<std::string, 5, 4, 3>::Type;
+using UInt32Tree   = tree::Tree4<uint32_t,    5, 4, 3>::Type;
+using Vec2DTree    = tree::Tree4<Vec2d,       5, 4, 3>::Type;
+using Vec2ITree    = tree::Tree4<Vec2i,       5, 4, 3>::Type;
+using Vec2STree    = tree::Tree4<Vec2s,       5, 4, 3>::Type;
+using Vec3DTree    = tree::Tree4<Vec3d,       5, 4, 3>::Type;
+using Vec3ITree    = tree::Tree4<Vec3i,       5, 4, 3>::Type;
+using Vec3STree    = tree::Tree4<Vec3f,       5, 4, 3>::Type;
+using ScalarTree   = FloatTree;
+using TopologyTree = MaskTree;
+using Vec3dTree    = Vec3DTree;
+using Vec3fTree    = Vec3STree;
+using VectorTree   = Vec3fTree;
+```
+
+
+```cpp
+
+/// @brief Tree3<T, N1, N2>::Type is the type of a three-level tree
+/// (Root, Internal, Leaf) with value type T and
+/// internal and leaf node log dimensions N1 and N2, respectively.
+/// @note This is NOT the standard tree configuration (Tree4 is).
+template<typename T, Index N1=4, Index N2=3>
+struct Tree3 {
+    using Type = Tree<RootNode<InternalNode<LeafNode<T, N2>, N1>>>;
+};
+
+
+/// @brief Tree4<T, N1, N2, N3>::Type is the type of a four-level tree
+/// (Root, Internal, Internal, Leaf) with value type T and
+/// internal and leaf node log dimensions N1, N2 and N3, respectively.
+/// @note This is the standard tree configuration.
+template<typename T, Index N1=5, Index N2=4, Index N3=3>
+struct Tree4 {
+    using Type = Tree<RootNode<InternalNode<InternalNode<LeafNode<T, N3>, N2>, N1>>>;
+};
+
+/// @brief Tree5<T, N1, N2, N3, N4>::Type is the type of a five-level tree
+/// (Root, Internal, Internal, Internal, Leaf) with value type T and
+/// internal and leaf node log dimensions N1, N2, N3 and N4, respectively.
+/// @note This is NOT the standard tree configuration (Tree4 is).
+template<typename T, Index N1=6, Index N2=5, Index N3=4, Index N4=3>
+struct Tree5 {
+    using Type =
+        Tree<RootNode<InternalNode<InternalNode<InternalNode<LeafNode<T, N4>, N3>, N2>, N1>>>;
+};
+```
 
 ### 虚拟纹理
 
