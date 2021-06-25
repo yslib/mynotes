@@ -1,14 +1,35 @@
-# 体素 (Voxel)
+# 体素(Voxel)
 
 最近自己在自娱自乐的写一个体素[存储引擎](https://github.com/yslib/VoxelMan.git)， 在这里记录一下需要用到的相关资料。
 
 自己写的这个体素存储引擎主要面向大规模(100TB)科学计算可视化数据的（以Raycasting 渲染为主），这种应用的特点是数据是**稠密**的，并且**不能引入太多预处理过程**，因为数据量太大，预处理的开销也是不可接受的。而且这种应用一般都需要实时改变传输函数，相当于整个空间都有数据。当然也不绝对，因为即使对于大部分科学计算数据来讲，至少表现上是稀疏的，我们感兴趣的部分基本上不太可能充满整个空间，总有一个主体。但是为了不失一般性，加入了可实时改变传输函数这个约束，整个数据就谈不上稀疏性了，或者说稀疏性变得不是那么直白。但是可以借助平衡树来作为mask管理可见块。(Hierachical DDA)。
 
+## 目录
 
-- [Interactive Volume Exploration of Petascale Microscopy Data
-Streams Using a Visualization-Driven Virtual Memory Approach]
+- [Raycasting](#raycasting)
 
-### Volume Rendering & Ray-Casting (Ray-marching)
+- [体素存储](#storage)
+
+  - [GPU: Sparse Volume Octree](#storage_gpu)
+  - [CPU: OpenVDB](#storage_cpu)
+  - [Dense Voxel Layout Optimization](#storage_layout)
+
+- [体素应用](#application)
+  - [有向距离场](#app_sdf)
+    - [Lumen](#app_sdf_lumen)
+  - [虚拟纹理](#app_vt)
+
+
+- [其他](#others)
+  - [体素渲染](#others_rendering)
+  - [有关项目](#others_project)
+
+- [参考文献](#references)
+
+
+<span id="raycasting"></span>
+
+## **Volume Rendering & Ray-Casting Ray-marching)**
 
 虽然这里主要介绍体素的存储，并且体素的表现方式并不局限于Raycasting，但是对于体素来说，Raycasting终归是一个绕不开的话题。在这里简单的介绍一下Raycasting.
 
@@ -28,68 +49,37 @@ $$
 
 - 从后向前：
 
-至于这个公式是怎么来的，可以参考[Real-Time Volume Graphics](http://www.real-time-volume-graphics.org/)这本书。总的来说，上面的两个形式就是在只考虑吸收和发散模型的光线在介质中的传播方程，经过离散化（积分->黎曼和）后的[数值解法](https://www.cg.informatik.uni-siegen.de/data/Tutorials/EG2006/RTVG01_Theory.pdf)。
+至于这个公式是怎么来的，可以参考[Real-Time Volume Graphics][2]这本书。总的来说，上面的两个形式就是在只考虑吸收和发散模型的光线在介质中的传播方程，经过离散化（积分->黎曼和）后的[数值解法](https://www.cg.informatik.uni-siegen.de/data/Tutorials/EG2006/RTVG01_Theory.pdf)。
 
 ![Raycasting1](./img/raycast_2.jpg)
 
 ![Raycasting2](./img/raycast3.jpg)
 
-### 关于体素存储的文章：
-#### storage
 
-- [Efficient Sparse Voxel Octrees(SVO)](): [ShaderToy Implementation](https://www.shadertoy.com/view/3d2XRd)
+<span id="storage"></span>
 
-
-- High Resolution Sparse Voxel DAGs
+## 体素存储：
 
 
-- GigaVoxels: [GigaVoxels: Ray-Guided Streaming for Efficient and Detailed Voxel Rendering](https://maverick.inria.fr/Publications/2009/CNLE09/CNLE09.pdf)
+### **相关文章**
 
 
-- OpenVDB: [VDB: High-Resolution Sparse Volumes with Dynamic Topology](http://www.museth.org/Ken/Publications_files/Museth_TOG13.pdf)
-
-
-
-
-#### Application
-
-- [Interactive Indirect Illumination Using Voxel Cone Tracing](https://research.nvidia.com/sites/default/files/pubs/2011-09_Interactive-Indirect-Illumination/GIVoxels-pg2011-authors.pdf)
-
-![Cone Tracing](./img/cone2.jpg)
-
-![Cone Tracing](./img/cone.jpg)
-
-
-#### Others
-- [Optimizing Memory Access on GPUs using Morton Order Indexing](https://john.cs.olemiss.edu/~rhodes/papers/Nocentino10.pdf)
-- [Soring Spatial Data](https://www.cs.umd.edu/~hjs/pubs/geoencycl.pdf)
-
-### 和体素有关的项目或工具:
-
-- [MagicaVoxel](http://ephtracy.github.io/)
-
-- [Goxel](https://github.com/guillaumechereau/goxel)
-
-- [Volume of Fun](http://www.volumesoffun.com/)
-
-    - [PolyVox](http://www.volumesoffun.com/polyvox-about/)
-
-    - [Cubiquity 2](https://github.com/DavidWilliams81/cubiquity)
-
+<span id="storage_gpu"></span>
 
 ### SVO(GPU)
 
 八叉树存储，重点是八叉树的遍历方式。这种类型的数据结构一般都是stackless遍历。
-比如对于kd-tree的有栈遍历方法(无递归):
+比如对于[kd-tree的有栈遍历方法][11](无递归):
 
 1. 判断射线和当前的节点的相交片段，如果只包含了分割平面的其中一侧（一定是里视点近的那一个），那就直接遍历这个节点。否则先把远处的那个节点压栈，然后遍历这个（离视点近的）节点。
 这样栈顶部的节点距视点的距离比栈底部的节点更近。
 2. 这样一直遍历去，如果当前节点是叶节点，执行普通求交规则，如果hit，则执行相应逻辑，否则判断栈是否为空。如果为空，整个遍历过程结束（即遍历完整个场景了），否则出栈继续执行上一步。
 
-[KD-Tree Acceleration Structures for a GPU Raytracer](https://graphics.stanford.edu/papers/gpu_kdtree/kdtree.pdf)
 
-去掉这个栈操作有两个方法
+
 ![](./img/kd_tree.jpg)
+[去掉这个栈操作有两个方法][12]
+
 1. 去掉压栈操作，并且在原算法需要出栈的时候，直接从(root, tMax, global_tMax)的地方**重新遍历树**。也就是直接从根节点寻找下个节点（不用栈存储了）(kd-restart)
 2. 去掉压栈操作，并且在原算法需要出栈的时候，直接回溯到第一个修改[tMin,tMax]的祖先的节点，然后继续遍历。（这种方法需要额外记录父节点信息）(kd-backtrace)
 
@@ -97,9 +87,7 @@ $$
 
 octree和kd-tree不同的地方在于，octree是局部规则的网格，在遍历子节点的时候可以直接通过坐标转换得到。
 
-[Stackless KD-Tree Traversal for High Performance GPU Ray Tracing](http://www.johannes-guenther.net/StacklessGPURT/StacklessGPURT.pdf)
-
-### GigaVoxels(GPU):
+### [GigaVoxels(GPU)][6]:
 
 - N^3-Tree
 ![](./img/n3.jpg)
@@ -136,7 +124,9 @@ CPU直接处理这几个RT里面的信息显然吃不消（除了回读的代价
 实现了这篇文章的方法的开源项目有 (Voreen)
 
 
-### OpenVDB(CPU)
+<span id="storage_cpu"></span>
+
+### [OpenVDB(CPU)][7]
 
 
 这篇文章描述的数据结构是部署在CPU上的，是梦工厂的开源项目。主要是面向动画变形，仿真等用途的。比起之前的GPU上主要用来面向渲染或者查询数据结构，最大的不同是提供了对体素的操作（增删查改）。
@@ -264,22 +254,55 @@ accessor是一个高度固定的链表，长度为树高，每调用一次getVal
 这个是针对具有特定访问模式的一系列优化。比如对于物理仿真，有限元模拟等。这些都是Accessor以及顺序遍历模式的组合。
 
 
-### 有向距离场
+<span id="storage_layout"></span>
+### **布局**
+
+- [Optimizing Memory Access on GPUs using Morton Order Indexing][8]
+
+- [Soring Spatial Data][9]
 
 
+<span id="app_sdf"></span>
+### **有向距离场**
 
 可以用来加速Ray-marching，来辅助全局光照的实现。
 
 全局光照的开销主要是光线和场景中物体表面求交。对于离线的全局光照，可以使用传统的加速结构，做无偏的光线求交。
 除此之外，通过空间换时间的办法，在场景中的每一点上，记录这一点到场景中**最近**物体表面的**距离**。当追踪从场景中某一点$o$向某方向$d$
-发出的一条光线，可以通过计算出下一个marching 的位置， $\bar{r} = \bar{o} + \bar{d} * SDF(\var{r})$，如果此时$sdf{\bar{r}}$ 小于某一设定的
+发出的一条光线，可以通过计算出下一个marching 的位置， $\bar{r_{cur}} = \bar{o} + \bar{d} * SDF(\bar{r_{prev}})$，如果此时$SDF(\bar{r})$ 小于某一设定的
 阈值时，可以认为此时与物体表面相交。其中，这个**有向距离场SDF**可以看作一个体素存储。
 
 实时更新并获得稳定的SDF时实现良好的实时全局光照的关键。
 
+<span id="app_sdf_lumen"></span>
 
 
-### 虚拟纹理
+#### **Lumen In UE5**
+
+- [RSM][1]
+
+![RSM](./img/)
+
+- [VXGI][8]
+
+![Cone Tracing](./img/cone2.jpg)
+
+![Cone Tracing](./img/cone.jpg)
+
+对场景进行预计算
+
+- UE5使用了复杂化的SDF来加速全局光照计算，并且它时离线计算的。在编辑器中修改了对象之后重新生成。
+
+- UE5 使用软硬结合的ray-tracing，fallback到不同配置的机器上。这里的软件ray-tracing也是用GPU实现的。
+
+    - 对于软件 ray-tracing，使用有向距离场加速，但是同时考虑了物体sdf 和 global sdf来加速。具体来说时对于近处的物体使用精确的local sdf。并且对于mesh和材质有各种限制。
+
+    - 硬件光锥可以使用更高精度的 proxy mesh，然而对于实例数量有限制。
+
+
+
+<span id="app_vt"></span>
+### **虚拟纹理**
 
 - VT in software
     - Simple in theroy, but hard to implement efficiently.
@@ -291,6 +314,7 @@ accessor是一个高度固定的链表，长度为树高，每调用一次getVal
 现在使用的是ray-guided方式，完全由ray决定。排除实现本身的效率之外，并不清楚这种做法的效率有多高。
 
 就拿PageTable(Address translation)的实现方式来说,hashtable 很直观，但是想要实现一个对GPU管线友好的数据结构还是很困难。
+
 用Texture? 每次都要更新部分纹理。但是其地址转换过程是最快的（直接采样）。但是很浪费空间，基本上虚拟纹理有多大，这个pagetable就有多大（个数上成正比）。
 
 每种方式的实现都千差万别。
@@ -300,33 +324,91 @@ accessor是一个高度固定的链表，长度为树高，每调用一次getVal
 
 
 
-### 体素渲染
-1. Ray casting
+<span id="others"></span>
 
-2. Ray tracing(contour set, cube)
-[](https://medium.com/@calebleak/cube-voxel-rendering-bc5d87c24c3)
+## **其他**
 
-3. Cube Rendering: [](https://medium.com/@calebleak/quads-all-the-way-down-simple-voxel-rendering-fea1e4488e26)
+<span id="others_rendering"></span>
 
+### **体素渲染**
 
+- #### Ray casting
 
+- #### [Ray tracing(contour set, cube)](https://medium.com/@calebleak/cube-voxel-rendering-bc5d87c24c3)
 
-
-#### 参考文献
-
-[RSM] (https://users.soe.ucsc.edu/~pang/160/s13/proposal/mijallen/proposal/media/p203-dachsbacher.pdf)
+- #### [Cube Rendering](https://medium.com/@calebleak/quads-all-the-way-down-simple-voxel-rendering-fea1e4488e26)
 
 
+<span id="others_project"></span>
+### 有关项目:
 
-#### 附 UE5 动态光照
+- [MagicaVoxel](http://ephtracy.github.io/)
+
+- [Goxel](https://github.com/guillaumechereau/goxel)
+
+- [OpenVDB](https://github.com/AcademySoftwareFoundation/openvdb)
+
+- [Volume of Fun](http://www.volumesoffun.com/)
+
+    - [PolyVox](http://www.volumesoffun.com/polyvox-about/)
+
+    - [Cubiquity 2](https://github.com/DavidWilliams81/cubiquity)
 
 
-对场景进行与计算
 
-- UE5使用了复杂化的SDF来加速全局光照计算，并且它时离线计算的。在编辑器中修改了对象之后重新生成。
 
-- UE5 使用软硬结合的ray-tracing，fallback到不同配置的机器上。这里的软件ray-tracing也是用GPU实现的。
+<span id="references"></span>
+## 参考文献
 
-    - 对于软件 ray-tracing，使用有向距离场加速，但是同时考虑了物体sdf 和 global sdf来加速。具体来说时对于近处的物体使用精确的local sdf。并且对于mesh和材质有各种限制。
+[Reflection Shadow Map][1]
 
-    - 硬件光锥可以使用更高精度的 proxy mesh，然而对于实例数量有限制。
+[Real-Time Volume Graphics][2]
+
+[Efficient Sparse Voxel Octrees(SVO)][3]
+
+[ShaderToy Implementation][4]
+
+[High Resolution Sparse Voxel DAGs][5]
+
+[GigaVoxels: Ray-Guided Streaming for Efficient and Detailed Voxel Rendering][6]
+
+[VDB: High-Resolution Sparse Volumes with Dynamic Topology][7]
+
+[Interactive Indirect Illumination Using Voxel Cone Tracing][8]
+
+[Optimizing-Memory-Access-on-GPUs-using-Morton-Order-Indexing][9]
+
+[Soring-Spatial-Data][10]
+
+[KD Tree Acceleration Structures for a GPU Raytracer][11]
+
+[Stackless KD Tree Traversal for High Performance GPU Ray Tracing][12]
+
+[Interactive Volume Exploration of Petascale Microscopy Data Streams Using a Visualization Driven Virtual Memory Approach](https://a.com)
+
+
+[1]: [RMS](https://users.soe.ucsc.edu/~pang/160/s13/proposal/mijallen/proposal/media/p203-dachsbacher.pdf)
+
+[2]: [RTVG](https://www.real-time-volume-graphics.org/)
+
+[3]: [SVO](https://users.aalto.fi/~laines9/publications/laine2010i3d_paper.pdf)
+
+[4]: [ShaderToyImplementation](https://www.shadertoy.com/view/3d2XRd)
+
+[5]: [High-Resolution-Sparse-Voxel-DAGs](http://www.cse.chalmers.se/~uffe/HighResolutionSparseVoxelDAGs.pdf)
+
+[6]: [GigaVoxels-Ray-Guided-Streaming-for-Efficient-and-Detailed-Voxel-Rendering](https://maverick.inria.fr/Publications/2009/CNLE09/CNLE09.pdf)
+
+[7]: [VDB-High-Resolution-Sparse-Volumes-with-Dynamic-Topology](http://www.museth.org/Ken/Publications_files/Museth_TOG13.pdf)
+
+[8]: [Interactive-Indirect-Illumination-Using-Voxel-Cone-Tracing](https://research.nvidia.com/sites/default/files/pubs/2011-09_Interactive-Indirect-Illumination/GIVoxels-pg2011-authors.pdf)
+
+[9]: [Optimizing-Memory-Access-on-GPUs-using-Morton-Order-Indexing](https://john.cs.olemiss.edu/~rhodes/papers/Nocentino10.pdf)
+
+[10]: [Soring-Spatial-Data](https://www.cs.umd.edu/~hjs/pubs/geoencycl.pdf)
+
+[11]: [KD-Tree-Acceleration-Structures-for-a-GPU-Raytracer](https://graphics.stanford.edu/papers/gpu_kdtree/kdtree.pdf)
+
+[12]: [Stackless-KD-Tree-Traversal-for-High-Performance-GPU-Ray-Tracing](http://www.johannes-guenther.net/StacklessGPURT/StacklessGPURT.pdf)
+
+[13]: [Interactive-Volume-Exploration-of-Petascale-Microscopy-Data-Streams-Using-a-Visualization-Driven-Virtual-Memory-Approach](https://a.com)
