@@ -1,8 +1,12 @@
-# 体素
+# 体素 (Voxel)
 
 最近自己在自娱自乐的写一个体素[存储引擎](https://github.com/yslib/VoxelMan.git)， 在这里记录一下需要用到的相关资料。
 
 自己写的这个体素存储引擎主要面向大规模(100TB)科学计算可视化数据的（以Raycasting 渲染为主），这种应用的特点是数据是**稠密**的，并且**不能引入太多预处理过程**，因为数据量太大，预处理的开销也是不可接受的。而且这种应用一般都需要实时改变传输函数，相当于整个空间都有数据。当然也不绝对，因为即使对于大部分科学计算数据来讲，至少表现上是稀疏的，我们感兴趣的部分基本上不太可能充满整个空间，总有一个主体。但是为了不失一般性，加入了可实时改变传输函数这个约束，整个数据就谈不上稀疏性了，或者说稀疏性变得不是那么直白。但是可以借助平衡树来作为mask管理可见块。(Hierachical DDA)。
+
+
+- [Interactive Volume Exploration of Petascale Microscopy Data
+Streams Using a Visualization-Driven Virtual Memory Approach]
 
 ### Volume Rendering & Ray-Casting (Ray-marching)
 
@@ -27,14 +31,24 @@ $$
 至于这个公式是怎么来的，可以参考[Real-Time Volume Graphics](http://www.real-time-volume-graphics.org/)这本书。总的来说，上面的两个形式就是在只考虑吸收和发散模型的光线在介质中的传播方程，经过离散化（积分->黎曼和）后的[数值解法](https://www.cg.informatik.uni-siegen.de/data/Tutorials/EG2006/RTVG01_Theory.pdf)。
 
 ![Raycasting1](./img/raycast_2.jpg)
+
 ![Raycasting2](./img/raycast3.jpg)
 
 ### 关于体素存储的文章：
 #### storage
+
 - [Efficient Sparse Voxel Octrees(SVO)](): [ShaderToy Implementation](https://www.shadertoy.com/view/3d2XRd)
+
+
 - High Resolution Sparse Voxel DAGs
+
+
 - GigaVoxels: [GigaVoxels: Ray-Guided Streaming for Efficient and Detailed Voxel Rendering](https://maverick.inria.fr/Publications/2009/CNLE09/CNLE09.pdf)
+
+
 - OpenVDB: [VDB: High-Resolution Sparse Volumes with Dynamic Topology](http://www.museth.org/Ken/Publications_files/Museth_TOG13.pdf)
+
+
 
 
 #### Application
@@ -45,7 +59,6 @@ $$
 
 ![Cone Tracing](./img/cone.jpg)
 
-- **Vitual Texture**
 
 #### Others
 - [Optimizing Memory Access on GPUs using Morton Order Indexing](https://john.cs.olemiss.edu/~rhodes/papers/Nocentino10.pdf)
@@ -251,6 +264,21 @@ accessor是一个高度固定的链表，长度为树高，每调用一次getVal
 这个是针对具有特定访问模式的一系列优化。比如对于物理仿真，有限元模拟等。这些都是Accessor以及顺序遍历模式的组合。
 
 
+### 有向距离场
+
+
+
+可以用来加速Ray-marching，来辅助全局光照的实现。
+
+全局光照的开销主要是光线和场景中物体表面求交。对于离线的全局光照，可以使用传统的加速结构，做无偏的光线求交。
+除此之外，通过空间换时间的办法，在场景中的每一点上，记录这一点到场景中**最近**物体表面的**距离**。当追踪从场景中某一点$o$向某方向$d$
+发出的一条光线，可以通过计算出下一个marching 的位置， $\bar{r} = \bar{o} + \bar{d} * SDF(\var{r})$，如果此时$sdf{\bar{r}}$ 小于某一设定的
+阈值时，可以认为此时与物体表面相交。其中，这个**有向距离场SDF**可以看作一个体素存储。
+
+实时更新并获得稳定的SDF时实现良好的实时全局光照的关键。
+
+
+
 ### 虚拟纹理
 
 - VT in software
@@ -279,3 +307,26 @@ accessor是一个高度固定的链表，长度为树高，每调用一次getVal
 [](https://medium.com/@calebleak/cube-voxel-rendering-bc5d87c24c3)
 
 3. Cube Rendering: [](https://medium.com/@calebleak/quads-all-the-way-down-simple-voxel-rendering-fea1e4488e26)
+
+
+
+
+
+#### 参考文献
+
+[RSM] (https://users.soe.ucsc.edu/~pang/160/s13/proposal/mijallen/proposal/media/p203-dachsbacher.pdf)
+
+
+
+#### 附 UE5 动态光照
+
+
+对场景进行与计算
+
+- UE5使用了复杂化的SDF来加速全局光照计算，并且它时离线计算的。在编辑器中修改了对象之后重新生成。
+
+- UE5 使用软硬结合的ray-tracing，fallback到不同配置的机器上。这里的软件ray-tracing也是用GPU实现的。
+
+    - 对于软件 ray-tracing，使用有向距离场加速，但是同时考虑了物体sdf 和 global sdf来加速。具体来说时对于近处的物体使用精确的local sdf。并且对于mesh和材质有各种限制。
+
+    - 硬件光锥可以使用更高精度的 proxy mesh，然而对于实例数量有限制。
