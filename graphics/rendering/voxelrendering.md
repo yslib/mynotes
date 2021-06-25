@@ -276,18 +276,24 @@ accessor是一个高度固定的链表，长度为树高，每调用一次getVal
 
 <span id="app_sdf_lumen"></span>
 
-
-#### **Lumen In UE5**
+### **全局光照**
 
 - [RSM][1]
 
-![RSM](./img/)
+![RSM](./img/rsm.jpg)
 
 - [VXGI][8]
 
 ![Cone Tracing](./img/cone2.jpg)
 
 ![Cone Tracing](./img/cone.jpg)
+
+[VXGI][8]相比于[RSM][1]，通过把mesh场景体素化成三维信息(并且动过滤波操作，把高精度的体素信息分别降到了不从层级的lod上，相当于把场景“气化”了，整个体素场景lod相当于**遮挡场**(Occlusion Field))，借助ray-marching累积$\alpha$，根据$\alpha$权重判断这一次的弹射有没有被遮挡。可见这种遮挡的判断也是非常粗糙的，容易漏光。
+
+**并没有对弹射的光线执行任何求交操作来判断严格意义上的遮挡，仅仅是把对遮挡的判断转移到了判断累积光线的不透明度上**
+
+#### **Lumen In UE5**
+
 
 对场景进行预计算
 
@@ -298,7 +304,6 @@ accessor是一个高度固定的链表，长度为树高，每调用一次getVal
     - 对于软件 ray-tracing，使用有向距离场加速，但是同时考虑了物体sdf 和 global sdf来加速。具体来说时对于近处的物体使用精确的local sdf。并且对于mesh和材质有各种限制。
 
     - 硬件光锥可以使用更高精度的 proxy mesh，然而对于实例数量有限制。
-
 
 
 <span id="app_vt"></span>
