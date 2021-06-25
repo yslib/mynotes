@@ -1,9 +1,6 @@
 # 体素(Voxel)
 
 最近自己在自娱自乐的写一个体素[存储引擎](https://github.com/yslib/VoxelMan.git)， 在这里记录一下需要用到的相关资料。
-
-自己写的这个体素存储引擎主要面向大规模(100TB)科学计算可视化数据的（以Raycasting 渲染为主），这种应用的特点是数据是**稠密**的，并且**不能引入太多预处理过程**，因为数据量太大，预处理的开销也是不可接受的。而且这种应用一般都需要实时改变传输函数，相当于整个空间都有数据。当然也不绝对，因为即使对于大部分科学计算数据来讲，至少表现上是稀疏的，我们感兴趣的部分基本上不太可能充满整个空间，总有一个主体。但是为了不失一般性，加入了可实时改变传输函数这个约束，整个数据就谈不上稀疏性了，或者说稀疏性变得不是那么直白。但是可以借助平衡树来作为mask管理可见块。(Hierachical DDA)。
-
 ## 目录
 
 - [Raycasting](#raycasting)
@@ -314,7 +311,7 @@ accessor是一个高度固定的链表，长度为树高，每调用一次getVal
 
 软件虚拟纹理实现的难点在于，现在的管线似乎不是为频繁更新纹理设计的。因为VT不可避免的频繁（相对）更新纹理，所以这是一个drawback。
 虚拟纹理的核心是feekback的过程。这个过程决定了渲染的效率。这个也得是全程软件实现，因此效率千差万别。
-优化的办法除了动态的确定working set，还可以离线烘焙feekback data。如同PVS一样，不过这个还和具体应用有关。对于科学可视化来的体绘制来说说，这个几乎不能用，因为不能假定可见性。
+优化的办法除了动态的确定working set，还可以离线烘焙feekback data。如同PVS一样，不过这个还和具体应用有关。
 
 现在使用的是ray-guided方式，完全由ray决定。排除实现本身的效率之外，并不清楚这种做法的效率有多高。
 
@@ -417,3 +414,5 @@ accessor是一个高度固定的链表，长度为树高，每调用一次getVal
 [12]: [Stackless-KD-Tree-Traversal-for-High-Performance-GPU-Ray-Tracing](http://www.johannes-guenther.net/StacklessGPURT/StacklessGPURT.pdf)
 
 [13]: [Interactive-Volume-Exploration-of-Petascale-Microscopy-Data-Streams-Using-a-Visualization-Driven-Virtual-Memory-Approach](https://a.com)
+
+[14]: [Dynamic-Diffuse-Global-Illumination-with-Ray-Traced-Irradiance-Fields](http://jcgt.org/published/0008/02/01/paper.pdf)
