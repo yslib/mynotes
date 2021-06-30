@@ -58,12 +58,9 @@ $$
 ## 体素存储：
 
 
-### **相关文章**
-
-
 <span id="storage_gpu"></span>
 
-### SVO(GPU)
+### [SVO(GPU)][3]
 
 八叉树存储，重点是八叉树的遍历方式。这种类型的数据结构一般都是stackless遍历。
 比如对于[kd-tree的有栈遍历方法][11](无递归):
@@ -71,7 +68,6 @@ $$
 1. 判断射线和当前的节点的相交片段，如果只包含了分割平面的其中一侧（一定是里视点近的那一个），那就直接遍历这个节点。否则先把远处的那个节点压栈，然后遍历这个（离视点近的）节点。
 这样栈顶部的节点距视点的距离比栈底部的节点更近。
 2. 这样一直遍历去，如果当前节点是叶节点，执行普通求交规则，如果hit，则执行相应逻辑，否则判断栈是否为空。如果为空，整个遍历过程结束（即遍历完整个场景了），否则出栈继续执行上一步。
-
 
 
 ![](./img/kd_tree.jpg)
@@ -87,6 +83,8 @@ octree和kd-tree不同的地方在于，octree是局部规则的网格，在遍�
 ### [GigaVoxels(GPU)][6]:
 
 - N^3-Tree
+
+
 ![](./img/n3.jpg)
 
 - 树的组织形式不是通常的指针（因为要在纹理里面存储），而是层次化的3d-texture cache。分为两个3d texture。 其中一个存放node metadata。每个node metadata里面有N^3个关于
@@ -100,6 +98,7 @@ octree和kd-tree不同的地方在于，octree是局部规则的网格，在遍�
 
 接下来就是绘制, Ray-casting的时候是用的是类似于kd-restart去遍历octree。
 
+#### **Feedback**
 Feedback过程是关键。这里使用的是多个RT存储缺页id。组织成一个2d texture array。 就像实现OIT一样，每个像素对应一个链表（数组），用来存放这个像素对应的射线在遍历的时候发现的没有在显存中的block id。但是直接这样做有两个问题：
 
 ![](./img/n3_pkg.jpg)
@@ -111,12 +110,12 @@ Feedback过程是关键。这里使用的是多个RT存储缺页id。组织成�
 基于以上两点考虑，可以让2x2四个像素公用四个链表的存储空间。
 
 ![](./img/n3_feedback.jpg)
+
 CPU直接处理这几个RT里面的信息显然吃不消（除了回读的代价外，还需要无差别遍历这几个rt中的每个像素去找到所有的不重复的缺页id），因此需要一个mask来指示一个不重复的缺页id集合。这个mask也是一张2d texture。每个像素可以解释为一个bit vector(32bit almost)。然后在CPU端通过这个像素信息去索引记录缺页id的rt。当然为这个mask texture 的每个像素构造bit vector除了要去重之外还涉及到了另外一篇文章的方法（金字塔直方图，就是一个统计问题，主要用来压缩），这里不细讲。
 
 
 总结:
 其实这篇文章写作上对读者不太友好。有些地方不够详细。比如feedback的过程和遍历树的过程。因为这两个地方并不是引用的其他文章，这里应该详细描述才对。而且feedback的过程图示非常让人迷惑。
-
 
 实现了这篇文章的方法的开源项目有 (Voreen)
 
@@ -131,36 +130,96 @@ CPU直接处理这几个RT里面的信息显然吃不消（除了回读的代价
 
 ![](./img/vdb2.jpg)
 
-
-![](./img/vdb.jpg)
-
-
 - 一个矮胖的树
     - 树高固定
     - 每个节点分支数固定
 
-
 - 子节点数量很多。在实现上把节点分为三类做特化**LeafNode**, **InternalNode**, **RootNode**, 用模板参数直接确定节点的结构。
 
-#### 随机访问模式
+```cpp
+template<typename Value, typename Child>
+class RootNode{
+  struct RootData{
+    Child * node; // Null if tile
+    pair<Value, bool> tile;
+  };
+  hash_map<RootKey,RootData,Hasher> mRootMap;
+  mutable Rigistry<Accessor> mAccessors;
+  Value mBackground;
+};
+```
 
-![](./img/vdb_root.jpg)
 
 - 全局坐标的block,对于每个体素所在block的坐标的每一维度，取所在block的高位，作为这个block的key。
 
-![](./img/vdb_internal.jpg)
+```cpp
+template <class Value , class Child , int Log2X , int Log2Y=Log2X , int Log2Z=Log2Y >
+class InternalNode {
+  static const int sLog2X=Log2X+Child:: sLog2X ,
+  sLog2Y=Log2Y+Child:: sLog2Y ,
+  sLog2Z=Log2Z+Child:: sLog2Z ,
+  sSize=1<<Log2X+Log2Y+Log2Z;
+
+    union InternalData {
+        Child* child;//child node pointer
+        Value value;//tile value
+    } mInternalDAT[ sSize];
+    BitMask <sSize > mValueMask;  //active states
+
+    BitMask <sSize > mChildMask;  //node topology
+
+    int32_t mX, mY, mZ;//origin of node
+};
+```
+
 
 - 全局坐标的(x,y,z)的块内偏移转换成子块坐标: 然后把三维坐标转换为一维坐标。
 
-![](./img/vdb_leaf.jpg)
+```cpp
+template <class Value , int Log2X , int Log2Y=Log2X , int Log2Z=Log2Y >
+class LeafNode {
+    static const int sSize=1<<Log2X+Log2Y+ Log2Z ,
+    sLog2X=Log2X , sLog2Y=Log2Y , sLog2Z=Log2Z;
+    union LeafData {
+        streamoff offset;                   //out -of-core streaming
+        Value* values;                      //temporal buffers
+    } mLeafDAT;                             //direct access table
+    BitMask <sSize > mValueMask;            //active states
 
+    [BitMask <sSize > mInsideMask];         //optional for LS
+    uint64_t mFlags;                        //64 bit flags
+};
+
+```
 - 体素的块内偏移
 
 注意，除了root用的是hash map，其他的每层(InternalNode和LeafNode)对于子节点的查询都是用了Direct Access Table。
 
+
+![](./img/vdb.jpg)
+
+#### 随机访问模式
+
 代码当中预定义的一些树
 
 ```cpp
+
+template<typename T, Index N1=4, Index N2=3>
+struct Tree3 {
+    using Type = Tree<RootNode<InternalNode<LeafNode<T, N2>, N1>>>;
+};
+
+template<typename T, Index N1=5, Index N2=4, Index N3=3>
+struct Tree4 {
+    using Type = Tree<RootNode<InternalNode<InternalNode<LeafNode<T, N3>, N2>, N1>>>;
+};
+
+template<typename T, Index N1=6, Index N2=5, Index N3=4, Index N4=3>
+struct Tree5 {
+    using Type =
+        Tree<RootNode<InternalNode<InternalNode<InternalNode<LeafNode<T, N4>, N3>, N2>, N1>>>;
+};
+
 
 using BoolTree     = tree::Tree4<bool,        5, 4, 3>::Type;
 using DoubleTree   = tree::Tree4<double,      5, 4, 3>::Type;
@@ -183,42 +242,7 @@ using Vec3fTree    = Vec3STree;
 using VectorTree   = Vec3fTree;
 ```
 
-如果按叶节点的边长是2*2*2来算的话，每个体素一个字节，这些树的整个数据寻址空间为2^(14*3)字节，也就是4TB。
-
-而且由于坐标的编码每个维度是20bit，理论寻址大小为2^(60)字节，1048576TB。
-
-```cpp
-
-/// @brief Tree3<T, N1, N2>::Type is the type of a three-level tree
-/// (Root, Internal, Leaf) with value type T and
-/// internal and leaf node log dimensions N1 and N2, respectively.
-/// @note This is NOT the standard tree configuration (Tree4 is).
-template<typename T, Index N1=4, Index N2=3>
-struct Tree3 {
-    using Type = Tree<RootNode<InternalNode<LeafNode<T, N2>, N1>>>;
-};
-
-
-/// @brief Tree4<T, N1, N2, N3>::Type is the type of a four-level tree
-/// (Root, Internal, Internal, Leaf) with value type T and
-/// internal and leaf node log dimensions N1, N2 and N3, respectively.
-/// @note This is the standard tree configuration.
-template<typename T, Index N1=5, Index N2=4, Index N3=3>
-struct Tree4 {
-    using Type = Tree<RootNode<InternalNode<InternalNode<LeafNode<T, N3>, N2>, N1>>>;
-};
-
-/// @brief Tree5<T, N1, N2, N3, N4>::Type is the type of a five-level tree
-/// (Root, Internal, Internal, Internal, Leaf) with value type T and
-/// internal and leaf node log dimensions N1, N2, N3 and N4, respectively.
-/// @note This is NOT the standard tree configuration (Tree4 is).
-template<typename T, Index N1=6, Index N2=5, Index N3=4, Index N4=3>
-struct Tree5 {
-    using Type =
-        Tree<RootNode<InternalNode<InternalNode<InternalNode<LeafNode<T, N4>, N3>, N2>, N1>>>;
-};
-
-```
+而且由于坐标的编码每个维度是20bit，按每个体素一字节，理论寻址大小为2^(60)字节，1048576TB。
 
 #### 具有空间局部性的访问模式
 
@@ -243,9 +267,29 @@ accessor是一个高度固定的链表，长度为树高，每调用一次getVal
 
 #### 顺序遍历模式
 
-如果事先确定对网格的局部进行顺序遍历，在实现相应的接口的时候，可以按照存储在内存当中的顺序进行寻址。比如对于某些fill操作，不要简单的使用```tree.setValue(x,y,z)```甚至```acc.setValue(x,y,z)```。因为这两个都没有考虑任何空间局部性。
+如果事先确定要对有体素的位置进行遍历，在实现相应的接口的时候，可以按照存储在内存当中的顺序进行寻址。不要简单的使用```tree.setValue(x,y,z)```甚至```acc.setValue(x,y,z)```。因为这两个都没有考虑体素存储在内存中的顺序。
 
-顺序遍历模式的实现和数据结构高度相关，原则就是快速的进行顺序索引。这里面涉及到很多trick，比如快速判断节点当中的mask的1 bit在第几位(Debruijn序列，专用指令集优化等)。这里就不详细展开了。
+顺序遍历模式的实现和数据结构高度相关，原则就是快速的进行顺序索引。因此要用迭代器进行遍历，因为迭代器封装了具体便利内存需要考虑的局部性的信息。
+
+```cpp
+  Index32 findNextOn(Index32 start) const
+    {
+        Index32 n = start >> 6;                          //initiate
+        if (n >= WORD_COUNT) return SIZE;                // check for out of bounds
+        Index32 m = start & 63;
+        Word b = mWords[n];
+        if (b & (Word(1) << m)) return start;            // simpel case: start is on
+        b &= ~Word(0) << m;                              // mask out lower bits
+        while(!b && ++n<WORD_COUNT) b = mWords[n];       // find next none-zero word
+        return (!b ? SIZE : (n << 6) + FindLowestOn(b)); // catch last word=0
+    }
+    // 找到第一个为True的位的索引
+```
+
+顺序访问迭代器基于以上操作。这个操作作用在节点内部的Mask结构上。
+
+这里面涉及到很多trick，比如快速判断节点当中的mask的1 bit在第几位(Debruijn序列，专用指令集优化等)。这里就不详细展开了。
+
 
 #### 模板访问模式
 这个是针对具有特定访问模式的一系列优化。比如对于物理仿真，有限元模拟等。这些都是Accessor以及顺序遍历模式的组合。
@@ -291,16 +335,22 @@ accessor是一个高度固定的链表，长度为树高，每调用一次getVal
 
 #### **Lumen In UE5**
 
+https://docs.unrealengine.com/5.0/en-US/RenderingFeatures/Lumen/TechOverview/
 
 对场景进行预计算
 
-- UE5使用了复杂化的SDF来加速全局光照计算，并且它时离线计算的。在编辑器中修改了对象之后重新生成。
 
-- UE5 使用软硬结合的ray-tracing，fallback到不同配置的机器上。这里的软件ray-tracing也是用GPU实现的。
+- UE5 使用软件实现的全局光照:
 
-    - 对于软件 ray-tracing，使用有向距离场加速，但是同时考虑了物体sdf 和 global sdf来加速。具体来说时对于近处的物体使用精确的local sdf。并且对于mesh和材质有各种限制。
+    - 全局光的核心还是软光追，即通过computer shader在LumensScene上 追踪Surface cache的实现。
 
-    - 硬件光锥可以使用更高精度的 proxy mesh，然而对于实例数量有限制。
+    - Surface Cache: 场景物体的光照信息被体素化到了一个叫做Mesh Card的结构上。充当光照探针的角色。
+
+    - 对于软件 ray-tracing，使用有向距离场加速，但是同时考虑了物体sdf (慢速高精度)和 global sdf(快速低精度)来加速。具体来说时对于近处的物体使用精确的local sdf。并且对于mesh和材质有各种限制。
+
+    - 硬件光锥可以使用更高精度的 proxy mesh，然而对于实例数量有限制，所以硬件光线追踪不能做大场景。因此，硬件光锥是一个可选项，用来增强光锥效果。
+
+    - 用屏幕空间反射弥补Lumen scene全局光照效果不太好的地方。因为软广追是建立在Lumen Scene这样一个[粗糙场景上的](https://docs.unrealengine.com/5.0/Images/RenderingFeatures/Lumen/TechOverview/TestScene_LumenEnabled.webp)
 
 
 <span id="app_vt"></span>
@@ -355,7 +405,6 @@ accessor是一个高度固定的链表，长度为树高，每调用一次getVal
     - [PolyVox](http://www.volumesoffun.com/polyvox-about/)
 
     - [Cubiquity 2](https://github.com/DavidWilliams81/cubiquity)
-
 
 
 
