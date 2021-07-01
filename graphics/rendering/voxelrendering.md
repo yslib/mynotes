@@ -1,6 +1,12 @@
-# 体素(Voxel)
+# 体素大杂烩
 
 最近自己在自娱自乐的写一个体素[存储引擎](https://github.com/yslib/VoxelMan.git)， 在这里记录一下需要用到的相关资料。
+
+
+<div align=center>
+<img src="./graphics/rendering/img/voxel.jpg" />
+</div>
+
 ## 目录
 
 - [Raycasting](#raycasting)
@@ -28,35 +34,41 @@
 
 ## **Volume Rendering & Ray-Casting Ray-marching)**
 
-虽然这里主要介绍体素的存储，并且体素的表现方式并不局限于Raycasting，但是对于体素来说，Raycasting终归是一个绕不开的话题。在这里简单的介绍一下Raycasting.
+虽然这里主要介绍体素的存储，并且体素的表现方式并不局限于Raycasting。 但是对于体素来说，Ray-casting终归是一个绕不开的话题。在这里简单的介绍一下Ray-casting.
 
-![Raycasting](./img/raycast0.jpg)
+<div align=center>
+<img src="./graphics/rendering/img/raycast0.jpg" />
+</div>
 
 对从当前像素发出的射线上每个点进行颜色累加作为这个像素最终的颜色，
 
 - 从前先后：
 
 $$
-C_{dst} = C_{dst} + (1 - \Alpha_{dst}) C_{src}
+C_{dst} = C_{dst} + (1 - \alpha_{dst}) C_{src}
 $$
 
 $$
-\alpha_{dst} = \alpha_{dst} + (1 - \Alpha_{dst}) C_{src}
+\alpha_{dst} = \alpha_{dst} + (1 - \alpha_{dst}) \alpha_{src}
 $$
 
 - 从后向前：
+$$
+C_{dst} = (1-\alpha_{src})C_{dst}+ C_{src}
+$$
+
+<div align=center>
+<img src="./graphics/rendering/img/render_result.png" />
+</div>
+
 
 至于这个公式是怎么来的，可以参考[Real-Time Volume Graphics][2]这本书。总的来说，上面的两个形式就是在只考虑吸收和发散模型的光线在介质中的传播方程，经过离散化（积分->黎曼和）后的[数值解法](https://www.cg.informatik.uni-siegen.de/data/Tutorials/EG2006/RTVG01_Theory.pdf)。
-
-![Raycasting1](./img/raycast_2.jpg)
-
-![Raycasting2](./img/raycast3.jpg)
-
 
 <span id="storage"></span>
 
 ## 体素存储：
 
+这里主要介绍两类的体素存储，在CPU和GPU上的针对大规模体素的存储。
 
 <span id="storage_gpu"></span>
 
@@ -68,7 +80,6 @@ $$
 1. 判断射线和当前的节点的相交片段，如果只包含了分割平面的其中一侧（一定是里视点近的那一个），那就直接遍历这个节点。否则先把远处的那个节点压栈，然后遍历这个（离视点近的）节点。
 这样栈顶部的节点距视点的距离比栈底部的节点更近。
 2. 这样一直遍历去，如果当前节点是叶节点，执行普通求交规则，如果hit，则执行相应逻辑，否则判断栈是否为空。如果为空，整个遍历过程结束（即遍历完整个场景了），否则出栈继续执行上一步。
-
 
 ![](./img/kd_tree.jpg)
 [去掉这个栈操作有两个方法][12]
@@ -85,12 +96,16 @@ octree和kd-tree不同的地方在于，octree是局部规则的网格，在遍�
 - N^3-Tree
 
 
-![](./img/n3.jpg)
+<div align=center>
+<img src="./graphics/rendering/img/n3.jpg" />
+</div>
 
 - 树的组织形式不是通常的指针（因为要在纹理里面存储），而是层次化的3d-texture cache。分为两个3d texture。 其中一个存放node metadata。每个node metadata里面有N^3个关于
 元素，按照对应的空间位置排列。可以看到，这本质上就是一个以direct accessed array方式存储的被层次化的hash table。指针被解释为block在texture 中的偏移。
 
-![](./img/n3_pool.jpg)
+<div align=center>
+<img src="./graphics/rendering/img/n3_pool.jpg" />
+</div>
 
 - 表面是个树，其实是一个hash table。
 
@@ -101,7 +116,9 @@ octree和kd-tree不同的地方在于，octree是局部规则的网格，在遍�
 #### **Feedback**
 Feedback过程是关键。这里使用的是多个RT存储缺页id。组织成一个2d texture array。 就像实现OIT一样，每个像素对应一个链表（数组），用来存放这个像素对应的射线在遍历的时候发现的没有在显存中的block id。但是直接这样做有两个问题：
 
-![](./img/n3_pkg.jpg)
+<div align=center>
+<img src="./graphics/rendering/img/n3_pkg.jpg" />
+</div>
 
 1. 相邻像素发出的射线大概率会检测到相同的块，因此重复度很高。
 
@@ -109,7 +126,9 @@ Feedback过程是关键。这里使用的是多个RT存储缺页id。组织成�
 
 基于以上两点考虑，可以让2x2四个像素公用四个链表的存储空间。
 
-![](./img/n3_feedback.jpg)
+<div align=center>
+<img src="./graphics/rendering/img/n3_feedback.jpg" />
+</div>
 
 CPU直接处理这几个RT里面的信息显然吃不消（除了回读的代价外，还需要无差别遍历这几个rt中的每个像素去找到所有的不重复的缺页id），因此需要一个mask来指示一个不重复的缺页id集合。这个mask也是一张2d texture。每个像素可以解释为一个bit vector(32bit almost)。然后在CPU端通过这个像素信息去索引记录缺页id的rt。当然为这个mask texture 的每个像素构造bit vector除了要去重之外还涉及到了另外一篇文章的方法（金字塔直方图，就是一个统计问题，主要用来压缩），这里不细讲。
 
@@ -128,7 +147,9 @@ CPU直接处理这几个RT里面的信息显然吃不消（除了回读的代价
 这篇文章描述的数据结构是部署在CPU上的，是梦工厂的开源项目。主要是面向动画变形，仿真等用途的。比起之前的GPU上主要用来面向渲染或者查询数据结构，最大的不同是提供了对体素的操作（增删查改）。
 第一次看到这个名字的时候以为是体素数据库的意思，其实VDB并不是体素数据库。虽然这篇文章就是在构造一个体素数据库。
 
-![](./img/vdb2.jpg)
+<div align=center>
+<img src="./graphics/rendering/img/vdb2.jpg" />
+</div>
 
 - 一个矮胖的树
     - 树高固定
@@ -196,7 +217,9 @@ class LeafNode {
 注意，除了root用的是hash map，其他的每层(InternalNode和LeafNode)对于子节点的查询都是用了Direct Access Table。
 
 
-![](./img/vdb.jpg)
+<div align=center>
+<img src="./graphics/rendering/img/vdb.jpg" />
+</div>
 
 #### 随机访问模式
 
@@ -306,12 +329,21 @@ accessor是一个高度固定的链表，长度为树高，每调用一次getVal
 <span id="app_sdf"></span>
 ### **有向距离场**
 
-可以用来加速Ray-marching，来辅助全局光照的实现。
+<div align=center>
+<img src="./graphics/rendering/img/sdf1.jpg" />
+</div>
+
+
+可以用来加速射线求交，来辅助全局光照的实现。
 
 全局光照的开销主要是光线和场景中物体表面求交。对于离线的全局光照，可以使用传统的加速结构，做无偏的光线求交。
 除此之外，通过空间换时间的办法，在场景中的每一点上，记录这一点到场景中**最近**物体表面的**距离**。当追踪从场景中某一点$o$向某方向$d$
 发出的一条光线，可以通过计算出下一个marching 的位置， $\bar{r_{cur}} = \bar{o} + \bar{d} * SDF(\bar{r_{prev}})$，如果此时$SDF(\bar{r})$ 小于某一设定的
 阈值时，可以认为此时与物体表面相交。其中，这个**有向距离场SDF**可以看作一个体素存储。
+
+<div align=center>
+<img src="./graphics/rendering/img/sdf.png" />
+</div>
 
 实时更新并获得稳定的SDF时实现良好的实时全局光照的关键。
 
@@ -321,15 +353,21 @@ accessor是一个高度固定的链表，长度为树高，每调用一次getVal
 
 - [RSM][1]
 
-![RSM](./img/rsm.jpg)
+<div align=center>
+<img src="./graphics/rendering/img/rsm.jpg" />
+</div>
 
 - [VXGI][8]
 
-![Cone Tracing](./img/cone2.jpg)
+<div align=center>
+<img src="./graphics/rendering/img/cone2.jpg" />
+</div>
 
-![Cone Tracing](./img/cone.jpg)
+<div align=center>
+<img src="./graphics/rendering/img/cone.jpg" />
+</div>
 
-[VXGI][8]相比于[RSM][1]，通过把mesh场景体素化成三维信息(并且动过滤波操作，把高精度的体素信息分别降到了不从层级的lod上，相当于把场景“气化”了，整个体素场景lod相当于**遮挡场**(Occlusion Field))，借助ray-marching累积$\alpha$，根据$\alpha$权重判断这一次的弹射有没有被遮挡。可见这种遮挡的判断也是非常粗糙的，容易漏光。
+[VXGI][8]相比于[RSM][1]，通过把mesh场景体素化成三维信息(低通滤波，把高精度的体素信息分别降到了不从层级的lod上，相当于把场景“气化”了，整个体素场景lod相当于**遮挡场**(Occlusion Field))，借助ray-marching累积$\alpha$，根据$\alpha$权重判断这一次的弹射有没有被遮挡。可见这种遮挡的判断也是非常粗糙的，容易漏光。
 
 **并没有对弹射的光线执行任何求交操作来判断严格意义上的遮挡，仅仅是把对遮挡的判断转移到了判断累积光线的不透明度上**
 
