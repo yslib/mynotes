@@ -12,6 +12,23 @@ Server = https://mirrors.ustc.edu.cn/archlinuxcn/$arch
 sudo pacman -Syy && sudo pacman -S archlinuxcn-keyring
 ```
 
+## 常见问题
+
+### **"Failed to commit transaction (invalid or corrupted package)" error**
+```sh
+find /var/cache/pacman/pkg/ -iname "*.part" -delete
+```
+
+### **"Failed to init transaction (unable to lock database)" error**
+
+```sh
+rm /var/lib/pacman/db.lck
+```
+
+### **Signature from "User <email@example.org>" is unknown trust, installation failed**
+
+```sh
+```
 
 ## Clash
 把提供的配置文件config.yaml复制到~/.config/clash 以及解压后的二进制文件中的根目录
@@ -103,3 +120,5 @@ export XMODIFIERS="@im=fcitx"
 '>>/etc/pacman.conf
 
 ```
+
+
