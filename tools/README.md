@@ -25,10 +25,28 @@ find /var/cache/pacman/pkg/ -iname "*.part" -delete
 rm /var/lib/pacman/db.lck
 ```
 
+Or you can reseting all the keys by:
+
+remove /etc/pacman.d/gnupg
+
+and then
+
+```sh
+pacman-key --init
+pacman-key --populate archlinux
+pacman -S archlinux-keyring
+```
+
 ### **Signature from "User <email@example.org>" is unknown trust, installation failed**
 
 ```sh
+pacman-key --refresh-keys
 ```
+
+```sh
+pacman -Sy archlinux-keyring && pacman -Su
+```
+
 
 ## Clash
 把提供的配置文件config.yaml复制到~/.config/clash 以及解压后的二进制文件中的根目录
