@@ -1,0 +1,75 @@
+<!doctype html><html lang=en><head><title>\[Principia\] The Laws of Conservation :: YSL Blog</title>
+<meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="We re-examine the conservation of energy and momentum we learned in middle school from a purely mathematical perspective, and then we derive the conservation of angular momentum from the same perspective.
+我们从纯数学的角度来重新审视中学学过的能量守恒和动量守恒,然后我们再通过同样的角度得出角动量守恒。
+"><meta name=keywords content="Blog,Personal Website"><meta name=robots content="noodp"><link rel=canonical href=/post/principia/conservation/><link rel=stylesheet href=/styles.css><link rel="shortcut icon" href=/img/theme-colors/white.png><link rel=apple-touch-icon href=/img/theme-colors/white.png><meta name=twitter:card content="summary"><meta name=twitter:site content><meta name=twitter:creator content="Yang Shuoliu"><meta property="og:locale" content="en"><meta property="og:type" content="article"><meta property="og:title" content="\[Principia\] The Laws of Conservation"><meta property="og:description" content="We re-examine the conservation of energy and momentum we learned in middle school from a purely mathematical perspective, and then we derive the conservation of angular momentum from the same perspective.
+我们从纯数学的角度来重新审视中学学过的能量守恒和动量守恒,然后我们再通过同样的角度得出角动量守恒。
+"><meta property="og:url" content="/post/principia/conservation/"><meta property="og:site_name" content="YSL Blog"><meta property="og:image" content="/img/favicon/white.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="627"><meta property="article:section" content="Principia"><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css integrity=sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X crossorigin=anonymous><script defer src=https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js integrity=sha384-g7c+Jr9ZivxKLnZTDUhnkOnsh30B4H0rpLUpJ4jAIKs4fnJI+sEnkvrMWph2EDg4 crossorigin=anonymous></script><script defer src=https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js integrity=sha384-mll67QQFJfxn0IYznZYonOWZ644AWYC+Pt2cHqMaRhXVrursRwvLnLaebdGIlYNa crossorigin=anonymous onload=renderMathInElement(document.body)></script><script>document.addEventListener("DOMContentLoaded",function(){renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:!0},{left:"$",right:"$",display:!1}]})})</script></head><body class=white><div class="container center headings--one-size"><header class=header><div class=header__inner><div class=header__logo><a href=/><div class=logo>YSL Blog</div></a></div><ul class="menu menu--mobile"><li class=menu__trigger>Menu&nbsp;▾</li><li><ul class=menu__dropdown><li><a href=/about/>About Me</a></li><li><a href=https://github.com/yslib>GitHub</a></li><li><a href=https://picysl.com>Photography</a></li></ul></li></ul></div><nav class=navigation-menu><ul class="navigation-menu__inner menu--desktop"><li><a href=/about/>About Me</a></li><li><a href=https://github.com/yslib>GitHub</a></li><li><a href=https://picysl.com>Photography</a></li></ul></nav></header><div class=content><article class=post><h1 class=post-title><a href=/post/principia/conservation/>[Principia] The Laws of Conservation</a></h1><div class=post-meta><span class=post-author>Yang Shuoliu</span></div><span class=post-tags>#<a href=/tags/physics/>Physics</a>&nbsp;
+#<a href=/tags/principia/>Principia</a>&nbsp;</span><div class=post-content><div><p>We re-examine the conservation of energy and momentum we learned in middle school from a purely mathematical perspective, and then we derive the conservation of angular momentum from the same perspective.</p><hr><p>我们从纯数学的角度来重新审视中学学过的能量守恒和动量守恒,然后我们再通过同样的角度得出角动量守恒。</p><h1 id=守恒定律是什么>守恒定律是什么<a href=#守恒定律是什么 class=hanchor arialabel=Anchor>&#8983;</a></h1><p>能量守恒，动量守恒和机械能守恒都是运动积分。 为了明白什么是运动积分，需要弄清楚下面两个问题。</p><ol><li><strong>动能定理</strong> 和 <strong>动量定理</strong>与<strong>牛顿第二定律</strong>的关系</li><li><strong>动能定理</strong> 和<strong>动量守恒</strong> 以及 <strong>动量定理</strong> 和<strong>动量守恒</strong>的关系。</li></ol><h3 id=前置知识>前置知识：<a href=#前置知识 class=hanchor arialabel=Anchor>&#8983;</a></h3><ol start=0><li>Nabla算子</li></ol><p>$$
+\nabla
+$$</p><ol><li><p>标量场$\Psi(\vec{r})$的<strong>梯度</strong>是<strong>向量</strong>:
+$$\nabla\Psi = \frac{\partial{\Psi}}{\partial{x}}\vec{i} + \frac{\partial{\Psi}}{\partial{y}}\vec{j}+ \frac{\partial{\Psi}}{\partial{z}}\vec{k}$$</p></li><li><p>矢量场$\vec{A}(\vec{r})$ 的<strong>散度</strong>是<strong>标量</strong>:
+散度：</p><p>$$
+\nabla \cdot \vec{A}=\frac{\partial{A_x}}{\partial{x}} + \frac{\partial{A_y}}{\partial{y}}+ \frac{\partial{A_z}}{\partial{z}}
+$$</p><p>旋度：</p><p>$$
+\nabla \times \vec{A}
+$$</p></li><li><p>结论：
+$$
+\nabla\times\left(\nabla\Psi\right) = 0
+$$
+<strong>标量场的梯度的旋度为0</strong></p><p>$$
+\nabla\cdot\left(\nabla\times\vec{A}\right) = 0
+$$
+<strong>矢量场的旋度的散度为0</strong></p><blockquote><p>这两个反命题也成立，也就是说，一个旋度为0的（向量）场，可以表示为一个标量场的梯度.
+一个散度为0的（向量）场，可以表示为一个（向量）场的旋度。</p></blockquote><p>例子:
+对于一个<strong>无旋场</strong>，我们可以用一个<strong>标量场</strong>来表示，这个标量场一般称为 <strong>&ldquo;势&rdquo;</strong> 。比如<strong>静电场（标量场）的电势场（只是和位置有关的一个数）<strong>和</strong>重力场（标量场）的重力势（只是一个和位置有关的标量）</strong>。 同时，我们把这种<strong>旋度为0</strong>的力场称为<strong>保守力</strong>。</p></li></ol><h2 id=能量守恒>能量守恒<a href=#能量守恒 class=hanchor arialabel=Anchor>&#8983;</a></h2><p>$$
+\vec{F} = m\ddot{\vec{r}} \Rightarrow \vec{F} = m \frac{d\vec{v}}{dt}
+$$</p><p>如果我们定义一个量
+$$T = \frac{1}{2}mv^2 $$</p><p>那么就有
+$$
+\vec{F}d\vec{r} = m\frac{d\vec{v}}{dt}d\vec{r} = d(\frac{1}{2}mv^2)
+$$</p><p>得到动能定理
+$$\vec{F}d\vec{r} = dT$$</p><p>其积分形式</p><p>$$
+T_2-T_1 = \int_{\vec{r_1}}^{\vec{r_2}}\vec{F}d\vec{r}
+$$</p><p><strong>如果$\vec{F} = 0$，运动前后动能不变</strong>.</p><h2 id=动量守恒>动量守恒<a href=#动量守恒 class=hanchor arialabel=Anchor>&#8983;</a></h2><p>$$
+\vec{F} = m\ddot{\vec{r}} \Rightarrow \vec{F} = m \frac{d\vec{v}}{dt}
+$$</p><p>如果我们定义一个量$\vec{p} = m\vec{v}$</p><p>就得到
+$$
+\vec{F} = \frac{d\vec{p}}{dt}
+$$</p><p>首先我们需要明白，动量定力和牛顿第二定律$\vec{F} = m\ddot{\vec{r}}$ 都是二阶微分方程，也就是他们的次数是一样的，从形式上来讲他们是等价的。实际上，牛顿最开始提出来的第二定律其实就是这个我们今天所熟悉的<strong>动量定理</strong>$\vec{F} = \frac{d\vec{p}}{dt}$</p><p>然后我们把这个动量定理对<strong>时间</strong>积分，得到
+$$
+\vec{p_2} - \vec{p_1} = \int_{t_1}^{t_2}\vec{F}dt
+$$</p><p><strong>如果$\vec{F} = 0$，运动前后动量不变</strong>, 因为和牛顿第二定律等价，所以也可以从牛顿第二定律的角度来解释，<strong>如果合外力为0,那么速度不变</strong>。
+当然以上都是显而易见的结论，但重点在下面:</p><p>也就是说
+$$
+\vec{F} = 0 \Rightarrow \vec{p} = \vec{C}
+$$
+其中的这个 <strong>$\vec{p}= \vec{C}$</strong> 是一个<strong>守恒量</strong>。
+我们知道，$\vec{p}$里面的速度是$\vec{r}$的一阶导数，因此，如果我们以计算出系统的位置$\vec{r}$为目标，那么这个守恒量$\vec{p} = \vec{C}$就是一个一阶微分方程，相比于牛顿第二定律或者说动量定理，已经降了一阶了。</p><h2 id=动量矩守恒角动量守恒>动量矩守恒（角动量守恒）<a href=#动量矩守恒角动量守恒 class=hanchor arialabel=Anchor>&#8983;</a></h2><h3 id=矩>矩<a href=#矩 class=hanchor arialabel=Anchor>&#8983;</a></h3><p>位置的矢量和矢量的叉积</p><h3 id=力矩>力矩<a href=#力矩 class=hanchor arialabel=Anchor>&#8983;</a></h3><p>位置矢量和力
+$$
+\vec{M} = \vec{r}\times\vec{F}
+$$</p><h3 id=动量矩角动量>动量矩（角动量）<a href=#动量矩角动量 class=hanchor arialabel=Anchor>&#8983;</a></h3><p>位置矢量和动量</p><p>$$
+\vec{J} = \vec{r}\times\vec{p}
+$$</p><p>所谓的动量矩定理，就是
+$$
+\vec{M} = \frac{\mathrm{d}{\vec{J}}}{\mathrm{d}{t}}
+$$</p><p>也就是动量矩对时间的导数是的力矩，<strong>求导</strong> + <strong>牛顿第二定律</strong> 就可以证明。
+所以，所以动量矩定理和牛顿第二定律等价。</p><p>我们类比之前的动量守恒，如果这里的力矩$\vec{M} = 0$，也可以得到积分后的量是一个不变量。这就是<strong>动量矩（角动量）守恒</strong>。</p><blockquote><p>动量守恒或动量矩守恒发生前提（外力为0）是在是有点苛刻。然而我们解决的问题基本上不可能不受力的，所以，对于这两种守恒，我们一般使用其分量形式来解决问题。即在某一固定方向（对动量定理来说）或对于某一固定点（对于角动量守恒）分别使用这两个守恒。在某一固定方向上应用动量定理的典型问题是一个滑块在静止的斜坯上滑下，问这两个物体的运动规律。这当然是一个在水平方向上动量守恒的例子。对于角动量守恒的经典问题是只受有心力的物体叫动量守恒，比如天体的轨道运动规律。</p></blockquote><h2 id=机械能守恒>机械能守恒<a href=#机械能守恒 class=hanchor arialabel=Anchor>&#8983;</a></h2><p>我们看到，前面的动能定理和动量定理本质上是在某种特殊的条件下(F=0)去得到<strong>降过阶的微分方程</strong>。 使我们不用再去解$\vec{F}=m\ddot{\vec{r}}$这种复杂的二阶微分方程了。有了这种想法，我们自然更多的要去挖掘更多的<strong>运动积分</strong>。 然而，我们从牛顿第二定律出发，似乎已经不能得到新的运动积分了。但是，如果我们继续<strong>施加某种条件</strong>，可能又会发现一些守恒量。幸运的是，我们发现，如果只有<strong>保守力</strong>为主动力，我们又可以的到<strong>机械能守恒</strong>这个非常重要的运动积分。</p><p>之前的前置知识里面说了，保守力可以写作一个标量场的形式，就是势能。我们无时无刻不在的保守力重力场中，有:
+$$
+\nabla\times\vec{F} = 0 \Rightarrow \vec{F} = -\nabla V(\vec{r})
+$$</p><p>再通过之前得到动能定理的方式得到：
+$$
+\vec{F}\cdot\mathrm{d}{\vec{r}} = -\nabla V({\vec{r}})\cdot\mathrm{d}{\vec{r}} = -\mathrm{d}{V(\vec{r})}
+$$</p><blockquote><p>中间那一步关键的过程直接在迪卡尔坐标系下写完全就能把Nabla算子转换成一个三元函数的全微分.</p></blockquote><p>因为之前我们得到的动能定理也是
+$$\vec{F}\cdot d\vec{r} = \mathrm{d}T$$</p><p>因此
+$$
+\mathrm{d}T = -\mathrm{d}{V(\vec{r})}
+$$
+即<strong>保守力的势能</strong>和<strong>动能</strong>相互转换。</p><p>积分的到新的运动积分为
+$$
+T + V = C
+$$
+这个就是<strong>机械能守恒</strong>。</p><h3 id=一维势能曲线>一维势能曲线<a href=#一维势能曲线 class=hanchor arialabel=Anchor>&#8983;</a></h3><p>在<strong>保守力</strong>的前提下，有一个这样的曲线。</p></div></div><div class=pagination><div class=pagination__title><span class=pagination__title-h>Read other posts</span><hr></div><div class=pagination__buttons><span class="button previous"><a href=/post/principia/coordinates/><span class=button__icon>←</span>
+<span class=button__text>\[Principia\] Introduction on Coordination System</span>
+</a></span><span class="button next"><a href=/post/programming-language/rust/><span class=button__text>\[Programming Language\] Rust vs C++</span>
+<span class=button__icon>→</span></a></span></div></div></article></div><footer class=footer><div class=footer__inner><div class=copyright><span>© 2024 Powered by <a href=https://gohugo.io>Hugo</a></span>
+<span>:: <a href=https://github.com/panr/hugo-theme-terminal target=_blank>Theme</a> made by <a href=https://github.com/panr target=_blank>panr</a></span></div></div></footer><script type=text/javascript src=/bundle.min.js></script></div></body></html>

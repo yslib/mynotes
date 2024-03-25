@@ -1,0 +1,85 @@
+<!doctype html><html lang=en><head><title>Cheating Sheet :: YSL Blog</title>
+<meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content><meta name=keywords content="Blog,Personal Website"><meta name=robots content="noodp"><link rel=canonical href=/qa/><link rel=stylesheet href=/styles.css><link rel="shortcut icon" href=/img/theme-colors/white.png><link rel=apple-touch-icon href=/img/theme-colors/white.png><meta name=twitter:card content="summary"><meta name=twitter:site content><meta name=twitter:creator content><meta property="og:locale" content="en"><meta property="og:type" content="article"><meta property="og:title" content="Cheating Sheet"><meta property="og:description" content><meta property="og:url" content="/qa/"><meta property="og:site_name" content="YSL Blog"><meta property="og:image" content="/img/favicon/white.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="627"><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css integrity=sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X crossorigin=anonymous><script defer src=https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js integrity=sha384-g7c+Jr9ZivxKLnZTDUhnkOnsh30B4H0rpLUpJ4jAIKs4fnJI+sEnkvrMWph2EDg4 crossorigin=anonymous></script><script defer src=https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js integrity=sha384-mll67QQFJfxn0IYznZYonOWZ644AWYC+Pt2cHqMaRhXVrursRwvLnLaebdGIlYNa crossorigin=anonymous onload=renderMathInElement(document.body)></script><script>document.addEventListener("DOMContentLoaded",function(){renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:!0},{left:"$",right:"$",display:!1}]})})</script></head><body class=white><div class="container center headings--one-size"><header class=header><div class=header__inner><div class=header__logo><a href=/><div class=logo>YSL Blog</div></a></div><ul class="menu menu--mobile"><li class=menu__trigger>Menu&nbsp;▾</li><li><ul class=menu__dropdown><li><a href=/about/>About Me</a></li><li><a href=https://github.com/yslib>GitHub</a></li><li><a href=https://picysl.com>Photography</a></li></ul></li></ul></div><nav class=navigation-menu><ul class="navigation-menu__inner menu--desktop"><li><a href=/about/>About Me</a></li><li><a href=https://github.com/yslib>GitHub</a></li><li><a href=https://picysl.com>Photography</a></li></ul></nav></header><div class=content><article class=post><h1 class=post-title><a href=/qa/>Cheating Sheet</a></h1><div class=post-meta></div><div class=table-of-contents><h2>Table of Contents</h2><nav id=TableOfContents><ul><li><a href=#manjaro-linux-初始配置>Manjaro Linux 初始配置</a><ul><li><a href=#添加archlinuxcn源>添加archlinuxcn源</a></li><li><a href=#安装中文输入法>安装中文输入法</a></li></ul></li><li><a href=#常见问题>常见问题</a><ul><li><a href=#failed-to-commit-transaction-invalid-or-corrupted-package-error><strong>&ldquo;Failed to commit transaction (invalid or corrupted package)&rdquo; error</strong></a></li><li><a href=#failed-to-init-transaction-unable-to-lock-database-error><strong>&ldquo;Failed to init transaction (unable to lock database)&rdquo; error</strong></a></li><li><a href=#signature-from-user-emailexampleorg-is-unknown-trust-installation-failed><strong>Signature from &ldquo;User <a href=mailto:email@example.org>email@example.org</a>&rdquo; is unknown trust, installation failed</strong></a></li></ul></li><li><a href=#samba>Samba</a></li><li><a href=#x-client配置>X-Client配置：</a></li><li><a href=#x-server配置>X-Server配置：</a></li><li><a href=#git-删除submodule>Git 删除submodule</a></li><li><a href=#windows下几个有用的注册表脚本>Windows下几个有用的注册表脚本</a><ul><li><a href=#右键上下文菜单通过指定应用快速打开注册表>右键上下文菜单通过指定应用快速打开注册表</a></li></ul></li></ul></nav></div><div class=post-content><div><h2 id=manjaro-linux-初始配置>Manjaro Linux 初始配置<a href=#manjaro-linux-初始配置 class=hanchor arialabel=Anchor>&#8983;</a></h2><h3 id=添加archlinuxcn源>添加archlinuxcn源<a href=#添加archlinuxcn源 class=hanchor arialabel=Anchor>&#8983;</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-sh data-lang=sh><span style=display:flex><span>sudo -s
+</span></span><span style=display:flex><span>echo <span style=color:#e6db74>&#39;[archlinuxcn]
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>Server = https://mirrors.tuna.tsinghua.edu.cn/archlinuxcn/$arch
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>Server = https://mirrors.ustc.edu.cn/archlinuxcn/$arch
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>&#39;</span>&gt;&gt;/etc/pacman.conf
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>sudo pacman -Syy <span style=color:#f92672>&amp;&amp;</span> sudo pacman -S archlinuxcn-keyring
+</span></span></code></pre></div><h3 id=安装中文输入法>安装中文输入法<a href=#安装中文输入法 class=hanchor arialabel=Anchor>&#8983;</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-sh data-lang=sh><span style=display:flex><span>
+</span></span><span style=display:flex><span>sudo pacman -S fcitx
+</span></span><span style=display:flex><span>sudo pacman -S fcitx-configtool
+</span></span><span style=display:flex><span>sudo pacman -S fcitx-gtk2 fcitx-gtk3
+</span></span><span style=display:flex><span>sudo pacman -S fcitx-qt4 fcitx-qt5
+</span></span><span style=display:flex><span>yay -S fcitx-sogoupinyin
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>sudo -s
+</span></span><span style=display:flex><span>echo <span style=color:#e6db74>&#39;
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>export GTK_IM_MODULE=fcitx
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>export QT_IM_MODULE=fcitx
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>export XMODIFIERS=&#34;@im=fcitx&#34;
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>&#39;</span>&gt;&gt;/etc/pacman.conf
+</span></span></code></pre></div><h2 id=常见问题>常见问题<a href=#常见问题 class=hanchor arialabel=Anchor>&#8983;</a></h2><h3 id=failed-to-commit-transaction-invalid-or-corrupted-package-error><strong>&ldquo;Failed to commit transaction (invalid or corrupted package)&rdquo; error</strong><a href=#failed-to-commit-transaction-invalid-or-corrupted-package-error class=hanchor arialabel=Anchor>&#8983;</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-sh data-lang=sh><span style=display:flex><span>find /var/cache/pacman/pkg/ -iname <span style=color:#e6db74>&#34;*.part&#34;</span> -delete
+</span></span></code></pre></div><h3 id=failed-to-init-transaction-unable-to-lock-database-error><strong>&ldquo;Failed to init transaction (unable to lock database)&rdquo; error</strong><a href=#failed-to-init-transaction-unable-to-lock-database-error class=hanchor arialabel=Anchor>&#8983;</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-sh data-lang=sh><span style=display:flex><span>rm /var/lib/pacman/db.lck
+</span></span></code></pre></div><p>Or you can reseting all the keys by:</p><p>remove /etc/pacman.d/gnupg</p><p>and then</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-sh data-lang=sh><span style=display:flex><span>pacman-key --init
+</span></span><span style=display:flex><span>pacman-key --populate archlinux
+</span></span><span style=display:flex><span>pacman -S archlinux-keyring
+</span></span></code></pre></div><h3 id=signature-from-user-emailexampleorg-is-unknown-trust-installation-failed><strong>Signature from &ldquo;User <a href=mailto:email@example.org>email@example.org</a>&rdquo; is unknown trust, installation failed</strong><a href=#signature-from-user-emailexampleorg-is-unknown-trust-installation-failed class=hanchor arialabel=Anchor>&#8983;</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-sh data-lang=sh><span style=display:flex><span>pacman-key --refresh-keys
+</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-sh data-lang=sh><span style=display:flex><span>pacman -Sy archlinux-keyring <span style=color:#f92672>&amp;&amp;</span> pacman -Su
+</span></span></code></pre></div><h2 id=samba>Samba<a href=#samba class=hanchor arialabel=Anchor>&#8983;</a></h2><ol><li>配置局域网共享</li></ol><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-sh data-lang=sh><span style=display:flex><span>  sudo pacman -S samba
+</span></span></code></pre></div><ol start=2><li>创建 samba 账号</li></ol><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-sh data-lang=sh><span style=display:flex><span>pdbedit -a root
+</span></span></code></pre></div><ol start=3><li>设置开机启动</li></ol><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>systemctl enable smb.service
+</span></span></code></pre></div><ol start=4><li>启动</li></ol><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>systemctl start smb.service
+</span></span></code></pre></div><ol start=5><li>配置文件在</li></ol><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>/etc/samba/smb.conf
+</span></span></code></pre></div><ol start=6><li>配置文件模板</li></ol><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-ini data-lang=ini><span style=display:flex><span>  <span style=color:#66d9ef>[global]</span>
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>workgroup</span><span style=color:#f92672>=</span><span style=color:#e6db74>WORKGROUP
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>  security=user # share (dangerous!), user ,server,domain
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>  [share]
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>  path=/path/to/your/share/dir
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>  public=yes
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>  writable=yes
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>  read only=no</span>
+</span></span></code></pre></div><ol start=7><li>X Forwarding to windows
+当（从Windows）ssh到服务器上时，有时候需要临时运行一下Linux下面的X11程序。我们需要设置X11转发。</li></ol><h2 id=x-client配置>X-Client配置：<a href=#x-client配置 class=hanchor arialabel=Anchor>&#8983;</a></h2><p>对于OpenSSH
+把sshd-config文件下的如下几项的注释去掉并重启ssh server</p><pre tabindex=0><code>AllowTcpForwarding yes
+X11Forwarding yes
+X11DisplayOffset 10
+</code></pre><p>并且导入环境变量</p><pre tabindex=0><code>export DISPLAY=ip:0.0   # ip 是ssh客户端的ip
+</code></pre><h2 id=x-server配置>X-Server配置：<a href=#x-server配置 class=hanchor arialabel=Anchor>&#8983;</a></h2><p>在Windows下，推荐使用VcXsrv 作为 X-Server
+链接时带上-X参数</p><h2 id=git-删除submodule>Git 删除submodule<a href=#git-删除submodule class=hanchor arialabel=Anchor>&#8983;</a></h2><ol><li>首先删除子模块目录</li><li><code>.gitmodules</code>中删除相关内容</li><li><code>.git/config</code>中删除相关内容</li><li><code>.git/module/*</code>中删除子模块相关信息</li></ol><h2 id=windows下几个有用的注册表脚本>Windows下几个有用的注册表脚本<a href=#windows下几个有用的注册表脚本 class=hanchor arialabel=Anchor>&#8983;</a></h2><h3 id=右键上下文菜单通过指定应用快速打开注册表>右键上下文菜单通过指定应用快速打开注册表<a href=#右键上下文菜单通过指定应用快速打开注册表 class=hanchor arialabel=Anchor>&#8983;</a></h3><p>我自己喜欢用TUI NVim来编辑文本，所以需要右键快速打开文本或者目录。这种自定义项目需要通过写入注册表的方式添加。
+把一下脚本复制到.reg类型的文本中，然后点击执行就可以了。</p><pre tabindex=0><code>Windows Registry Editor Version 5.00
+[HKEY_CLASSES_ROOT\*\shell\Nvim]
+@=&#34;Open With Nvim In Alacritty&#34;
+[HKEY_CLASSES_ROOT\*\shell\Nvim\command]
+@=&#34;C:\\Program Files\\Alacritty\\alacritty.exe -e nvim \&#34;%1\&#34;&#34;
+
+
+[HKEY_CLASSES_ROOT\Directory\shell\Nvim]
+@=&#34;Open With Nvim In Alacritty&#34;
+[HKEY_CLASSES_ROOT\Directory\shell\Nvim\command]
+@=&#34;C:\\Program Files\\Alacritty\\alacritty.exe -e nvim \&#34;%1\&#34;&#34;
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\Nvim]
+@=&#34;Open With Nvim In Alacritty&#34;
+[HKEY_CLASSES_ROOT\Directory\Background\shell\Nvim\command]
+@=&#34;C:\\Program Files\\Alacritty\\alacritty.exe -e nvim \&#34;%V\&#34;&#34;
+</code></pre><p>简单解释一下，第一行是必须的。方括号里是要建立的项。@代表默认的Key。
+右键菜单的一般是添加shell/{自定义的键} 以及 shell/{自定义的键}/command 这两个键。注意路径需要用转义字符。
+如果想加图标，则在shell/{自定义的键}这一级加入名称为Icon的项: &ldquo;Icon&rdquo;="{Your Icon Path}"</p><p>保证alacritty 和 nvim的路径要保证正确。可以根据自己的环境修改。</p><p>添加的三个地方分别是针对所有文件，目录，以及空白处的右键。如果只想对某种类型的文件添加这种功能，把通配符替换成文件扩展名。可以打开注册表看一下这个结构。</p><p>如果想要删除，直接把方括号里的键前面加-</p><pre tabindex=0><code>Windows Registry Editor Version 5.00
+[-HKEY_CLASSES_ROOT\*\shell\Nvim]
+@=&#34;Open With Nvim In Alacritty&#34;
+[-HKEY_CLASSES_ROOT\*\shell\Nvim\command]
+@=&#34;C:\\Program Files\\Alacritty\\alacritty.exe -e nvim \&#34;%1\&#34;&#34;
+
+
+[-HKEY_CLASSES_ROOT\Directory\shell\Nvim]
+@=&#34;Open With Nvim In Alacritty&#34;
+[HKEY_CLASSES_ROOT\Directory\shell\Nvim\command]
+@=&#34;C:\\Program Files\\Alacritty\\alacritty.exe -e nvim \&#34;%1\&#34;&#34;
+
+[-HKEY_CLASSES_ROOT\Directory\Background\shell\Nvim]
+@=&#34;Open With Nvim In Alacritty&#34;
+[-HKEY_CLASSES_ROOT\Directory\Background\shell\Nvim\command]
+@=&#34;C:\\Program Files\\Alacritty\\alacritty.exe -e nvim \&#34;%V\&#34;&#34;
+</code></pre></div></div></article></div><footer class=footer><div class=footer__inner><div class=copyright><span>© 2024 Powered by <a href=https://gohugo.io>Hugo</a></span>
+<span>:: <a href=https://github.com/panr/hugo-theme-terminal target=_blank>Theme</a> made by <a href=https://github.com/panr target=_blank>panr</a></span></div></div></footer><script type=text/javascript src=/bundle.min.js></script></div></body></html>

@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="161px" height="341px" viewBox="-0.5 -0.5 161 341" content="&lt;mxfile host=&quot;c6fbe022-87ab-43c5-af81-405e5ff0eaac&quot; modified=&quot;2020-09-13T03:01:18.560Z&quot; agent=&quot;5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Code-Insiders/1.49.0-insider Chrome/83.0.4103.122 Electron/9.2.1 Safari/537.36&quot; etag=&quot;TaV7EKQjJ3BqLmLDTvMj&quot; version=&quot;13.1.3&quot;&gt;&lt;diagram id=&quot;6hGFLwfOUW9BJ-s0fimq&quot; name=&quot;Page-1&quot;&gt;7VZLj5swEP41XCo14tEmu8dAk/ZSqVUOPXvxAFb8oMYE0l/fMZjX0pXYSntqTxl/8/LMfB7iRYloP2tSFl8VBe6FPm296JMXhkHw4YA/Frn3yMeHoAdyzagzmoAL+wUO9B1aMwrVwtAoxQ0rl2CqpITULDCitWqWZpniy6wlyWEFXFLC1+gPRk3Row/hYcK/AMuLIXOwf+w1ggzGrpKqIFQ1Myg6eVGilTK9JNoEuG3e0Jfe7/yCdryYBmm2OIS9w43w2tW22+28cM/RO37SKOVWWiO3a6KBGEiUEETSb9j+bW5HzlU6OcZ1loGutvh2N+uaZu7DJAy0VlUYwREIUKyMVleMzpVGRCqJlnHGOH8GEc5yiUcOWXcx0IbhhI8OFoxSmyRuCmbgUpLUZmyQz4hpVUsKtoW+Da6kGYJ7YXQOznFy6CroWouBoX1xPME4dHwtoAQYfUeT8ak4nriHsnfHZmJdMGDFnHG+A4ljej6GnsiAguPDn7kRrbhxu8aQM7kY3ZbJDQhlt8X49j9rS/TYTvG9G8jRvltsTxfZ6Z/HqUoiZ0QU9N2gwZrmyhnc5X6b66wLfdt8/8tflv9X1c930knSV3O620b+5m35vYYaLvWTYOZfX2LB48YtNn7vX7HF8Dh9PTvd7D9IdPoN&lt;/diagram&gt;&lt;/mxfile&gt;">
+    <defs/>
+    <g>
+        <rect x="0" y="0" width="160" height="100" fill="none" stroke="none" pointer-events="all"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject style="overflow: visible; text-align: left;" pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe flex-start; width: 158px; height: 1px; padding-top: 50px; margin-left: 2px;">
+                        <div style="box-sizing: border-box; font-size: 0; text-align: left; ">
+                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: #F1FBC7; line-height: 1.2; pointer-events: all; white-space: normal; word-wrap: normal; ">
+                                ...
+                                <br/>
+                                <br/>
+                                vkCreateCommandPool
+                                <br/>
+                                <br/>
+                                vkAllocateCommandBuffers
+                                <br/>
+                                <br/>
+                                ...
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="2" y="54" fill="#F1FBC7" font-family="Helvetica" font-size="12px">
+                    ......
+                </text>
+            </switch>
+        </g>
+        <rect x="0" y="130" width="160" height="210" fill="none" stroke="none" pointer-events="all"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject style="overflow: visible; text-align: left;" pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe flex-start; width: 158px; height: 1px; padding-top: 235px; margin-left: 2px;">
+                        <div style="box-sizing: border-box; font-size: 0; text-align: left; ">
+                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: #F1FBC7; line-height: 1.2; pointer-events: all; white-space: normal; word-wrap: normal; ">
+                                vkBeginCommandBuffer
+                                <br/>
+                                <br/>
+                                <div style="text-align: center">
+                                    <span>
+                                        vkCmd*
+                                    </span>
+                                </div>
+                                <div style="text-align: center">
+                                    <br/>
+                                </div>
+                                <div style="text-align: center">
+                                    <span>
+                                        vkCmd*
+                                    </span>
+                                </div>
+                                <div style="text-align: center">
+                                    <br/>
+                                </div>
+                                <div style="text-align: center">
+                                    <span>
+                                        vkCmd
+                                    </span>
+                                </div>
+                                <br/>
+                                vkEndCommandBuffer
+                                <br/>
+                                <br/>
+                                ... ...
+                                <br/>
+                                <br/>
+                                vkQueueSubmit
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="2" y="239" fill="#F1FBC7" font-family="Helvetica" font-size="12px">
+                    vkBeginCommandBuffer...
+                </text>
+            </switch>
+        </g>
+    </g>
+    <switch>
+        <g requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"/>
+        <a transform="translate(0,-5)" xlink:href="https://desk.draw.io/support/solutions/articles/16000042487" target="_blank">
+            <text text-anchor="middle" font-size="10px" x="50%" y="100%">
+                Viewer does not support full SVG 1.1
+            </text>
+        </a>
+    </switch>
+</svg>

@@ -1,0 +1,199 @@
+<svg host="65bd71144e" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="871px" height="451px" viewBox="-0.5 -0.5 871 451" content="&lt;mxfile&gt;&lt;diagram id=&quot;XKLqsCDf5HKm490foHrs&quot; name=&quot;Page-1&quot;&gt;7VpLc6M4EP41rvIcJsUjweEY20l2D7uVGm/tzBxlaIMqArFCtsn8+m2BsMFggh8zcabCJdIn1Gp93e5uiQzsSZQ9CpKEf3Ef2MAy/GxgTweWZZnGLf5RyEuBmJZ9XSCBoL7GtsCM/gANGhpdUh/S2ouScyZpUgc9HsfgyRpGhODr+msLzuqrJiSABjDzCGuiX6kvQ42ajrsd+ANoEOqlb61RMRCR8mW9kzQkPl9XIPt+YE8E57JoRdkEmGKv5KWY97BndKOYgFj2meAUE1aELfXeBpbDcOp4wVGCopBxkY84/y2VVuOBZS/ypwo5gfrryewztkmUYCdHZiC/QOyDeCJpOhTJp1I8qlSsUMws4bnYRbr1cPHpqccTTYDRGIaJ8am5XHPKhEcRlTM0EIgvkPKl8CAdpmLebzqu+C8ICdl4uViAGK4qnd4S/kTqSgF02+43fyrIOhcA/vDcvPe1/9+Qydlynlv/3DrMbcc52PbmabbvN73L9r0l7LG9+VY09nOnPKjJlzJS4rYVHsqIIWBiM5WCP8NE6xLzGJSGlLEdiDAaxNj1MJIB4mNFIsUYfKcHIur7apnxOqQSZgnx1JprTDmICb5EVVWQM9SaOEjj4B+eKCUUEnJBf6DipFRL7UInGtPZThlzKXlUzmpGVx1wCwNXIB1tH4FHIMULvlKOjnTkL3Ofo/vrbSKxrzUWVnLIdZn8iE5ewUb2Nr5jQ4f49nA/2hvufbqqWa70B2XAz9oWd/gGg4VsekspBVmLD/E+z8N9+U15q+dJ5Bf+PoaAxkMv8ufLxWuuj3CbBgjn26ujb7Nj99YdmWS/vOav93L2euS+ihgSz9Mk7xu9oa7tH5OeVs+5M1UKksKtBtbk9crkkpxoX91zCtk9oOJXiblok043/FVqqsvx1/dG6xRST9BEcoHpv+KctZrzg96D6VXc1uqxDbPtRfkHxUdRXC1YNwy3nlo+CD4mRFQL8Iuth7rI80euq8rjX0ve2cuI3B7Vg21vY/w01lsEX54hTivp2o+pHSWJOqm9eljuMMrpyr113aAcq3pl8VtysD+5b87lPS9O3j8PrRlYHf8PuD563ywcmyYvcMv5Zu5jv3Fc/SXb6UgRB99TnK5Nj3siZOokfi6pyjwn+ZdeUZ+7Fjmo/OvJz8eldveltlNeWHdcal8bbZfaN2e41HZbLrV3LJaGJFHNBYPsTn0Axn1jWNXNqccwulKvbtNd8iCj8pseU+3vyg5XN7o3zbRZ8s5LaaOaX6C3P+RPF+vg1749NzmvcHrTQmmJCWBE0lX9i3UbzXqFJ07zH6k26Y1pXBmVx6oZ2N61W/GJTMuofm/eEeuY7pVbeW67xUoiApANsblHbChpcxLsbj+iF69v/xfBvv8f&lt;/diagram&gt;&lt;/mxfile&gt;">
+    <defs/>
+    <g>
+        <rect x="0" y="0" width="340" height="410" fill="none" stroke="none" pointer-events="all"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject style="overflow: visible; text-align: left;" pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 338px; height: 1px; padding-top: 205px; margin-left: 1px;">
+                        <div style="box-sizing: border-box; font-size: 0; text-align: center; ">
+                            <div style="display: inline-block; font-size: 16px; font-family: Helvetica; color: #000000; line-height: 1.2; pointer-events: all; white-space: normal; word-wrap: normal; ">
+                                <font color="#ffffff">
+                                    ctx-&gt;SetRenderPass(rp)
+                                </font>
+                                <br/>
+                                <font color="#ff9999">
+                                    ctx-&gt;SetPipeline(p0)
+                                    <br/>
+                                    ctx-&gt;CommitShaderResources(srb0)
+                                    <br/>
+                                    ctx-&gt;SetVertexBuffer(vertexBuffer0)
+                                    <br/>
+                                    ctx-&gt;SetIndexBuffer(indexBuffer0)
+                                    <br/>
+                                    ctx-&gt;DrawIndexed()
+                                </font>
+                                <br/>
+                                <font color="#ffffff">
+                                    ctx-&gt;NextSubPass()
+                                </font>
+                                <br/>
+                                <font color="#ffb366">
+                                    ctx-&gt;SetPipeline(p1)
+                                    <br/>
+                                    ctx-&gt;CommitShaderResources(srb1)
+                                    <br/>
+                                    ctx-&gt;SetVertexBuffer(vertexBuffer1)
+                                    <br/>
+                                    ctx-&gt;SetIndexBuffer(indexBuffer1)
+                                </font>
+                                <br/>
+                                <font color="#ffb366">
+                                    ctx-&gt;DrawIndexed()
+                                </font>
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="170" y="210" fill="#000000" font-family="Helvetica" font-size="16px" text-anchor="middle">
+                    ctx-&gt;SetRenderPass(rp)...
+                </text>
+            </switch>
+        </g>
+        <rect x="470" y="0" width="400" height="450" fill="none" stroke="none" pointer-events="all"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject style="overflow: visible; text-align: left;" pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 398px; height: 1px; padding-top: 225px; margin-left: 471px;">
+                        <div style="box-sizing: border-box; font-size: 0; text-align: center; ">
+                            <div style="display: inline-block; font-size: 16px; font-family: Helvetica; color: #000000; line-height: 1.2; pointer-events: all; white-space: normal; word-wrap: normal; ">
+                                <div style="text-align: left">
+                                    <span>
+                                        <font color="#cc241d">
+                                            vkCmdBufferBegin(cmdbuf)
+                                        </font>
+                                    </span>
+                                </div>
+                                <div style="text-align: left">
+                                    <span>
+                                        <font color="#98971a">
+                                            <br/>
+                                        </font>
+                                    </span>
+                                </div>
+                                <div style="text-align: left">
+                                    <font color="#98971a">
+                                    </font>
+                                    <font color="#ffffff">
+                                        vkBeginRenderPass(cmdbuf,rp)
+                                    </font>
+                                </div>
+                                <div style="text-align: left">
+                                    <span>
+                                        <font color="#ff9999">
+                                            vkCmdBindPipeline(cmdbuf,p0)
+                                        </font>
+                                    </span>
+                                </div>
+                                <div style="text-align: left">
+                                    <span>
+                                        <font color="#ff9999">
+                                            vkCmdBindDescriptorSets(cmdbuf,srb0)
+                                        </font>
+                                    </span>
+                                </div>
+                                <div style="text-align: left">
+                                    <span>
+                                        <font color="#ff9999">
+                                            vkBindVertexBuffer(cmdbuf,vertexBuffer0)
+                                        </font>
+                                    </span>
+                                </div>
+                                <div style="text-align: left">
+                                    <span>
+                                        <font color="#ff9999">
+                                            vkBindIndexBuffer(cmdbuf,indexBuffer0)
+                                        </font>
+                                    </span>
+                                </div>
+                                <div style="text-align: left">
+                                    <span>
+                                        <font color="#ff9999">
+                                            vkCmdDrawIndexed(cmdbuf)
+                                        </font>
+                                    </span>
+                                </div>
+                                <div style="text-align: left">
+                                    <font color="#d79921">
+                                    </font>
+                                    <font color="#ffffff">
+                                        vkNextSubPass(cmdbuf)
+                                    </font>
+                                </div>
+                                <div style="text-align: left">
+                                    <div>
+                                        <font color="#d79921">
+                                        </font>
+                                        <font color="#ffb366">
+                                            vkCmdBindPipeline(cmdbuf, p1)
+                                        </font>
+                                    </div>
+                                    <div>
+                                        <font color="#ffb366">
+                                            vkCmdBindDescriptorSets(cmdbuf, srb1)
+                                        </font>
+                                    </div>
+                                    <div>
+                                        <font color="#ffb366">
+                                            vkBindVertexBuffer(cmdbuf, vertexBuffer1)
+                                        </font>
+                                    </div>
+                                    <div>
+                                        <font color="#ffb366">
+                                            vkBindIndexBuffer(cmdbuf, indexBuffer1)
+                                        </font>
+                                    </div>
+                                    <div>
+                                        <font color="#ffb366">
+                                            vkCmdDrawIndexed(cmdbuf)
+                                        </font>
+                                    </div>
+                                    <div>
+                                        <font color="#ffb366">
+                                            vkCmdEndRenderPass(cmdbuf)
+                                        </font>
+                                    </div>
+                                    <div>
+                                        <font color="#d79921">
+                                            <br/>
+                                        </font>
+                                    </div>
+                                    <div>
+                                        <font color="#cc241d">
+                                            vkCmdBufferEnd(cmdbuf)
+                                        </font>
+                                    </div>
+                                </div>
+                                <div style="text-align: left">
+                                    <span>
+                                        <font color="#d79921">
+                                            <br/>
+                                        </font>
+                                    </span>
+                                </div>
+                                <div style="text-align: left">
+                                    <span>
+                                        <font color="#d79921">
+                                        </font>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="670" y="230" fill="#000000" font-family="Helvetica" font-size="16px" text-anchor="middle">
+                    vkCmdBufferBegin(cmdbuf)...
+                </text>
+            </switch>
+        </g>
+        <path d="M 340.5 195 L 340.5 185 L 430.5 185 L 430.5 174.5 L 449.5 190 L 430.5 205.5 L 430.5 195 Z" fill="none" stroke="#ffffff" stroke-linejoin="round" stroke-miterlimit="10" pointer-events="all"/>
+    </g>
+    <switch>
+        <g requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"/>
+        <a transform="translate(0,-5)" xlink:href="https://www.diagrams.net/doc/faq/svg-export-text-problems" target="_blank">
+            <text text-anchor="middle" font-size="10px" x="50%" y="100%">
+                Viewer does not support full SVG 1.1
+            </text>
+        </a>
+    </switch>
+</svg>

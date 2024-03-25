@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Principia on YSL Blog</title><link>/categories/principia/</link><description>Recent content in Principia on YSL Blog</description><generator>Hugo -- gohugo.io</generator><language>en</language><atom:link href="/categories/principia/index.xml" rel="self" type="application/rss+xml"/><item><title>\[Principia\] Hamillton's Principle</title><link>/post/principia/physics/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/post/principia/physics/</guid><description>&lt;p>最近学习分析力学，朗道那本《力学》开篇就是最小作用量原理，把人搞得非常晕。只看那本书是不行的，完全是毫无感情的客观描述，
+对于理解这种抽象的定律毫无帮助。去年年初就打算学习理论力学，当时找了哈工大任延宇老师的理论力学公开课看，当时感觉讲得非常好，&lt;/p></description><content>&lt;p>最近学习分析力学，朗道那本《力学》开篇就是最小作用量原理，把人搞得非常晕。只看那本书是不行的，完全是毫无感情的客观描述，
+对于理解这种抽象的定律毫无帮助。去年年初就打算学习理论力学，当时找了哈工大任延宇老师的理论力学公开课看，当时感觉讲得非常好，&lt;/p>
+&lt;p>然而这门课程在最后才对哈密顿原理进行简单的讲解，但是讲得足够明白，比自己看书来的快多了，而且老师讲得非常清晰。鉴于哈密顿原理的
+重要性，这里打算详细记录一下哈密顿原理的来龙去脉。下面的这些笔记主要是用来加深自己对哈密顿原理的理解，更推荐大家去看任老师的课程视频。&lt;/p>
+&lt;p>由于哈密顿原理比较抽象，数学背景较强，直接入手的话没有任何东西能够带给我们直观的理解，所以还是要从应用入手。&lt;/p>
+&lt;ul>
+&lt;li>前置知识：&lt;/li>
+&lt;/ul>
+&lt;ol>
+&lt;li>
+&lt;p>弧微分：
+$$
+dl=\sqrt{1+y&amp;rsquo;^2}dx
+$$&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>三元函数在$(x,y,z)$的一阶泰勒展开:
+$$
+f(x+\delta x,y + \delta y,z + \delta z) = f(x,y,z) + \delta{x}f&amp;rsquo;_x(x,y,z) + \delta{y}f&amp;rsquo;_y(x,y,z) + \delta{z}f&amp;rsquo;_z(x,y,z) + o^n
+$$&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>分部积分公式:
+$$
+\int{u(x)v&amp;rsquo;(x)dx} = u(x)v(x) - \int{u&amp;rsquo;(x)v(x)dx}
+$$&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;h2 id="速降线问题">速降线问题&lt;/h2>
+&lt;h3 id="约翰伯努利的解法">约翰伯努利的解法&lt;/h3>
+&lt;p>哈密顿原理还是要从&lt;strong>速降线&lt;/strong>说起。这个问题大家都应该非常熟悉了，能主动了解哈密顿原理的人基本上都听说过速降线问题，如果不是很了解的话可以自行查阅相关资料。&lt;/p>
+&lt;p>速降线是伽利略首先提出来的，然而伽利略给出了错误的答案，他认为这个曲线是一个圆弧。
+&lt;strong>约翰伯努利(Johann Bernoulli)&lt;/strong> （就是伯努利家族的约翰伯努利，欧拉的老师）给出世界上第一个速降线问题的解法。其基本方法是类比了光的折射定律得出了这个速降线是个&lt;strong>圆滚线(cycloid)&lt;/strong> ，相当于从物理角度解决了一个数学问题，当然速降线本身就是一个物理问题。只不过这种类比方法着实大胆，但也非常的直观。&lt;/p>
+&lt;p>圆滚线或摆线其参数方程为:
+$$x=a(\theta - \sin\theta)$$
+$$y=a(1-\cos\theta)$$&lt;/p>
+&lt;p>伯努利的解决方式是把这个质点的轨迹看成光的传播路径，大家知道，光从一个介质到另一个介质中会发生折射，也就是光线的偏折。如果把这个介质的变化在竖直方向上看成连续变化的，并且从密度大的介质到密度小的介质传播，那这个光线也是一个曲线。我们知道折射定律&lt;/p>
+&lt;p>$$\frac{\sin\theta_1}{v_1} = \frac{\sin\theta_2}{v_2} = C$$&lt;/p>
+&lt;p>类比到这个速降线问题，质点的运行轨迹的切线的角度设为$\theta$,那这就和折射定律的形式一致了。 &lt;strong>(补图)&lt;/strong> 由于机械能守恒，下落$y$距离的速度为$v= \sqrt{2gy}$，得到
+$$\frac{\sin\theta}{\sqrt{2gy}}=C$$整理之后得到$$y=a\sin\theta^2$$
+然后我们又有$dy/dx =\tan\theta$这个斜率，也就是$$y&amp;rsquo;=\cot\theta$$，可以解一个微分方程$$y(1+y&amp;rsquo;^2) = C$$ 即摆线。&lt;/p>
+&lt;p>这种解法利用了光的折射轨迹是所需时间最少的这一个观察得来的事实，也就是费马原理。也说明了了光学和运动学的似乎又种内在联系，或许这两种东西在某种程度上都是同一个呢？&lt;/p>
+&lt;h3 id="变分法">变分法&lt;/h3>
+&lt;p>当然，我们现在知道，速降线是一个泛函问题，需要用变分法来解决。这里简单的介绍一下变分。
+相对于函数，泛函数的自变量是一个函数，我们用$J[y]$这种方法来标识，即泛函的自变量用中括号括起来，里面是一个普通的函数$y=y(x)$。&lt;/p>
+&lt;p>对于速降线，其实我们就是在寻找一个轨迹函数$y$，这个函数满足这个性质，在这个路径进行时间的积分，最后所用时间，也就是从$A$点降落到$B$点所用的时间最小。那这个函数$y$就是速降线。这个问题本身是个优化问题倒不难理解，但是困难的地方在于，。我我们根本就不知道函数的形式，之前我们求极值的那套东西，也即让一阶导数为0找到极值点的方式不好用了，如和求导呢？如何在无穷多种函数种寻找我们想要的那个呢？在进行之前，我们首先来考察一下极值的含义。&lt;/p>
+&lt;p>首先我们看一下普通函数$y=y(x)$的极值。极值$y_0$对应的极值点$x_0$有一个特殊的性质，也就是在$x_0$附近改变一个小量$a$，函数值相对于极值的变化也几乎是$0$，也就是一阶无穷小，这也是极值点导数为$0$的直观结果。在非极值点变化就不是$0$了.同样，对于泛函，对于一个泛函的极值点$y$，在$y$附近变化，泛函的结果的变化量$\delta J$也几乎是$0$。有了这个想法，我们似乎可以利用这个性质，来对这个优化问题构造一个约束，把这个问题的困难进行转移。&lt;/p>
+&lt;p>大概形式就是要想时间最小，也就是在极值点变化量是$0$，这样我们就能写出必要条件$\delta J = 0$。然后看一下这个必要条件能不能把这个未知的$y$转移掉。&lt;/p>
+&lt;p>那么如何刻画这个泛函自变量$y$在极值点附近的一般形式呢？对于普通函数的在 &lt;strong>自变量$x$&lt;/strong> 附近改的 &lt;strong>小量$\alpha$&lt;/strong> 影响的函数值的变化，我们可以用 &lt;strong>$x+\alpha$&lt;/strong> 这种一般形式表示变化后的自变量。对于泛函，我们可以用 &lt;strong>$y(x)+\alpha\eta(x)$&lt;/strong> 这种一般形式来表示表示变化后的自变量。 &lt;strong>$\eta(x)$&lt;/strong> 是一个一般形式的函数， &lt;strong>$\alpha\eta(x)$&lt;/strong> 也是小量，所以这种表示没问题，虽然我们又引入了一个未知的函数，似乎把问题变得更复杂了，但现在我们都不知道 &lt;strong>$y(x)$&lt;/strong> 的形式，再多引进一个未知的函数又何妨？后边说不定这东西被优化掉了。下面我们把这个优化问题写完整:&lt;/p>
+&lt;ol>
+&lt;li>&lt;strong>建立模型&lt;/strong>&lt;/li>
+&lt;/ol>
+&lt;p>我们优化的目标是时间最短，也就是对路径上的长度微元除以速度这些小片段进行求和，即:
+$$t = \lim \sum_0^n{\Delta l/v} = \int_{x_1}^{x_2}{\frac{dl}{v}} $$&lt;/p>
+&lt;p>如果你对这种曲线微元在笛卡尔坐标系下的形式非常熟悉，那就可以马上写出$dl=\sqrt{1+y&amp;rsquo;^2}dx$这个非常熟悉的表达式，带入到上面的优化项中，可以得到
+$$t = \int_{x_1}^{x_2}{\frac{\sqrt{1+y&amp;rsquo;^2}}{\sqrt{2gy}}}dx$$&lt;/p>
+&lt;p>我们的目标就是求当$t$最小时的$y$。&lt;/p>
+&lt;ol start="2">
+&lt;li>&lt;strong>回到一般&lt;/strong>&lt;/li>
+&lt;/ol>
+&lt;p>上面一小节针对具体的速降线问题写出了这个问题的具体优化目标，然而这对于用变分法这种一般性的工具来得出结果是没有帮助的，我们或许可以用这个具体的优化目标来解出这个$y$，但是可能会非常复杂。变分法的目的就是用一般性的方法给出所有同类问题的解。
+首先我们参考速降线这个问题优化项的被积函数，其实一个系统的运动规律无非就是&lt;strong>位移，速度，时间&lt;/strong>，要想一般化这个模型，我们可以用$F(y,y&amp;rsquo;,t)$这种一般形式来代表所有的物理系统。(之所以可以代表一般的物理系统，这个形式是理论物理里面的一个结论，先接受它就可以，并且也符合直觉)&lt;/p>
+&lt;p>优化最小值就变成了使下面的约束成立
+$$\delta J[y] = J[y] - J[\overline y] = 0$$&lt;/p>
+&lt;p>其中
+$$J[y] = \int_{x_1}^{x_2}{F(y,y\prime,x)}dx$$&lt;/p>
+&lt;p>$$J[\overline y] = \int_{x_1}^{x_2}{F(y + \alpha\eta,(y + \alpha\eta)&amp;rsquo;,x)}dx = \int_{x_1}^{x_2}{F(y + \delta y,(y+\delta y)&amp;rsquo;,x)}dx$$&lt;/p>
+&lt;p>一般碰到这种有微小改变量$\Delta$的抽象函数，处理方法就是在这一点展开。在进行展开之前，强调一下这个泛函的边界条件。&lt;/p>
+&lt;p>泛函的变化量$\delta y$中，自变量是函数本身， &lt;strong>(补图)&lt;/strong>，在端点$x_1,x_2$处，$\delta y(x_1) = \delta y(x_2) = 0$，并且$\delta x = 1$，有了这些，我们对上面的式子进行展开&lt;/p>
+&lt;p>$$
+J[\overline y] = \int_{x_1}^{x_2}{(F(y,y&amp;rsquo;,x) + \frac{\partial F}{\partial y}\delta y+\frac{\partial F}{\partial y&amp;rsquo;}\delta y&amp;rsquo;)dx}
+$$&lt;/p>
+&lt;p>$$
+\delta J[y] = J[\overline y] - J[y]
+$$&lt;/p>
+&lt;p>最后我们得到了
+$$
+\delta J[y] = \int_{x_1}^{x_2}{(\frac{\partial F}{\partial y}\delta y+\frac{\partial F}{\partial y&amp;rsquo;}\delta y&amp;rsquo;)dx}
+$$&lt;/p>
+&lt;p>注意其中的 &lt;strong>微分的变分 $\delta y&amp;rsquo;$&lt;/strong>, 这里是可以交换的,也就是 $\delta y&amp;rsquo;$可以先求导再变分 那就可以写成
+$$
+\delta J[y] = \int_{x_1}^{x_2}{(\frac{\partial F}{\partial y}\delta y+\frac{\partial F}{\partial y&amp;rsquo;}\frac{d(\delta y)}{dx})dx} = \int_{x_1}^{x_2}{\frac{\partial F}{\partial y}\delta y dx}+\int_{x_1}^{x_2}{\frac{\partial F}{\partial y&amp;rsquo;}\frac{d(\delta y)}{dx}dx}
+$$&lt;/p>
+&lt;p>看到这种被积函数是由一些因子相乘，且某一个因子和积分变量的积是某个函数的全微分的形式$\int_{x_1}^{x_2}{\frac{\partial F}{\partial y&amp;rsquo;}\frac{d(\delta y)}{dx}dx}$，比如这里的 &lt;strong>$\frac{d(\delta y)}{dx}dx$&lt;/strong> 就是全微分 &lt;strong>$d(\delta y)$&lt;/strong> ，那就使用分部积分：&lt;/p>
+&lt;p>$$
+\int_{x_1}^{x_2}{\frac{\partial F}{\partial y&amp;rsquo;}\frac{d(\delta y)}{dx}dx} = \int_{x_1}^{x_2}{\frac{\partial F}{\partial y&amp;rsquo;}}d(\delta y) = \frac{\partial F}{\partial y&amp;rsquo;}\delta y \mid_{x_1}^{x_2} - \int_{x_1}^{x_2}{\delta y \frac{d}{dx}(\frac{\partial F}{\partial y&amp;rsquo;})}
+$$&lt;/p>
+&lt;p>那么
+$$
+\delta J[y] = \frac{\partial F}{\partial y&amp;rsquo;}\delta y \mid_{x_1}^{x_2} + \int_{x_1}^{x_2}{(\frac{\partial F}{\partial y} - \frac{d}{dx}\frac{\partial F}{\partial y&amp;rsquo;})}\delta ydx
+$$
+因为$\delta y(x_1) = \delta y(x_2) = 0$,所以第一项为0。要使$\delta J[y] = 0$,那就只能使后面的
+$$
+\int_{x_1}^{x_2}{(\frac{\partial F}{\partial y} - \frac{d}{dx}\frac{\partial F}{\partial y&amp;rsquo;})}\delta ydx \equiv 0
+$$&lt;/p>
+&lt;p>因为$\delta y$是任意的，所以要使积分为0,则必要条件就是
+$$
+(\frac{\partial F}{\partial y} - \frac{d}{dx}\frac{\partial F}{\partial y&amp;rsquo;}) = 0
+$$&lt;/p>
+&lt;p>这个方程就是力学中的 &lt;strong>拉格朗日方程&lt;/strong>。&lt;/p></content></item><item><title>\[Principia\] The Laws of Conservation</title><link>/post/principia/conservation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/post/principia/conservation/</guid><description>&lt;p>We re-examine the conservation of energy and momentum we learned in middle school from a purely mathematical perspective, and then we derive the conservation of angular momentum from the same perspective.&lt;/p>
+&lt;hr>
+&lt;p>我们从纯数学的角度来重新审视中学学过的能量守恒和动量守恒,然后我们再通过同样的角度得出角动量守恒。&lt;/p></description><content>&lt;p>We re-examine the conservation of energy and momentum we learned in middle school from a purely mathematical perspective, and then we derive the conservation of angular momentum from the same perspective.&lt;/p>
+&lt;hr>
+&lt;p>我们从纯数学的角度来重新审视中学学过的能量守恒和动量守恒,然后我们再通过同样的角度得出角动量守恒。&lt;/p>
+&lt;h1 id="守恒定律是什么">守恒定律是什么&lt;/h1>
+&lt;p>能量守恒，动量守恒和机械能守恒都是运动积分。 为了明白什么是运动积分，需要弄清楚下面两个问题。&lt;/p>
+&lt;ol>
+&lt;li>&lt;strong>动能定理&lt;/strong> 和 &lt;strong>动量定理&lt;/strong>与&lt;strong>牛顿第二定律&lt;/strong>的关系&lt;/li>
+&lt;li>&lt;strong>动能定理&lt;/strong> 和&lt;strong>动量守恒&lt;/strong> 以及 &lt;strong>动量定理&lt;/strong> 和&lt;strong>动量守恒&lt;/strong>的关系。&lt;/li>
+&lt;/ol>
+&lt;h3 id="前置知识">前置知识：&lt;/h3>
+&lt;ol start="0">
+&lt;li>Nabla算子&lt;/li>
+&lt;/ol>
+&lt;p>$$
+\nabla
+$$&lt;/p>
+&lt;ol>
+&lt;li>
+&lt;p>标量场$\Psi(\vec{r})$的&lt;strong>梯度&lt;/strong>是&lt;strong>向量&lt;/strong>:
+$$\nabla\Psi = \frac{\partial{\Psi}}{\partial{x}}\vec{i} + \frac{\partial{\Psi}}{\partial{y}}\vec{j}+ \frac{\partial{\Psi}}{\partial{z}}\vec{k}$$&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>矢量场$\vec{A}(\vec{r})$ 的&lt;strong>散度&lt;/strong>是&lt;strong>标量&lt;/strong>:
+散度：&lt;/p>
+&lt;p>$$
+\nabla \cdot \vec{A}=\frac{\partial{A_x}}{\partial{x}} + \frac{\partial{A_y}}{\partial{y}}+ \frac{\partial{A_z}}{\partial{z}}
+$$&lt;/p>
+&lt;p>旋度：&lt;/p>
+&lt;p>$$
+\nabla \times \vec{A}
+$$&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>结论：
+$$
+\nabla\times\left(\nabla\Psi\right) = 0
+$$
+&lt;strong>标量场的梯度的旋度为0&lt;/strong>&lt;/p>
+&lt;p>$$
+\nabla\cdot\left(\nabla\times\vec{A}\right) = 0
+$$
+&lt;strong>矢量场的旋度的散度为0&lt;/strong>&lt;/p>
+&lt;blockquote>
+&lt;p>这两个反命题也成立，也就是说，一个旋度为0的（向量）场，可以表示为一个标量场的梯度.
+一个散度为0的（向量）场，可以表示为一个（向量）场的旋度。&lt;/p>
+&lt;/blockquote>
+&lt;p>例子:
+对于一个&lt;strong>无旋场&lt;/strong>，我们可以用一个&lt;strong>标量场&lt;/strong>来表示，这个标量场一般称为 &lt;strong>&amp;ldquo;势&amp;rdquo;&lt;/strong> 。比如&lt;strong>静电场（标量场）的电势场（只是和位置有关的一个数）&lt;strong>和&lt;/strong>重力场（标量场）的重力势（只是一个和位置有关的标量）&lt;/strong>。 同时，我们把这种&lt;strong>旋度为0&lt;/strong>的力场称为&lt;strong>保守力&lt;/strong>。&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;h2 id="能量守恒">能量守恒&lt;/h2>
+&lt;p>$$
+\vec{F} = m\ddot{\vec{r}} \Rightarrow \vec{F} = m \frac{d\vec{v}}{dt}
+$$&lt;/p>
+&lt;p>如果我们定义一个量
+$$T = \frac{1}{2}mv^2 $$&lt;/p>
+&lt;p>那么就有
+$$
+\vec{F}d\vec{r} = m\frac{d\vec{v}}{dt}d\vec{r} = d(\frac{1}{2}mv^2)
+$$&lt;/p>
+&lt;p>得到动能定理
+$$\vec{F}d\vec{r} = dT$$&lt;/p>
+&lt;p>其积分形式&lt;/p>
+&lt;p>$$
+T_2-T_1 = \int_{\vec{r_1}}^{\vec{r_2}}\vec{F}d\vec{r}
+$$&lt;/p>
+&lt;p>&lt;strong>如果$\vec{F} = 0$，运动前后动能不变&lt;/strong>.&lt;/p>
+&lt;h2 id="动量守恒">动量守恒&lt;/h2>
+&lt;p>$$
+\vec{F} = m\ddot{\vec{r}} \Rightarrow \vec{F} = m \frac{d\vec{v}}{dt}
+$$&lt;/p>
+&lt;p>如果我们定义一个量$\vec{p} = m\vec{v}$&lt;/p>
+&lt;p>就得到
+$$
+\vec{F} = \frac{d\vec{p}}{dt}
+$$&lt;/p>
+&lt;p>首先我们需要明白，动量定力和牛顿第二定律$\vec{F} = m\ddot{\vec{r}}$ 都是二阶微分方程，也就是他们的次数是一样的，从形式上来讲他们是等价的。实际上，牛顿最开始提出来的第二定律其实就是这个我们今天所熟悉的&lt;strong>动量定理&lt;/strong>$\vec{F} = \frac{d\vec{p}}{dt}$&lt;/p>
+&lt;p>然后我们把这个动量定理对&lt;strong>时间&lt;/strong>积分，得到
+$$
+\vec{p_2} - \vec{p_1} = \int_{t_1}^{t_2}\vec{F}dt
+$$&lt;/p>
+&lt;p>&lt;strong>如果$\vec{F} = 0$，运动前后动量不变&lt;/strong>, 因为和牛顿第二定律等价，所以也可以从牛顿第二定律的角度来解释，&lt;strong>如果合外力为0,那么速度不变&lt;/strong>。
+当然以上都是显而易见的结论，但重点在下面:&lt;/p>
+&lt;p>也就是说
+$$
+\vec{F} = 0 \Rightarrow \vec{p} = \vec{C}
+$$
+其中的这个 &lt;strong>$\vec{p}= \vec{C}$&lt;/strong> 是一个&lt;strong>守恒量&lt;/strong>。
+我们知道，$\vec{p}$里面的速度是$\vec{r}$的一阶导数，因此，如果我们以计算出系统的位置$\vec{r}$为目标，那么这个守恒量$\vec{p} = \vec{C}$就是一个一阶微分方程，相比于牛顿第二定律或者说动量定理，已经降了一阶了。&lt;/p>
+&lt;h2 id="动量矩守恒角动量守恒">动量矩守恒（角动量守恒）&lt;/h2>
+&lt;h3 id="矩">矩&lt;/h3>
+&lt;p>位置的矢量和矢量的叉积&lt;/p>
+&lt;h3 id="力矩">力矩&lt;/h3>
+&lt;p>位置矢量和力
+$$
+\vec{M} = \vec{r}\times\vec{F}
+$$&lt;/p>
+&lt;h3 id="动量矩角动量">动量矩（角动量）&lt;/h3>
+&lt;p>位置矢量和动量&lt;/p>
+&lt;p>$$
+\vec{J} = \vec{r}\times\vec{p}
+$$&lt;/p>
+&lt;p>所谓的动量矩定理，就是
+$$
+\vec{M} = \frac{\mathrm{d}{\vec{J}}}{\mathrm{d}{t}}
+$$&lt;/p>
+&lt;p>也就是动量矩对时间的导数是的力矩，&lt;strong>求导&lt;/strong> + &lt;strong>牛顿第二定律&lt;/strong> 就可以证明。
+所以，所以动量矩定理和牛顿第二定律等价。&lt;/p>
+&lt;p>我们类比之前的动量守恒，如果这里的力矩$\vec{M} = 0$，也可以得到积分后的量是一个不变量。这就是&lt;strong>动量矩（角动量）守恒&lt;/strong>。&lt;/p>
+&lt;blockquote>
+&lt;p>动量守恒或动量矩守恒发生前提（外力为0）是在是有点苛刻。然而我们解决的问题基本上不可能不受力的，所以，对于这两种守恒，我们一般使用其分量形式来解决问题。即在某一固定方向（对动量定理来说）或对于某一固定点（对于角动量守恒）分别使用这两个守恒。在某一固定方向上应用动量定理的典型问题是一个滑块在静止的斜坯上滑下，问这两个物体的运动规律。这当然是一个在水平方向上动量守恒的例子。对于角动量守恒的经典问题是只受有心力的物体叫动量守恒，比如天体的轨道运动规律。&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="机械能守恒">机械能守恒&lt;/h2>
+&lt;p>我们看到，前面的动能定理和动量定理本质上是在某种特殊的条件下(F=0)去得到&lt;strong>降过阶的微分方程&lt;/strong>。 使我们不用再去解$\vec{F}=m\ddot{\vec{r}}$这种复杂的二阶微分方程了。有了这种想法，我们自然更多的要去挖掘更多的&lt;strong>运动积分&lt;/strong>。 然而，我们从牛顿第二定律出发，似乎已经不能得到新的运动积分了。但是，如果我们继续&lt;strong>施加某种条件&lt;/strong>，可能又会发现一些守恒量。幸运的是，我们发现，如果只有&lt;strong>保守力&lt;/strong>为主动力，我们又可以的到&lt;strong>机械能守恒&lt;/strong>这个非常重要的运动积分。&lt;/p>
+&lt;p>之前的前置知识里面说了，保守力可以写作一个标量场的形式，就是势能。我们无时无刻不在的保守力重力场中，有:
+$$
+\nabla\times\vec{F} = 0 \Rightarrow \vec{F} = -\nabla V(\vec{r})
+$$&lt;/p>
+&lt;p>再通过之前得到动能定理的方式得到：
+$$
+\vec{F}\cdot\mathrm{d}{\vec{r}} = -\nabla V({\vec{r}})\cdot\mathrm{d}{\vec{r}} = -\mathrm{d}{V(\vec{r})}
+$$&lt;/p>
+&lt;blockquote>
+&lt;p>中间那一步关键的过程直接在迪卡尔坐标系下写完全就能把Nabla算子转换成一个三元函数的全微分.&lt;/p>
+&lt;/blockquote>
+&lt;p>因为之前我们得到的动能定理也是
+$$\vec{F}\cdot d\vec{r} = \mathrm{d}T$$&lt;/p>
+&lt;p>因此
+$$
+\mathrm{d}T = -\mathrm{d}{V(\vec{r})}
+$$
+即&lt;strong>保守力的势能&lt;/strong>和&lt;strong>动能&lt;/strong>相互转换。&lt;/p>
+&lt;p>积分的到新的运动积分为
+$$
+T + V = C
+$$
+这个就是&lt;strong>机械能守恒&lt;/strong>。&lt;/p>
+&lt;h3 id="一维势能曲线">一维势能曲线&lt;/h3>
+&lt;p>在&lt;strong>保守力&lt;/strong>的前提下，有一个这样的曲线。&lt;/p></content></item></channel></rss>
