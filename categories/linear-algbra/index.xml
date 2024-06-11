@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Linear Algbra on YSL Blog</title><link>/categories/linear-algbra/</link><description>Recent content in Linear Algbra on YSL Blog</description><generator>Hugo -- gohugo.io</generator><language>en</language><atom:link href="/categories/linear-algbra/index.xml" rel="self" type="application/rss+xml"/><item><title>\[Engineering\] Coordination Conversion in the Mathematical Perspective</title><link>/post/graphics/transform/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/post/graphics/transform/</guid><description>&lt;p>This article give an mathematical perspective to the coordination conversion. It is a general method to convert the coordination from one to another. It is very useful in computer graphics.&lt;/p></description><content>&lt;p>This article give an mathematical perspective to the coordination conversion. It is a general method to convert the coordination from one to another. It is very useful in computer graphics.&lt;/p>
+&lt;h2 id="introduction">Introduction&lt;/h2>
+&lt;p>In computer graphics, it is often necessary to convert coordinates from one system to another. For instance, if we have a point $P$ in the world coordinate system and we want to determine its coordinates in the camera coordinate system, we can use a general method to perform this conversion.&lt;/p>
+&lt;p>In this article, I will illustrate the method in 2D, but it can easily be extended to 3D. Suppose you are reading points from a scene format or other resource file where the positive direction is upwards. However, your code is based on a format where the positive direction is downwards, which is the coordinate system most familiar to graphics programmers.&lt;/p>
+&lt;p>Typically, the top left corner of your window is considered to be the origin (0, 0) and extends to the right and downwards. In the simplest case, you can simply flip the y-coordinate, which is a straightforward operation.&lt;/p>
+&lt;p>However, objects in a scene are usually organized in a tree structure, where each node has its own local coordinate system. Before proceeding, let&amp;rsquo;s understand why objects are organized in a tree rather than a flat structure. One reason is that we often need to dynamically update or modify objects. Using a local coordinate system makes these modifications intuitive and easy. For example, if you want to rotate an object, you can simply rotate its local coordinate system. If you want to scale an object, you can scale its local coordinate system, and this operation will also affect its child objects, which is typically what we want.&lt;/p>
+&lt;p>However, another important aspect is that in dynamic circumstances, this type of organization will effectively utilize both the immutable and mutable parts. For instance, if you only want to rotate the innermost object, simply apply a rotation matrix instead of directly changing its final coordinates.&lt;/p>
+&lt;h2 id="object-representation">Object Representation&lt;/h2>
+&lt;p>First, let us clarify the representation of an object. An object is represented by a matrix $M$, which denotes the transformation from its local coordinate system to its parent&amp;rsquo;s coordinate system.&lt;/p>
+&lt;p>It is important to remember that when you draw any object from a tree, what actually occurs is that its final points are transformed from its local coordinate system to the outermost coordinate system.&lt;/p>
+&lt;p>$$
+P_{WindowUp} = M_{1} \times M_{2} \times M_{3} \times M_{4} \times p_{LocalUp}
+$$&lt;/p>
+&lt;figure class="center" >
+&lt;img src="img/objects.drawio.svg" alt="tree" style="border-radius: 8px; width: 400px" />
+&lt;figcaption class="center" >Object Tree&lt;/figcaption>
+&lt;/figure>
+&lt;p>But your renderer only accepts positive coordinates in the downward direction, denoted as $P_{WindowDown}$. Therefore, you need to flip it at the beginning by multiplying it with a scale matrix $S$, where $S$ is a diagonal matrix.&lt;/p>
+&lt;p>$$
+S = \begin{bmatrix}
+1 &amp;amp; 0 \\
+0 &amp;amp; -1
+\end{bmatrix}
+$$&lt;/p>
+&lt;p>Then you obtain the final object by using the following equation:&lt;/p>
+&lt;p>$$ P_{WindowDown} = S \times M_{1} \times M_{2} \times M_{3} \times M_{4} \times p_{LocalUp} $$&lt;/p>
+&lt;p>Please note that dealing with $p_{LocalUp}$ will increase your mental workload when interacting with graphics APIs that can only handle the opposite coordinate system, or vice versa.
+If you think simply as just flipping y axis, Like&lt;/p>
+&lt;p>$$ P_{WindowDown} = M_{1} \times M_{2} \times M_{3} \times M_{4} \times S \times p_{LocalUp} $$&lt;/p>
+&lt;p>It is incorrect because the order of matrix multiplication is important.&lt;/p>
+&lt;p>$$S \times M_{1} \times M_{2} \times M_{3} \times M_{4} \times p_{LocalUp} \neq M_{1} \times M_{2} \times M_{3} \times M_{4} \times S \times p_{LocalDown} $$&lt;/p>
+&lt;blockquote>
+&lt;p>When all matrices are diagonal matrices, the order of multiplication does not matter. However, when there is at least one non-diagonal matrix, the order of multiplication becomes significant.&lt;/p>
+&lt;/blockquote>
+&lt;h4 id="clues-from-basics">Clues from Basics&lt;/h4>
+&lt;p>We can start from the basics. Let&amp;rsquo;s consider the case where there is only one object, represented by $$P_{WindowDown} =S\times M \times p_{localUp}$$&lt;/p>
+&lt;p>When we want a local-down coordinate system, which means we require a form $$P_{WindowDown} = M \times p_{LocalDown}$$&lt;/p>
+&lt;p>Note that the latter $M$ is not equal to the former, or the equation doesn&amp;rsquo;t hold. So using another notation $M^\prime$ would be better. Also, remember that $p_{LocalDown} = S \times p_{LocalUp}$, so we get another more essential form:&lt;/p>
+&lt;p>$$P_{WindowDown} = M^\prime \times S \times p_{LocalUp}$$&lt;/p>
+&lt;p>So what&amp;rsquo;s next? What do we need to do to finish the conversion? We need to make the two equations equal:&lt;/p>
+&lt;p>$$ S \times M \times p_{LocalUp} = M^\prime \times S \times p_{LocalUp} $$&lt;/p>
+&lt;p>This means that regardless of the coordinate systems of $p_{LocalUp}$ or $p_{LocalDown}$, they must have the same global coordinates after being transformed by their respective $M$ and $M^\prime$. The $S$ factor helps reconcile the difference between the two coordinate systems, specifically in the opposite y direction.&lt;/p>
+&lt;p>Do you have any clues from this?&lt;/p>
+&lt;blockquote>
+&lt;p>The equation holds &lt;strong>if and only if&lt;/strong> $S \times M = M^\prime \times S$.&lt;/p>
+&lt;/blockquote>
+&lt;p>Voila! We obtain the new transformation matrix for the object:&lt;/p>
+&lt;p>$$ M^\prime = S \times M \times S^{-1} = S \times M \times S $$&lt;/p>
+&lt;p>Since $S$ is a diagonal matrix where $S = \begin{bmatrix} 1 &amp;amp; 0 \\ 0 &amp;amp; -1 \end{bmatrix}$, then $S^{-1} = S$.&lt;/p>
+&lt;h4 id="one-more-step">One More Step&lt;/h4>
+&lt;p>When we have a more general case, we can assume that the original object hierarchy is:&lt;/p>
+&lt;p>$$
+P_{WindowDown} = S \times M_{1} \times M_{2} \times M_{3} \times M_{4} \times p_{LocalUp}
+$$&lt;/p>
+&lt;p>We can denote each new transform matrix as $M^\prime_{n}$, and then apply the conversion equation mentioned above:&lt;/p>
+&lt;p>$$
+S \times M_{1} \times M_{2} \times M_{3} \times M_{4} \times p_{LocalUp} = M^\prime_{1} \times M^\prime_{2}\times M^\prime_{3}\times M^\prime_{4}\times S \times p_{LocalDown}
+$$&lt;/p>
+&lt;p>This equation holds &lt;strong>if and only if&lt;/strong>:&lt;/p>
+&lt;p>$$
+S \times M_{1} \times M_{2} \times M_{3} \times M_{4}= M^\prime_{1} \times M^\prime_{2}\times M^\prime_{3}\times M^\prime_{4}\times S
+$$&lt;/p>
+&lt;p>So many $M^\prime$? Don&amp;rsquo;t forget that we have already obtained $M^\prime_{1}$, which is the new matrix that allows for the correct transformation of the first object with a local-down coordinate system.&lt;/p>
+&lt;p>Yes, the conversion of the $n$-th object is based on the fact that the preceding $n-1$ objects have already been converted. This means that we can use $M^\prime_{1}$ to convert the second object to a local-down coordinate system, and then use $M^\prime_{2}$ to convert the third object, and so on.&lt;/p>
+&lt;p>The equations for the conversion matrices are as follows:&lt;/p>
+&lt;p>$$M^\prime_{1} = SM_{1}S^{-1} $$
+$$M^\prime_{2} = {M^\prime_{1}}^{-1}SM_{1}M_{2}S^{-1}$$
+$$M^\prime_{3} = {M^\prime_{2}}^{-1}{M^\prime_{1}}^{-1}SM_{1}M_{2}M_{3}S^{-1}$$
+$$M^\prime_{4} = {M^\prime_{3}}^{-1}{M^\prime_{2}}^{-1}{M^\prime_{1}}^{-1}SM_{1}M_{2}M_{3}M_{4}S^{-1}$$
+$$&amp;hellip;$$&lt;/p>
+&lt;p>You can use mathematical induction to determine that the general form
+$$M^\prime_{n} = M_{previous} M_{n} S^{-1}$$&lt;/p>
+&lt;p>With the exception of the special case $S$, where $S^{-1}=S$ and $SS^{-1}=S^{-1}S=SS=I$, the result can be simplified as follows:&lt;/p>
+&lt;p>$$M^\prime_{1} = SM_{1}S^{-1}$$
+$$M^\prime_{2} = SM_{2}S^{-1}$$
+$$M^\prime_{3} = SM_{3}S^{-1}$$
+$$M^\prime_{4} = SM_{4}S^{-1}$$
+$$&amp;hellip;$$&lt;/p>
+&lt;p>Excellent! There is no need to calculate the inverse matrix of $M_{previous}$, which is a very expensive operation. You simply need to multiply $S$ on the left and right of $M_{n}$. In other words, only when flipping the object&amp;rsquo;s local y-axis direction, the new matrix is only related to itself.&lt;/p>
+&lt;h4 id="take-one-step-further">Take One Step Further&lt;/h4>
+&lt;p>If you observe the process by which we derive the conversion equation, you will notice that nothing is assumed except for the form of $S$, which is a diagonal matrix used to flip the y-axis. Therefore, the conversion equation is also valid for other types of $S$. $S$ can be generalized to any matrix $B$, which represents the basis vectors of a new coordinate system that can be used to convert from one coordinate system to another. For instance, if you wish to convert from a left-hand coordinate system to a right-hand coordinate system, you can use $B = \begin{bmatrix} -1 &amp;amp; 0 \\ 0 &amp;amp; 1 \end{bmatrix}$.&lt;/p>
+&lt;h4 id="another-general-perspective">Another General Perspective&lt;/h4>
+&lt;p>From this perspective, the above question can be viewed as a specific scenario: converting a child object with an upward-facing y-axis to the root window with a downward-facing y-axis. This can be described as a more general question:&lt;/p>
+&lt;blockquote>
+&lt;p>How can one convert the coordinates of an object from one tree to another within the same tree?&lt;/p>
+&lt;/blockquote>
+&lt;figure class="center" >
+&lt;img src="img/2.drawio.svg" alt="tree" style="border-radius: 8px; width: 400px" />
+&lt;figcaption class="center" >Object Tree&lt;/figcaption>
+&lt;/figure>
+&lt;p>Suppose we want to convert $M_{9}$ to $M_{M11}$ as shown in the image. This is very useful when we want to apply an effect on $M_{11}$ that is related to $M_{9}$, such as masking $M_{11}$ with $M_{9}$.&lt;/p>
+&lt;p>It is obvious if we use the conclusion above:&lt;/p>
+&lt;p>The object $9$ in the local coordinate system of $M_9$ to the root is ${M_{5} \times M_{1} \times } M_{6}\times M_{7}\times M_{9}\times p_{Local{9}}$.&lt;/p>
+&lt;p>The object $9$ in the local coordinate system of $M_{11}$ to the root is ${M_{5} \times M_{1} \times } M_{10}\times M_{11}\times p_{Local{11}}$.&lt;/p>
+&lt;p>Note that object $9$ at $M_{9}$, denoted as $p_{local9}$, can be viewed from $M_{11}$ as $B \times p_{local11}$, meaning that $p_{9} = B \times p_{local11}$, where $p_{local11}$ is the equivalent of $p_{local9}$ in $M_{11}$, achieved by adding a $B$ to make them equivalent.&lt;/p>
+&lt;p>$$\sout{M_{5} \times M_{1} \times } M_{6}\times M_{7}\times M_{9}\times B \times p_{Local{11}} = \sout{M_{5} \times M_{1} \times } M_{10}\times M_{11}\times p_{Local{11}}$$&lt;/p>
+&lt;p>We can determine that both the left-side object $p_{local9}$ and the right-side object $p_{local11}$ can be represented in the local coordinate system of $M_{5}$, without having to be in the root coordinate system.&lt;/p>
+&lt;p>Go ahead. The equation holds &lt;strong>if and only if&lt;/strong> $M_{7}\times M_{9}\times B= M_{10}\times M_{11}$, where&lt;/p>
+&lt;p>$$
+B = {M_{9}}^{-1}\times {M_{7}}^{-1}\times M_{10}\times M_{11}
+$$&lt;/p>
+&lt;p>The transformation from $M_9$ to $M_{11}$ is&lt;/p>
+&lt;p>$$
+p_{local11} = B^{-1} \times p_{local9} = {M_{11}}^{-1} \times {M_{10}}^{-1} \times M_{7} \times M_{9} \times p_{local9}
+$$&lt;/p>
+&lt;p>just like the path flow $P_1 \rightarrow P_2 \rightarrow P_3 \rightarrow P_4 \rightarrow P_5$ shown in the image.&lt;/p></content></item></channel></rss>

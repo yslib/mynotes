@@ -1,0 +1,2021 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on YSL Blog</title><link>/post/</link><description>Recent content in Posts on YSL Blog</description><generator>Hugo -- gohugo.io</generator><language>en</language><atom:link href="/post/index.xml" rel="self" type="application/rss+xml"/><item><title>\[Engineering\] Coordination Conversion in the Mathematical Perspective</title><link>/post/graphics/transform/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/post/graphics/transform/</guid><description>&lt;p>This article give an mathematical perspective to the coordination conversion. It is a general method to convert the coordination from one to another. It is very useful in computer graphics.&lt;/p></description><content>&lt;p>This article give an mathematical perspective to the coordination conversion. It is a general method to convert the coordination from one to another. It is very useful in computer graphics.&lt;/p>
+&lt;h2 id="introduction">Introduction&lt;/h2>
+&lt;p>In computer graphics, it is often necessary to convert coordinates from one system to another. For instance, if we have a point $P$ in the world coordinate system and we want to determine its coordinates in the camera coordinate system, we can use a general method to perform this conversion.&lt;/p>
+&lt;p>In this article, I will illustrate the method in 2D, but it can easily be extended to 3D. Suppose you are reading points from a scene format or other resource file where the positive direction is upwards. However, your code is based on a format where the positive direction is downwards, which is the coordinate system most familiar to graphics programmers.&lt;/p>
+&lt;p>Typically, the top left corner of your window is considered to be the origin (0, 0) and extends to the right and downwards. In the simplest case, you can simply flip the y-coordinate, which is a straightforward operation.&lt;/p>
+&lt;p>However, objects in a scene are usually organized in a tree structure, where each node has its own local coordinate system. Before proceeding, let&amp;rsquo;s understand why objects are organized in a tree rather than a flat structure. One reason is that we often need to dynamically update or modify objects. Using a local coordinate system makes these modifications intuitive and easy. For example, if you want to rotate an object, you can simply rotate its local coordinate system. If you want to scale an object, you can scale its local coordinate system, and this operation will also affect its child objects, which is typically what we want.&lt;/p>
+&lt;p>However, another important aspect is that in dynamic circumstances, this type of organization will effectively utilize both the immutable and mutable parts. For instance, if you only want to rotate the innermost object, simply apply a rotation matrix instead of directly changing its final coordinates.&lt;/p>
+&lt;h2 id="object-representation">Object Representation&lt;/h2>
+&lt;p>First, let us clarify the representation of an object. An object is represented by a matrix $M$, which denotes the transformation from its local coordinate system to its parent&amp;rsquo;s coordinate system.&lt;/p>
+&lt;p>It is important to remember that when you draw any object from a tree, what actually occurs is that its final points are transformed from its local coordinate system to the outermost coordinate system.&lt;/p>
+&lt;p>$$
+P_{WindowUp} = M_{1} \times M_{2} \times M_{3} \times M_{4} \times p_{LocalUp}
+$$&lt;/p>
+&lt;figure class="center" >
+&lt;img src="img/objects.drawio.svg" alt="tree" style="border-radius: 8px; width: 400px" />
+&lt;figcaption class="center" >Object Tree&lt;/figcaption>
+&lt;/figure>
+&lt;p>But your renderer only accepts positive coordinates in the downward direction, denoted as $P_{WindowDown}$. Therefore, you need to flip it at the beginning by multiplying it with a scale matrix $S$, where $S$ is a diagonal matrix.&lt;/p>
+&lt;p>$$
+S = \begin{bmatrix}
+1 &amp;amp; 0 \\
+0 &amp;amp; -1
+\end{bmatrix}
+$$&lt;/p>
+&lt;p>Then you obtain the final object by using the following equation:&lt;/p>
+&lt;p>$$ P_{WindowDown} = S \times M_{1} \times M_{2} \times M_{3} \times M_{4} \times p_{LocalUp} $$&lt;/p>
+&lt;p>Please note that dealing with $p_{LocalUp}$ will increase your mental workload when interacting with graphics APIs that can only handle the opposite coordinate system, or vice versa.
+If you think simply as just flipping y axis, Like&lt;/p>
+&lt;p>$$ P_{WindowDown} = M_{1} \times M_{2} \times M_{3} \times M_{4} \times S \times p_{LocalUp} $$&lt;/p>
+&lt;p>It is incorrect because the order of matrix multiplication is important.&lt;/p>
+&lt;p>$$S \times M_{1} \times M_{2} \times M_{3} \times M_{4} \times p_{LocalUp} \neq M_{1} \times M_{2} \times M_{3} \times M_{4} \times S \times p_{LocalDown} $$&lt;/p>
+&lt;blockquote>
+&lt;p>When all matrices are diagonal matrices, the order of multiplication does not matter. However, when there is at least one non-diagonal matrix, the order of multiplication becomes significant.&lt;/p>
+&lt;/blockquote>
+&lt;h4 id="clues-from-basics">Clues from Basics&lt;/h4>
+&lt;p>We can start from the basics. Let&amp;rsquo;s consider the case where there is only one object, represented by $$P_{WindowDown} =S\times M \times p_{localUp}$$&lt;/p>
+&lt;p>When we want a local-down coordinate system, which means we require a form $$P_{WindowDown} = M \times p_{LocalDown}$$&lt;/p>
+&lt;p>Note that the latter $M$ is not equal to the former, or the equation doesn&amp;rsquo;t hold. So using another notation $M^\prime$ would be better. Also, remember that $p_{LocalDown} = S \times p_{LocalUp}$, so we get another more essential form:&lt;/p>
+&lt;p>$$P_{WindowDown} = M^\prime \times S \times p_{LocalUp}$$&lt;/p>
+&lt;p>So what&amp;rsquo;s next? What do we need to do to finish the conversion? We need to make the two equations equal:&lt;/p>
+&lt;p>$$ S \times M \times p_{LocalUp} = M^\prime \times S \times p_{LocalUp} $$&lt;/p>
+&lt;p>This means that regardless of the coordinate systems of $p_{LocalUp}$ or $p_{LocalDown}$, they must have the same global coordinates after being transformed by their respective $M$ and $M^\prime$. The $S$ factor helps reconcile the difference between the two coordinate systems, specifically in the opposite y direction.&lt;/p>
+&lt;p>Do you have any clues from this?&lt;/p>
+&lt;blockquote>
+&lt;p>The equation holds &lt;strong>if and only if&lt;/strong> $S \times M = M^\prime \times S$.&lt;/p>
+&lt;/blockquote>
+&lt;p>Voila! We obtain the new transformation matrix for the object:&lt;/p>
+&lt;p>$$ M^\prime = S \times M \times S^{-1} = S \times M \times S $$&lt;/p>
+&lt;p>Since $S$ is a diagonal matrix where $S = \begin{bmatrix} 1 &amp;amp; 0 \\ 0 &amp;amp; -1 \end{bmatrix}$, then $S^{-1} = S$.&lt;/p>
+&lt;h4 id="one-more-step">One More Step&lt;/h4>
+&lt;p>When we have a more general case, we can assume that the original object hierarchy is:&lt;/p>
+&lt;p>$$
+P_{WindowDown} = S \times M_{1} \times M_{2} \times M_{3} \times M_{4} \times p_{LocalUp}
+$$&lt;/p>
+&lt;p>We can denote each new transform matrix as $M^\prime_{n}$, and then apply the conversion equation mentioned above:&lt;/p>
+&lt;p>$$
+S \times M_{1} \times M_{2} \times M_{3} \times M_{4} \times p_{LocalUp} = M^\prime_{1} \times M^\prime_{2}\times M^\prime_{3}\times M^\prime_{4}\times S \times p_{LocalDown}
+$$&lt;/p>
+&lt;p>This equation holds &lt;strong>if and only if&lt;/strong>:&lt;/p>
+&lt;p>$$
+S \times M_{1} \times M_{2} \times M_{3} \times M_{4}= M^\prime_{1} \times M^\prime_{2}\times M^\prime_{3}\times M^\prime_{4}\times S
+$$&lt;/p>
+&lt;p>So many $M^\prime$? Don&amp;rsquo;t forget that we have already obtained $M^\prime_{1}$, which is the new matrix that allows for the correct transformation of the first object with a local-down coordinate system.&lt;/p>
+&lt;p>Yes, the conversion of the $n$-th object is based on the fact that the preceding $n-1$ objects have already been converted. This means that we can use $M^\prime_{1}$ to convert the second object to a local-down coordinate system, and then use $M^\prime_{2}$ to convert the third object, and so on.&lt;/p>
+&lt;p>The equations for the conversion matrices are as follows:&lt;/p>
+&lt;p>$$M^\prime_{1} = SM_{1}S^{-1} $$
+$$M^\prime_{2} = {M^\prime_{1}}^{-1}SM_{1}M_{2}S^{-1}$$
+$$M^\prime_{3} = {M^\prime_{2}}^{-1}{M^\prime_{1}}^{-1}SM_{1}M_{2}M_{3}S^{-1}$$
+$$M^\prime_{4} = {M^\prime_{3}}^{-1}{M^\prime_{2}}^{-1}{M^\prime_{1}}^{-1}SM_{1}M_{2}M_{3}M_{4}S^{-1}$$
+$$&amp;hellip;$$&lt;/p>
+&lt;p>You can use mathematical induction to determine that the general form
+$$M^\prime_{n} = M_{previous} M_{n} S^{-1}$$&lt;/p>
+&lt;p>With the exception of the special case $S$, where $S^{-1}=S$ and $SS^{-1}=S^{-1}S=SS=I$, the result can be simplified as follows:&lt;/p>
+&lt;p>$$M^\prime_{1} = SM_{1}S^{-1}$$
+$$M^\prime_{2} = SM_{2}S^{-1}$$
+$$M^\prime_{3} = SM_{3}S^{-1}$$
+$$M^\prime_{4} = SM_{4}S^{-1}$$
+$$&amp;hellip;$$&lt;/p>
+&lt;p>Excellent! There is no need to calculate the inverse matrix of $M_{previous}$, which is a very expensive operation. You simply need to multiply $S$ on the left and right of $M_{n}$. In other words, only when flipping the object&amp;rsquo;s local y-axis direction, the new matrix is only related to itself.&lt;/p>
+&lt;h4 id="take-one-step-further">Take One Step Further&lt;/h4>
+&lt;p>If you observe the process by which we derive the conversion equation, you will notice that nothing is assumed except for the form of $S$, which is a diagonal matrix used to flip the y-axis. Therefore, the conversion equation is also valid for other types of $S$. $S$ can be generalized to any matrix $B$, which represents the basis vectors of a new coordinate system that can be used to convert from one coordinate system to another. For instance, if you wish to convert from a left-hand coordinate system to a right-hand coordinate system, you can use $B = \begin{bmatrix} -1 &amp;amp; 0 \\ 0 &amp;amp; 1 \end{bmatrix}$.&lt;/p>
+&lt;h4 id="another-general-perspective">Another General Perspective&lt;/h4>
+&lt;p>From this perspective, the above question can be viewed as a specific scenario: converting a child object with an upward-facing y-axis to the root window with a downward-facing y-axis. This can be described as a more general question:&lt;/p>
+&lt;blockquote>
+&lt;p>How can one convert the coordinates of an object from one tree to another within the same tree?&lt;/p>
+&lt;/blockquote>
+&lt;figure class="center" >
+&lt;img src="img/2.drawio.svg" alt="tree" style="border-radius: 8px; width: 400px" />
+&lt;figcaption class="center" >Object Tree&lt;/figcaption>
+&lt;/figure>
+&lt;p>Suppose we want to convert $M_{9}$ to $M_{M11}$ as shown in the image. This is very useful when we want to apply an effect on $M_{11}$ that is related to $M_{9}$, such as masking $M_{11}$ with $M_{9}$.&lt;/p>
+&lt;p>It is obvious if we use the conclusion above:&lt;/p>
+&lt;p>The object $9$ in the local coordinate system of $M_9$ to the root is ${M_{5} \times M_{1} \times } M_{6}\times M_{7}\times M_{9}\times p_{Local{9}}$.&lt;/p>
+&lt;p>The object $9$ in the local coordinate system of $M_{11}$ to the root is ${M_{5} \times M_{1} \times } M_{10}\times M_{11}\times p_{Local{11}}$.&lt;/p>
+&lt;p>Note that object $9$ at $M_{9}$, denoted as $p_{local9}$, can be viewed from $M_{11}$ as $B \times p_{local11}$, meaning that $p_{9} = B \times p_{local11}$, where $p_{local11}$ is the equivalent of $p_{local9}$ in $M_{11}$, achieved by adding a $B$ to make them equivalent.&lt;/p>
+&lt;p>$$\sout{M_{5} \times M_{1} \times } M_{6}\times M_{7}\times M_{9}\times B \times p_{Local{11}} = \sout{M_{5} \times M_{1} \times } M_{10}\times M_{11}\times p_{Local{11}}$$&lt;/p>
+&lt;p>We can determine that both the left-side object $p_{local9}$ and the right-side object $p_{local11}$ can be represented in the local coordinate system of $M_{5}$, without having to be in the root coordinate system.&lt;/p>
+&lt;p>Go ahead. The equation holds &lt;strong>if and only if&lt;/strong> $M_{7}\times M_{9}\times B= M_{10}\times M_{11}$, where&lt;/p>
+&lt;p>$$
+B = {M_{9}}^{-1}\times {M_{7}}^{-1}\times M_{10}\times M_{11}
+$$&lt;/p>
+&lt;p>The transformation from $M_9$ to $M_{11}$ is&lt;/p>
+&lt;p>$$
+p_{local11} = B^{-1} \times p_{local9} = {M_{11}}^{-1} \times {M_{10}}^{-1} \times M_{7} \times M_{9} \times p_{local9}
+$$&lt;/p>
+&lt;p>just like the path flow $P_1 \rightarrow P_2 \rightarrow P_3 \rightarrow P_4 \rightarrow P_5$ shown in the image.&lt;/p></content></item><item><title>\[Engineering\] Squircle</title><link>/post/graphics/bezier/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/post/graphics/bezier/</guid><description>&lt;p>This article is aimed to help you implement the &lt;a href="https://www.figma.com/blog/desperately-seeking-squircles/">Figma&amp;rsquo;s corner smoothing effect&lt;/a> step by step.&lt;/p>
+&lt;hr>
+&lt;p>In design, rounded rectangle are a very common geometry used to enhance visual effects. Since iOS7, Apple proposed a new type of rounded icon that provide &amp;ldquo;pop&amp;rdquo; visual effect with something subtle around the corner. Initial reversing work comes from Marc Edwards, which reveals that this kind of contour might be governed by &lt;a href="https://mathworld.wolfram.com/Superellipse.html">&lt;strong>Superellipse&lt;/strong>&lt;/a> $(\frac{x}{a})^n + (\frac{y}{b})^n = 1 $ with $n&amp;gt;2$&lt;/p></description><content>&lt;p>This article is aimed to help you implement the &lt;a href="https://www.figma.com/blog/desperately-seeking-squircles/">Figma&amp;rsquo;s corner smoothing effect&lt;/a> step by step.&lt;/p>
+&lt;hr>
+&lt;p>In design, rounded rectangle are a very common geometry used to enhance visual effects. Since iOS7, Apple proposed a new type of rounded icon that provide &amp;ldquo;pop&amp;rdquo; visual effect with something subtle around the corner. Initial reversing work comes from Marc Edwards, which reveals that this kind of contour might be governed by &lt;a href="https://mathworld.wolfram.com/Superellipse.html">&lt;strong>Superellipse&lt;/strong>&lt;/a> $(\frac{x}{a})^n + (\frac{y}{b})^n = 1 $ with $n&amp;gt;2$&lt;/p>
+&lt;figure class="center" >
+&lt;img src="img/superellipse.png" alt="SuperEllipse" style="border-radius: 8px; width: 400px" />
+&lt;figcaption class="center" >Superellipse $(\frac{x}{a})^5 + (\frac{y}{b})^5 = 1$ with $n=5$&lt;/figcaption>
+&lt;/figure>
+&lt;p>However, it not true for what iOS really does. After many efforts, it seems that the iOS-style corner is made of a combination of cubic Bézier curve and arc segment. The blog from Figma proposed a method that how to parameterized the smooth. With the value varies between [0, 1], the corner varies from a full arc to Bézier curve. Moreover, it could also apply to the corner with arbitrary angle rather than the 90-degree corner. The exposition on the mathematical theory in the original blog is sufficient, but it is obscured by ornate rhetoric, which can leave readers who wish to delve deeper into its mathematical principles rather perplexed. This article mainly focuses on the theoretical details proposed in the original blog and provides detailed mathematical formulas for each section, allowing readers to easily implement them in code based on these formulas.&lt;/p>
+&lt;h2 id="0x00-prerequisite">0x00 Prerequisite:&lt;/h2>
+&lt;ol>
+&lt;li>
+&lt;p>The definition of Bézier curves：&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://pomax.github.io/bezierinfo/">Here&lt;/a> is a good introduction on Bezier for beginners.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;p>Basic linear algebra:&lt;/p>
+&lt;ul>
+&lt;li>A basic concept on affine transformation.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ol>
+&lt;h2 id="0x01-mathematics-perspective">0x01 Mathematics Perspective&lt;/h2>
+&lt;figure class="center" >
+&lt;img src="img/rect.svg" alt="Rect&amp;amp;Squircle" style="border-radius: 8px; width: 400px" />
+&lt;figcaption class="center" >Rounded Rectangle(Left) Squircle(Right)&lt;/figcaption>
+&lt;/figure>
+&lt;p>Comparing two different kinds of rectangle, the squircle feels not as much abrupt as normal rounded rectangle at the joint between line and curve.
+This aesthetic comes from what is called continuation, in more specifically and mathematically speaking, &lt;strong>Curvature Continuation&lt;/strong>.
+The necessary way to derive such a squircle is keeping the curvature continuation at the joint. Let&amp;rsquo;s begin from the basic idea behind the squircle.&lt;/p>
+&lt;p>But it&amp;rsquo;s far from enough to modeling a squirecle with the only condition mentioned above, since there are infinite curve combinations if specific curve form is not given. Considering simplicity in both mathematics and practice, Bezier curve (Cubic Bezier is enough for most scenarios) and circle, the most common and powerful tools in both engineering, computer graphics and 2D design, are adopted.&lt;/p>
+&lt;blockquote>
+&lt;p>In fact, the original author show his idea from a mathematical perspective, where he assumes an continuous curvature profile, and he try to get the final integral curve by the given curvature equation. The result curve is called &lt;a href="https://en.wikipedia.org/wiki/Euler_spiral">Clothoid&lt;/a>, which is too complex and not in closed formed, far beyond out of our scenario.&lt;/p>
+&lt;/blockquote>
+&lt;p>Since the most curves can be given by a elementary function is already curvature continuatous itself. The only thing need to be done is having the value of curvature of both segments equal at their joint. Just recall that the condition of derivable or continous function you have learned in your high school.&lt;/p>
+&lt;h2 id="0x02-components">0x02 Components&lt;/h2>
+&lt;p>Squircle corners are composed of an arc (part of circle) and two cubic Bézier curves at each end symmetrically. The proportion of Bézier curves included is controlled by a parameter, namely the smoothing. The smoothing ranges from 0 to 1. The larger the value, the longer Bézier curves are. When the value is 1, the arc part vanishes. When the value is 0, the arc is tangent with this angle, as the ordinary rounded angle used to be. As the smooth becomes larger, the length of arc part becomes less until smooth value is 1. Here is an illustration.&lt;/p>
+&lt;figure class="center" >
+&lt;img src="img/smooth.gif" alt="Hello Friend" style="border-radius: 8px; width: 400px" />
+&lt;/figure>
+&lt;h2 id="0x03-math-foundation">0x03 Math Foundation&lt;/h2>
+&lt;p>This section gives the sufficency condition for the curvature continuation at each joint without too much detail.&lt;/p>
+&lt;figure class="center" >
+&lt;img src="img/a1.png" alt="Hello Friend" style="border-radius: 8px; width: 400px" />
+&lt;figcaption class="center" >Cubic Bezier and its control points distribution &lt;div>&lt;/div> (Source: Figma's blog)&lt;/figcaption>
+&lt;/figure>
+&lt;p>As the figure shows, the point 1 and point 4 are the end points of cubic Bezier and the point 2 and 3 are its control points. If we want get a continuous curvature profile for our smoothing curve, two constraints are held at the same time:&lt;/p>
+&lt;h4 id="constraint-1">Constraint 1&lt;/h4>
+&lt;blockquote>
+&lt;p>$If$ $P_1$, $P_2$ and $P_3$ are collinear, $Then$ $\kappa_{p_1}(0)=0$ $\implies$, $Then$ the curvature continuation is held between straight line part and the Bezier part&lt;/p>
+&lt;/blockquote>
+&lt;ul>
+&lt;li>$Proof:$&lt;/li>
+&lt;/ul>
+&lt;p>We know that the curvature of parameterized curve is&lt;/p>
+&lt;p>$$\kappa(t) = \frac{\left| B&amp;rsquo;(t) \times B&amp;rsquo;&amp;rsquo;(t) \right|}{\left| B&amp;rsquo;(t) \right|^3}$$&lt;/p>
+&lt;p>Given the cubic Bezier $B(t) = (1 - t)^3 \cdot P_0 + 3 \cdot (1 - t)^2 \cdot t \cdot P_1 + 3 \cdot (1 - t) \cdot t^2 \cdot P_2 + t^3 \cdot P_3 $&lt;/p>
+&lt;p>The curvature of cubic Bezier at $P_0$ ($t = 0$) is&lt;/p>
+&lt;p>$$\kappa_{p_1}(0) = \frac{\left| B&amp;rsquo;(0) \times B&amp;rsquo;&amp;rsquo;(0) \right|}{\left| B&amp;rsquo;(0) \right|^3}
+= \frac{\left| \left(6 \left(P_1-2 P_2+P_3\right)\right)\times \left(3 P_2-3 P_1\right)\right| }{27 \left| P_1-P_2\right| {}^3} $$&lt;/p>
+&lt;p>When $P_1$, $P_2$ and $P_3$ are collinear, the cross product of the numerator term equals $0$, so that $\kappa(0) = 0$ at $P_1$.&lt;/p>
+&lt;p>&lt;strong>Amazing!&lt;/strong>&lt;/p>
+&lt;h4 id="constraint-2">Constraint 2&lt;/h4>
+&lt;blockquote>
+&lt;p>$If$ $P_1$, $P_2$ and $P_3$ are collinear $and$ $b = \frac{2}{3} \frac{(c^2+d^2)^\frac{3}{2}}{dR}$ $\implies$ $\kappa_{p_4}(1) = \frac{1}{R}$, $Then$ the curvature continuation is held between the Bezier part the Bezier part and the arc part.&lt;/p>
+&lt;/blockquote>
+&lt;ul>
+&lt;li>$Proof:$&lt;/li>
+&lt;/ul>
+&lt;p>Once we get the conclusion that $P_1$, $P_2$ and $P_3$ are collinear, we can put the curve at a special coordination for the further examnation. As above figure shows, we can simplify the representation of Bezier curve by the scalar $a$ $b$ $c$ and $d$ rather than using the vector $P_1$, $P_2$ and $P_3$, which reduces the complexity dramatically.&lt;/p>
+&lt;p>So when we put the curve at $P_1=(0, 0)$, and then $P_2=(a, 0)$ $P_3=(a+b,0)$ $P_4=(a+b+c,d)$ with respect to $a$, $b$, $c$ and $d$. Bezier curve $B(t)$ can be simplified as&lt;/p>
+&lt;p>$$ B(t) = ( t^3 (a+b+c)+3 (1-t) t^2 (a+b)+3 a (1-t)^2 t,d t^3 )$$&lt;/p>
+&lt;p>then the curvature at $P_4$ is&lt;/p>
+&lt;p>$$\kappa_{p_4}(1) = \frac{\left| B&amp;rsquo;(1) \times B&amp;rsquo;&amp;rsquo;(1) \right|}{\left| B&amp;rsquo;(1) \right|^3} = \frac{|(3c,3d) \times (6c-6b,6d)|}{|(3c,3d)|^\frac{3}{2}} = \frac{18|bd|}{|(3c,3d)|^\frac{3}{2}} = \frac{1}{R}$$&lt;/p>
+&lt;p>$deriving$&lt;/p>
+&lt;p>$$b = \frac{2}{3} \frac{(c^2+d^2)^\frac{3}{2}}{dR}$$&lt;/p>
+&lt;h4 id="smoothing-parameterized">Smoothing Parameterized&lt;/h4>
+&lt;p>How we to control the visual effect of smoothing?&lt;/p>
+&lt;ol>
+&lt;li>
+&lt;p>Intuitively, we would like a form with respect to $s \in [0, 1] \mapsto $ $Shape[a,b,c,d]$, saying that we could compute a corresponding set of $a,b,c,d$ from a given $s$.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Besides $s$, it should also be a map with respect to the arc part radius $R$. Written as $[s, R] \mapsto$ $Shape[a,b,c,d]$&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>The map must be invertable so that we could deal with the maximum smoothing value that corner could be.&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;p>Let&amp;rsquo;s explain each of these individually.&lt;/p>
+&lt;p>Picture the following, imagine we increase $s$ from 0 for all the three angle of an equalateral triangle at the same time with equal rate, the Bezier part will consume all sides with equal rate. What&amp;rsquo;s the smoothing angle looks like as the value increasing? And what&amp;rsquo;s the maximum value going to be? If the initial radius is relatively small, $s$ could be 1. But If the initial radius is larger, the Bezier part will consume the straight line before the parameter is going to be 1, because the side of triangle has no more room for angle being smoothing. So the map must be with respect to $s$ and $R$, namely $ s, R \mapsto$ $a,b,c,d$. As mentioned above, for larger $R$, the valid range of $is$ cannot come to 1. How we resolve the maximum value of $s$? What we only need to do is let the map be invertable. Then by giving the maximum room for consuming of each single angle, we can calculate $s$ by $Shape(a,b,c,d, R)$ $\mapsto$ $s$.&lt;/p>
+&lt;p>For a normal rounded corner, if the angle is $\theta$, then the segments consume of the edge is $\frac{R}{\tan{\frac{\theta}{2}}}$ = $R\sqrt{\frac{1+\cos\theta}{1-\cos\theta}}$, keep it simple as much as possible, we just define the squircle corner consume edge is
+$$
+q=(1+s)R\sqrt{\frac{1+\cos\theta}{1-\cos\theta}}
+$$&lt;/p>
+&lt;p>Above form meet the 1, 2 and 3 at the same time.&lt;/p>
+&lt;h3 id="conclusion">Conclusion&lt;/h3>
+&lt;p>To get the curve with desired curvature profile, it&amp;rsquo;s necessary to make $P_1$, $P_2$ and $P_3$ collinear and hold $b = \frac{2}{3} \frac{(c^2+d^2)^\frac{3}{2}}{dR}$.
+In the next section, We will talk about how to code this step by step.&lt;/p></content></item><item><title>\[Principia\] Hamillton's Principle</title><link>/post/principia/physics/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/post/principia/physics/</guid><description>&lt;p>最近学习分析力学，朗道那本《力学》开篇就是最小作用量原理，把人搞得非常晕。只看那本书是不行的，完全是毫无感情的客观描述，
+对于理解这种抽象的定律毫无帮助。去年年初就打算学习理论力学，当时找了哈工大任延宇老师的理论力学公开课看，当时感觉讲得非常好，&lt;/p></description><content>&lt;p>最近学习分析力学，朗道那本《力学》开篇就是最小作用量原理，把人搞得非常晕。只看那本书是不行的，完全是毫无感情的客观描述，
+对于理解这种抽象的定律毫无帮助。去年年初就打算学习理论力学，当时找了哈工大任延宇老师的理论力学公开课看，当时感觉讲得非常好，&lt;/p>
+&lt;p>然而这门课程在最后才对哈密顿原理进行简单的讲解，但是讲得足够明白，比自己看书来的快多了，而且老师讲得非常清晰。鉴于哈密顿原理的
+重要性，这里打算详细记录一下哈密顿原理的来龙去脉。下面的这些笔记主要是用来加深自己对哈密顿原理的理解，更推荐大家去看任老师的课程视频。&lt;/p>
+&lt;p>由于哈密顿原理比较抽象，数学背景较强，直接入手的话没有任何东西能够带给我们直观的理解，所以还是要从应用入手。&lt;/p>
+&lt;ul>
+&lt;li>前置知识：&lt;/li>
+&lt;/ul>
+&lt;ol>
+&lt;li>
+&lt;p>弧微分：
+$$
+dl=\sqrt{1+y&amp;rsquo;^2}dx
+$$&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>三元函数在$(x,y,z)$的一阶泰勒展开:
+$$
+f(x+\delta x,y + \delta y,z + \delta z) = f(x,y,z) + \delta{x}f&amp;rsquo;_x(x,y,z) + \delta{y}f&amp;rsquo;_y(x,y,z) + \delta{z}f&amp;rsquo;_z(x,y,z) + o^n
+$$&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>分部积分公式:
+$$
+\int{u(x)v&amp;rsquo;(x)dx} = u(x)v(x) - \int{u&amp;rsquo;(x)v(x)dx}
+$$&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;h2 id="速降线问题">速降线问题&lt;/h2>
+&lt;h3 id="约翰伯努利的解法">约翰伯努利的解法&lt;/h3>
+&lt;p>哈密顿原理还是要从&lt;strong>速降线&lt;/strong>说起。这个问题大家都应该非常熟悉了，能主动了解哈密顿原理的人基本上都听说过速降线问题，如果不是很了解的话可以自行查阅相关资料。&lt;/p>
+&lt;p>速降线是伽利略首先提出来的，然而伽利略给出了错误的答案，他认为这个曲线是一个圆弧。
+&lt;strong>约翰伯努利(Johann Bernoulli)&lt;/strong> （就是伯努利家族的约翰伯努利，欧拉的老师）给出世界上第一个速降线问题的解法。其基本方法是类比了光的折射定律得出了这个速降线是个&lt;strong>圆滚线(cycloid)&lt;/strong> ，相当于从物理角度解决了一个数学问题，当然速降线本身就是一个物理问题。只不过这种类比方法着实大胆，但也非常的直观。&lt;/p>
+&lt;p>圆滚线或摆线其参数方程为:
+$$x=a(\theta - \sin\theta)$$
+$$y=a(1-\cos\theta)$$&lt;/p>
+&lt;p>伯努利的解决方式是把这个质点的轨迹看成光的传播路径，大家知道，光从一个介质到另一个介质中会发生折射，也就是光线的偏折。如果把这个介质的变化在竖直方向上看成连续变化的，并且从密度大的介质到密度小的介质传播，那这个光线也是一个曲线。我们知道折射定律&lt;/p>
+&lt;p>$$\frac{\sin\theta_1}{v_1} = \frac{\sin\theta_2}{v_2} = C$$&lt;/p>
+&lt;p>类比到这个速降线问题，质点的运行轨迹的切线的角度设为$\theta$,那这就和折射定律的形式一致了。 &lt;strong>(补图)&lt;/strong> 由于机械能守恒，下落$y$距离的速度为$v= \sqrt{2gy}$，得到
+$$\frac{\sin\theta}{\sqrt{2gy}}=C$$整理之后得到$$y=a\sin\theta^2$$
+然后我们又有$dy/dx =\tan\theta$这个斜率，也就是$$y&amp;rsquo;=\cot\theta$$，可以解一个微分方程$$y(1+y&amp;rsquo;^2) = C$$ 即摆线。&lt;/p>
+&lt;p>这种解法利用了光的折射轨迹是所需时间最少的这一个观察得来的事实，也就是费马原理。也说明了了光学和运动学的似乎又种内在联系，或许这两种东西在某种程度上都是同一个呢？&lt;/p>
+&lt;h3 id="变分法">变分法&lt;/h3>
+&lt;p>当然，我们现在知道，速降线是一个泛函问题，需要用变分法来解决。这里简单的介绍一下变分。
+相对于函数，泛函数的自变量是一个函数，我们用$J[y]$这种方法来标识，即泛函的自变量用中括号括起来，里面是一个普通的函数$y=y(x)$。&lt;/p>
+&lt;p>对于速降线，其实我们就是在寻找一个轨迹函数$y$，这个函数满足这个性质，在这个路径进行时间的积分，最后所用时间，也就是从$A$点降落到$B$点所用的时间最小。那这个函数$y$就是速降线。这个问题本身是个优化问题倒不难理解，但是困难的地方在于，。我我们根本就不知道函数的形式，之前我们求极值的那套东西，也即让一阶导数为0找到极值点的方式不好用了，如和求导呢？如何在无穷多种函数种寻找我们想要的那个呢？在进行之前，我们首先来考察一下极值的含义。&lt;/p>
+&lt;p>首先我们看一下普通函数$y=y(x)$的极值。极值$y_0$对应的极值点$x_0$有一个特殊的性质，也就是在$x_0$附近改变一个小量$a$，函数值相对于极值的变化也几乎是$0$，也就是一阶无穷小，这也是极值点导数为$0$的直观结果。在非极值点变化就不是$0$了.同样，对于泛函，对于一个泛函的极值点$y$，在$y$附近变化，泛函的结果的变化量$\delta J$也几乎是$0$。有了这个想法，我们似乎可以利用这个性质，来对这个优化问题构造一个约束，把这个问题的困难进行转移。&lt;/p>
+&lt;p>大概形式就是要想时间最小，也就是在极值点变化量是$0$，这样我们就能写出必要条件$\delta J = 0$。然后看一下这个必要条件能不能把这个未知的$y$转移掉。&lt;/p>
+&lt;p>那么如何刻画这个泛函自变量$y$在极值点附近的一般形式呢？对于普通函数的在 &lt;strong>自变量$x$&lt;/strong> 附近改的 &lt;strong>小量$\alpha$&lt;/strong> 影响的函数值的变化，我们可以用 &lt;strong>$x+\alpha$&lt;/strong> 这种一般形式表示变化后的自变量。对于泛函，我们可以用 &lt;strong>$y(x)+\alpha\eta(x)$&lt;/strong> 这种一般形式来表示表示变化后的自变量。 &lt;strong>$\eta(x)$&lt;/strong> 是一个一般形式的函数， &lt;strong>$\alpha\eta(x)$&lt;/strong> 也是小量，所以这种表示没问题，虽然我们又引入了一个未知的函数，似乎把问题变得更复杂了，但现在我们都不知道 &lt;strong>$y(x)$&lt;/strong> 的形式，再多引进一个未知的函数又何妨？后边说不定这东西被优化掉了。下面我们把这个优化问题写完整:&lt;/p>
+&lt;ol>
+&lt;li>&lt;strong>建立模型&lt;/strong>&lt;/li>
+&lt;/ol>
+&lt;p>我们优化的目标是时间最短，也就是对路径上的长度微元除以速度这些小片段进行求和，即:
+$$t = \lim \sum_0^n{\Delta l/v} = \int_{x_1}^{x_2}{\frac{dl}{v}} $$&lt;/p>
+&lt;p>如果你对这种曲线微元在笛卡尔坐标系下的形式非常熟悉，那就可以马上写出$dl=\sqrt{1+y&amp;rsquo;^2}dx$这个非常熟悉的表达式，带入到上面的优化项中，可以得到
+$$t = \int_{x_1}^{x_2}{\frac{\sqrt{1+y&amp;rsquo;^2}}{\sqrt{2gy}}}dx$$&lt;/p>
+&lt;p>我们的目标就是求当$t$最小时的$y$。&lt;/p>
+&lt;ol start="2">
+&lt;li>&lt;strong>回到一般&lt;/strong>&lt;/li>
+&lt;/ol>
+&lt;p>上面一小节针对具体的速降线问题写出了这个问题的具体优化目标，然而这对于用变分法这种一般性的工具来得出结果是没有帮助的，我们或许可以用这个具体的优化目标来解出这个$y$，但是可能会非常复杂。变分法的目的就是用一般性的方法给出所有同类问题的解。
+首先我们参考速降线这个问题优化项的被积函数，其实一个系统的运动规律无非就是&lt;strong>位移，速度，时间&lt;/strong>，要想一般化这个模型，我们可以用$F(y,y&amp;rsquo;,t)$这种一般形式来代表所有的物理系统。(之所以可以代表一般的物理系统，这个形式是理论物理里面的一个结论，先接受它就可以，并且也符合直觉)&lt;/p>
+&lt;p>优化最小值就变成了使下面的约束成立
+$$\delta J[y] = J[y] - J[\overline y] = 0$$&lt;/p>
+&lt;p>其中
+$$J[y] = \int_{x_1}^{x_2}{F(y,y\prime,x)}dx$$&lt;/p>
+&lt;p>$$J[\overline y] = \int_{x_1}^{x_2}{F(y + \alpha\eta,(y + \alpha\eta)&amp;rsquo;,x)}dx = \int_{x_1}^{x_2}{F(y + \delta y,(y+\delta y)&amp;rsquo;,x)}dx$$&lt;/p>
+&lt;p>一般碰到这种有微小改变量$\Delta$的抽象函数，处理方法就是在这一点展开。在进行展开之前，强调一下这个泛函的边界条件。&lt;/p>
+&lt;p>泛函的变化量$\delta y$中，自变量是函数本身， &lt;strong>(补图)&lt;/strong>，在端点$x_1,x_2$处，$\delta y(x_1) = \delta y(x_2) = 0$，并且$\delta x = 1$，有了这些，我们对上面的式子进行展开&lt;/p>
+&lt;p>$$
+J[\overline y] = \int_{x_1}^{x_2}{(F(y,y&amp;rsquo;,x) + \frac{\partial F}{\partial y}\delta y+\frac{\partial F}{\partial y&amp;rsquo;}\delta y&amp;rsquo;)dx}
+$$&lt;/p>
+&lt;p>$$
+\delta J[y] = J[\overline y] - J[y]
+$$&lt;/p>
+&lt;p>最后我们得到了
+$$
+\delta J[y] = \int_{x_1}^{x_2}{(\frac{\partial F}{\partial y}\delta y+\frac{\partial F}{\partial y&amp;rsquo;}\delta y&amp;rsquo;)dx}
+$$&lt;/p>
+&lt;p>注意其中的 &lt;strong>微分的变分 $\delta y&amp;rsquo;$&lt;/strong>, 这里是可以交换的,也就是 $\delta y&amp;rsquo;$可以先求导再变分 那就可以写成
+$$
+\delta J[y] = \int_{x_1}^{x_2}{(\frac{\partial F}{\partial y}\delta y+\frac{\partial F}{\partial y&amp;rsquo;}\frac{d(\delta y)}{dx})dx} = \int_{x_1}^{x_2}{\frac{\partial F}{\partial y}\delta y dx}+\int_{x_1}^{x_2}{\frac{\partial F}{\partial y&amp;rsquo;}\frac{d(\delta y)}{dx}dx}
+$$&lt;/p>
+&lt;p>看到这种被积函数是由一些因子相乘，且某一个因子和积分变量的积是某个函数的全微分的形式$\int_{x_1}^{x_2}{\frac{\partial F}{\partial y&amp;rsquo;}\frac{d(\delta y)}{dx}dx}$，比如这里的 &lt;strong>$\frac{d(\delta y)}{dx}dx$&lt;/strong> 就是全微分 &lt;strong>$d(\delta y)$&lt;/strong> ，那就使用分部积分：&lt;/p>
+&lt;p>$$
+\int_{x_1}^{x_2}{\frac{\partial F}{\partial y&amp;rsquo;}\frac{d(\delta y)}{dx}dx} = \int_{x_1}^{x_2}{\frac{\partial F}{\partial y&amp;rsquo;}}d(\delta y) = \frac{\partial F}{\partial y&amp;rsquo;}\delta y \mid_{x_1}^{x_2} - \int_{x_1}^{x_2}{\delta y \frac{d}{dx}(\frac{\partial F}{\partial y&amp;rsquo;})}
+$$&lt;/p>
+&lt;p>那么
+$$
+\delta J[y] = \frac{\partial F}{\partial y&amp;rsquo;}\delta y \mid_{x_1}^{x_2} + \int_{x_1}^{x_2}{(\frac{\partial F}{\partial y} - \frac{d}{dx}\frac{\partial F}{\partial y&amp;rsquo;})}\delta ydx
+$$
+因为$\delta y(x_1) = \delta y(x_2) = 0$,所以第一项为0。要使$\delta J[y] = 0$,那就只能使后面的
+$$
+\int_{x_1}^{x_2}{(\frac{\partial F}{\partial y} - \frac{d}{dx}\frac{\partial F}{\partial y&amp;rsquo;})}\delta ydx \equiv 0
+$$&lt;/p>
+&lt;p>因为$\delta y$是任意的，所以要使积分为0,则必要条件就是
+$$
+(\frac{\partial F}{\partial y} - \frac{d}{dx}\frac{\partial F}{\partial y&amp;rsquo;}) = 0
+$$&lt;/p>
+&lt;p>这个方程就是力学中的 &lt;strong>拉格朗日方程&lt;/strong>。&lt;/p></content></item><item><title>\[Principia\] Introduction on Coordination System</title><link>/post/principia/coordinates/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/post/principia/coordinates/</guid><description/><content>&lt;h1 id="坐标系">坐标系&lt;/h1>
+&lt;p>为了避免这个笔记成为毫无意义的摘抄，所以这里不机械式地罗列各种坐标系地笔记公式，只针对我们不常用的极坐标和自然坐标系，来写出这两个坐标系下的动力学表示。&lt;/p>
+&lt;p>坐标系是用来干什么的？&lt;strong>当然是方便人解决问题的&lt;/strong>。这篇笔记的目的是给出每种坐标系下物体的&lt;strong>速度、加速度、动能和动量的表示&lt;/strong>。以上目的在于方便地处理各种问题。并且给出这些坐标系所能处理的典型问题。&lt;/p>
+&lt;p>我们的目的是把&lt;strong>位置、速度和加速度&lt;/strong>在各个坐标系下用这个坐标系的基底来表示。&lt;/p>
+&lt;p>这两个坐标系不同于笛卡尔直角坐标系，它们的基底是随时间变化的，也就是这些基底对时间求导还是有信息的。并且如果我们要达到我们的目的，也就是用基底表示速度和加速度，也必然涉及到对基底的求导。因为速度和加速度是由&lt;strong>位移对时间&lt;/strong>求导得到的，一旦对用基底表示的位移求导，那么不可避免地涉及到对基底的求导。所以，为了在各个坐标系下用基向量表示&lt;strong>位置、速度和加速度&lt;/strong> ,我们首先必须得出这个坐标系下基向量对时间求导的表示。&lt;/p>
+&lt;blockquote>
+&lt;p>注意，只有对时间求导，才写成函数上加点。$\dot{x}$表示为$x$对时间$t$求导&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="极坐标基底对时间导数的表示">极坐标基底对时间导数的表示&lt;/h2>
+&lt;p>极坐标需要选取一个定点作为坐标原点。通常，极坐标系适合处理有心力的问题。所以，这个极点通常为力心，这样整个坐标系就成了惯性系。&lt;/p>
+&lt;h3 id="极坐标系的定义">极坐标系的定义&lt;/h3>
+&lt;p>极坐标系的两个基底分别是径向和垂直于径向的单位矢量。这两个基本矢量用笛卡尔坐标系表示为：&lt;/p>
+&lt;p>$$
+\vec{e_r}=\cos\theta\vec{i}+\sin\theta\vec{j}
+$$&lt;/p>
+&lt;p>$$
+\vec{e_{\theta}}=-\sin\theta\vec{i}+\cos\theta\vec{j}
+$$&lt;/p>
+&lt;h3 id="推导">推导&lt;/h3>
+&lt;p>如果把 &lt;strong>$\vec{e_r}$对$\theta$求导&lt;/strong>，会发现就是$\vec{e_{\theta}}$，这是极坐标非常舒服的地方。&lt;/p>
+&lt;p>$$
+\frac{d\vec{e_r}}{d\theta}=-\sin\theta\vec{i}+\cos\theta\vec{j} = \vec{e_\theta}
+$$&lt;/p>
+&lt;p>同理&lt;/p>
+&lt;p>$$
+\frac{d\vec{e_\theta}}{d\theta}=-\cos\theta\vec{i}-\sin\theta\vec{j} = -\vec{e_r}
+$$&lt;/p>
+&lt;p>这样就能写出基本矢量随着时间的变化规律&lt;/p>
+&lt;p>$$
+\dot{\vec{e_r}} = \frac{d\vec{e_r}}{dt} = \frac{d\vec{e_r}}{d\theta}\frac{d\theta}{dt} = \dot{\theta}\vec{e_\theta}
+$$&lt;/p>
+&lt;p>同理得:&lt;/p>
+&lt;h2 id="heading">$$
+\dot{\vec{e_\theta}} = -\dot{\theta}\vec{e_r}
+$$&lt;/h2>
+&lt;p>$$
+\dot{\vec{e_r}} = \dot{\theta}\vec{e_\theta}
+$$
+$$
+\dot{\vec{e_\theta}} = -\dot{\theta}\vec{e_r}
+$$&lt;/p>
+&lt;h2 id="自然坐标基底对时间导数的表示">自然坐标基底对时间导数的表示&lt;/h2>
+&lt;p>自然坐标系的参数化相对复杂一些，自然坐标系用来处理具有&lt;strong>向心加速度&lt;/strong>的问题。
+它除了具有额外的曲率半径这个参数，还有角度正负号的问题。（补图）在推导之前，我们先引入自然坐标系的定义，这个定义比较复杂&lt;/p>
+&lt;h3 id="自然坐标系的定义">自然坐标系的定义&lt;/h3>
+&lt;p>首先我们能通过定义得到切线方向基底：
+$$
+\vec{e_t}= \frac{d\vec{r}}{|d\vec{r}|}
+$$
+这个非常的简单。&lt;/p>
+&lt;p>但是法向的基底如何表示呢？首先，我们规定法线方向在&lt;strong>曲线的凹侧&lt;/strong>&lt;/p>
+&lt;p>接下来回想之前的极坐标的横向基底对时间导数的表达式$\vec{e_\theta}$具有形式 &lt;strong>$$\frac{d\vec{e_r}}{d\theta}=-\sin\theta\vec{i}+\cos\theta\vec{j} = \vec{e_\theta}$$&lt;/strong>&lt;/p>
+&lt;p>因为在极坐标系种$\vec{e_r}$ 和 $\vec{e_\theta}$相互垂直，在自然坐标系种，这两个分量也定义为相互垂直，所以对于自然坐标系，只要我们找到一个在形式上相当于极坐标系中的$\theta$，也就随意规定一个固定轴,其与切向夹角为$\theta$，我们就可以认为在自然坐标系中，其法向基底$\vec{e_n}$也可以表示为&lt;/p>
+&lt;p>$$
+\vec{e_n} = \frac{d\vec{e_t}}{d\theta}
+$$
+这里相对于极坐标系，只是把$\theta$替换为$n$，$r$ 替换为$t$，形式不变。&lt;/p>
+&lt;p>这里其实就是法向的定义。&lt;/p>
+&lt;p>最后一个参数就是&lt;strong>曲率&lt;/strong>：&lt;/p>
+&lt;p>$$
+\rho = \frac{ds}{d\theta}
+$$&lt;/p>
+&lt;p>为什么这里引入了一个$\rho$呢，因为如果只靠我们选取的最基本变量$r$和$\theta$来表示最终结果非常复杂，所以我们引入了一个中间变量。&lt;/p>
+&lt;p>$$
+\rho = |\frac{[r^2+(dr/d\theta)^2]^{\frac{3}{2}}}{r^2+2(dr/d\theta)^2 - r\frac{d^2 r}{d\theta^2}}|
+$$&lt;/p>
+&lt;p>&lt;strong>注意&lt;/strong>，虽然$\vec{e_n} \vec{e_t}$和 极坐标中的$\vec{e_\theta} \vec{e_r}$在形式上相同，但是在自然坐标系下，我们规定了法向的方向，也就是&lt;strong>曲线的凹侧&lt;/strong>，然而在极坐标系下，横向的方向就是 &lt;strong>$\theta$增大的方向&lt;/strong>，所以&lt;strong>曲线的凹侧&lt;/strong> 和 &lt;strong>$\theta$增大的方向&lt;/strong> 不完全等价。所以对于自然坐标系，需要按$d\theta$的符号来进行分类。之所在自然坐标系下对于法线方向需要分类，是因为 &lt;strong>法线的正方向在曲线的凹侧&lt;/strong>这个定义是不连续的，没办法用统一的表达式来表述。因为我们必须规定一个方向，只能通过曲线的形状来规定一个方向，否则法向的正向到底朝向哪里呢？因此，在曲线的凹侧变化的时候，也就是 &lt;strong>$d\theta$&lt;/strong> 的符号改变的时候，法向的正向定义也是要变的。所以结论就是：&lt;/p>
+&lt;p>在选定一个固定轴后，与切向的基底的夹角为 **$\theta$**时:&lt;/p>
+&lt;p>当 &lt;strong>$d\theta &amp;gt; 0$&lt;/strong>:
+$$
+\vec{e_t}= \frac{d\vec{r}}{|d\vec{r}|} = \frac{d\vec{r}}{ds}
+$$&lt;/p>
+&lt;p>$$
+\vec{e_n} = \frac{d\vec{e_t}}{d\theta}
+$$&lt;/p>
+&lt;p>$$
+\rho = \frac{ds}{d\theta}
+$$&lt;/p>
+&lt;p>当 &lt;strong>$d\theta &amp;lt; 0$&lt;/strong>:
+$$
+\vec{e_t} = \frac{d\vec{r}}{|d\vec{r}}|= \frac{d\vec{r}}{ds}
+$$&lt;/p>
+&lt;p>$$
+\vec{e_n} = -\frac{d\vec{e_t}}{d\theta}
+$$&lt;/p>
+&lt;p>$$
+\rho = -\frac{ds}{d\theta}
+$$&lt;/p>
+&lt;h3 id="推导-1">推导&lt;/h3>
+&lt;p>在自然坐标系下，我们不像在极坐标系下，需要考虑基底对时间的导数，因为通过计算我们发现速度的基底表示并不涉及基底对时间的导数。&lt;/p>
+&lt;p>速度:&lt;/p>
+&lt;p>$$
+\vec{\dot{v}} =\dot{\vec{r}} = \frac{d\vec{r}}{dt} = \frac{d\vec{r}}{ds}\frac{ds}{dt}
+$$
+其中，$\frac{ds}{dt}$就是我们所熟悉的速率的定义。
+因此：
+$$
+\vec{\dot{v}} = v\vec{e_t} + 0\vec{e_n}
+$$&lt;/p>
+&lt;p>加速度：&lt;/p>
+&lt;p>$$
+\vec{a} = \frac{d\vec{v}}{dt} = \frac{d}{dt}(v\vec{e_t}) = \dot{v}\vec{e_t} + \frac{v^2}{\rho}\vec{e_n}
+$$&lt;/p>
+&lt;h2 id="结论">结论&lt;/h2>
+&lt;p>有了上面的基底求导的结果，我们就能得到&lt;strong>位移、速度和加速度&lt;/strong>用基底的表示。&lt;/p>
+&lt;h3 id="在极坐标系下">在极坐标系下&lt;/h3>
+&lt;h4 id="位置矢量">位置矢量&lt;/h4>
+&lt;p>$$
+\vec{r} = r\vec{e_r}
+$$
+这是极坐标的定义&lt;/p>
+&lt;h4 id="速度矢量">速度矢量&lt;/h4>
+&lt;p>$$
+\vec{v} = \dot{\vec{r}} =\vec{\dot{r}}\vec{e_r}+r(\dot{\theta}\vec{e_\theta})
+$$&lt;/p>
+&lt;p>则
+&lt;strong>$$v_r=\dot{r}$$&lt;/strong>
+&lt;strong>$$v_\theta = r\dot{\theta}$$&lt;/strong>&lt;/p>
+&lt;h4 id="加速度矢量">加速度矢量&lt;/h4>
+&lt;p>$$
+\vec{a} = \dot{\vec{v}} = \frac{d}{dt}(\vec{\dot{r}}\vec{e_r}+r\dot{\theta}\vec{e_\theta})
+$$&lt;/p>
+&lt;p>这一步略去计算,最后我们得到
+$$
+\vec{a}=(\ddot{r}-r\dot{\theta}^2)\vec{e_r} + (2\dot{r}\dot{\theta}+r\ddot{\theta})\vec{e_\theta}
+$$&lt;/p>
+&lt;p>则
+&lt;strong>$$a_r=\ddot{r}-r\dot{\theta}^2$$&lt;/strong>
+&lt;strong>$$a_\theta = 2\dot{r}\dot{\theta}+r\ddot{\theta}$$&lt;/strong>
+到这里，我们就把三大量在极坐标系下的分量表示写出来了。&lt;/p>
+&lt;p>如果比较敏感的话，可以看到在横向分量下的加速度的部分，是某种形式的全微分。这就可以写成更简洁的形式（当然，发现这一步其实挺需要敏感度的）&lt;/p>
+&lt;p>&lt;strong>$$a_\theta =\frac{1}{r}\frac{d}{dt}(r^2\dot{\theta})$$&lt;/strong>
+这个形式非常有用，放在之后的极坐标的应用里说明。&lt;/p>
+&lt;h3 id="在自然坐标系下">在自然坐标系下&lt;/h3>
+&lt;p>因为在上一节中直接推出了运动学的表示，所以我们这里直接抄过来&lt;/p>
+&lt;h4 id="位置矢量-1">位置矢量&lt;/h4>
+&lt;h4 id="速度矢量-1">速度矢量&lt;/h4>
+&lt;p>$$v_t = v$$&lt;/p>
+&lt;p>$$v_n = 0$$&lt;/p>
+&lt;h4 id="加速度矢量-1">加速度矢量&lt;/h4>
+&lt;p>$$
+a_t = \dot{v}
+$$&lt;/p>
+&lt;p>$$
+a_n = \frac{v^2}{\rho}
+$$&lt;/p>
+&lt;h2 id="极坐标的银弹silver-bullet级的应用">极坐标的银弹(Silver Bullet)级的应用&lt;/h2>
+&lt;ul>
+&lt;li>&lt;strong>由掠面面积所想到的&lt;/strong>&lt;/li>
+&lt;/ul>
+&lt;p>根据掠面的定义，我们可以写出掠面的微分表达式（补图）:&lt;/p>
+&lt;p>$$
+dA = \frac{1}{2}r^2 d\theta
+$$&lt;/p>
+&lt;p>那么掠面速率就是:
+$$
+\dot{A} = \frac{dA}{dt} = \frac{1}{2}r^2\frac{d\theta}{dt}
+$$&lt;/p>
+&lt;p>利用全微分形式的横向加速分量，我们可以看到，掠面速率是横向加速度&lt;strong>横向分量&lt;/strong>的一部分
+$$
+a_\theta = \frac{2}{r}\frac{d}{dt}(\dot{A})
+$$&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>惊人的巧合&lt;/strong>&lt;/li>
+&lt;/ul>
+&lt;p>我们知道&lt;strong>开普勒第一定律&lt;/strong>。开普勒通过观测发现行星的掠面速度是常数，也就是$\frac{d}{dt}(\dot{A})$这一项为$0$，那么就得出结论：&lt;/p>
+&lt;p>&lt;strong>$a_\theta = 0$ $\Rightarrow$ 行星的横向加速度为$0$ $\Rightarrow$ 行星横向的力为$0$ $\Rightarrow$ 行星所受到的力是有心力&lt;/strong>&lt;/p>
+&lt;p>这么复杂的一个天体问题，通过观测，并且经过极坐标的计算，就可以得出非常简洁的结论:&lt;strong>万有引力是有心力&lt;/strong>。&lt;/p>
+&lt;blockquote>
+&lt;p>我们现在再来思考一下，这是巧合吗？这当然不是巧合，因为如果给了极坐标的定义，速度、加速度的定义，这个横向加速度的形式本就应该如此。它本来就在那里，不会因为我们的精妙计算而存在,也不会因为我们的愚钝算不出而不存在。当然，如果非要说成是极坐标系“巧合”，那这个“巧合”其实就是 &lt;strong>在数学上（用极坐标系）对这个问题的本质(只受到了极坐标所定义的径向方向的力)的做出的解答。&lt;/strong> 而我们把这种在极坐标系下定义的只有径向的力的这种力叫做 &lt;strong>有心力(Central Force)&lt;/strong> 。&lt;/p>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>注意横向加速和切向加速度不一样。切向加速度是自然坐标系下的表示。&lt;/p>
+&lt;/blockquote>
+&lt;p>从这里我们可以发现极坐标的杀手级应用：处理有心力的问题。毕竟对于有心力，横向上的加速度为0，这就使其表示以及运算非常的简单。而且有心力是自然界最常见最基本的力，小到库仑力，大到万有引力。都是有心力。当然需要先证明有心力只会引起平面运动，只有平面运动，才能用平面极坐标系。这个之后涉及。&lt;/p></content></item><item><title>\[Principia\] The Laws of Conservation</title><link>/post/principia/conservation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/post/principia/conservation/</guid><description>&lt;p>We re-examine the conservation of energy and momentum we learned in middle school from a purely mathematical perspective, and then we derive the conservation of angular momentum from the same perspective.&lt;/p>
+&lt;hr>
+&lt;p>我们从纯数学的角度来重新审视中学学过的能量守恒和动量守恒,然后我们再通过同样的角度得出角动量守恒。&lt;/p></description><content>&lt;p>We re-examine the conservation of energy and momentum we learned in middle school from a purely mathematical perspective, and then we derive the conservation of angular momentum from the same perspective.&lt;/p>
+&lt;hr>
+&lt;p>我们从纯数学的角度来重新审视中学学过的能量守恒和动量守恒,然后我们再通过同样的角度得出角动量守恒。&lt;/p>
+&lt;h1 id="守恒定律是什么">守恒定律是什么&lt;/h1>
+&lt;p>能量守恒，动量守恒和机械能守恒都是运动积分。 为了明白什么是运动积分，需要弄清楚下面两个问题。&lt;/p>
+&lt;ol>
+&lt;li>&lt;strong>动能定理&lt;/strong> 和 &lt;strong>动量定理&lt;/strong>与&lt;strong>牛顿第二定律&lt;/strong>的关系&lt;/li>
+&lt;li>&lt;strong>动能定理&lt;/strong> 和&lt;strong>动量守恒&lt;/strong> 以及 &lt;strong>动量定理&lt;/strong> 和&lt;strong>动量守恒&lt;/strong>的关系。&lt;/li>
+&lt;/ol>
+&lt;h3 id="前置知识">前置知识：&lt;/h3>
+&lt;ol start="0">
+&lt;li>Nabla算子&lt;/li>
+&lt;/ol>
+&lt;p>$$
+\nabla
+$$&lt;/p>
+&lt;ol>
+&lt;li>
+&lt;p>标量场$\Psi(\vec{r})$的&lt;strong>梯度&lt;/strong>是&lt;strong>向量&lt;/strong>:
+$$\nabla\Psi = \frac{\partial{\Psi}}{\partial{x}}\vec{i} + \frac{\partial{\Psi}}{\partial{y}}\vec{j}+ \frac{\partial{\Psi}}{\partial{z}}\vec{k}$$&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>矢量场$\vec{A}(\vec{r})$ 的&lt;strong>散度&lt;/strong>是&lt;strong>标量&lt;/strong>:
+散度：&lt;/p>
+&lt;p>$$
+\nabla \cdot \vec{A}=\frac{\partial{A_x}}{\partial{x}} + \frac{\partial{A_y}}{\partial{y}}+ \frac{\partial{A_z}}{\partial{z}}
+$$&lt;/p>
+&lt;p>旋度：&lt;/p>
+&lt;p>$$
+\nabla \times \vec{A}
+$$&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>结论：
+$$
+\nabla\times\left(\nabla\Psi\right) = 0
+$$
+&lt;strong>标量场的梯度的旋度为0&lt;/strong>&lt;/p>
+&lt;p>$$
+\nabla\cdot\left(\nabla\times\vec{A}\right) = 0
+$$
+&lt;strong>矢量场的旋度的散度为0&lt;/strong>&lt;/p>
+&lt;blockquote>
+&lt;p>这两个反命题也成立，也就是说，一个旋度为0的（向量）场，可以表示为一个标量场的梯度.
+一个散度为0的（向量）场，可以表示为一个（向量）场的旋度。&lt;/p>
+&lt;/blockquote>
+&lt;p>例子:
+对于一个&lt;strong>无旋场&lt;/strong>，我们可以用一个&lt;strong>标量场&lt;/strong>来表示，这个标量场一般称为 &lt;strong>&amp;ldquo;势&amp;rdquo;&lt;/strong> 。比如&lt;strong>静电场（标量场）的电势场（只是和位置有关的一个数）&lt;strong>和&lt;/strong>重力场（标量场）的重力势（只是一个和位置有关的标量）&lt;/strong>。 同时，我们把这种&lt;strong>旋度为0&lt;/strong>的力场称为&lt;strong>保守力&lt;/strong>。&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;h2 id="能量守恒">能量守恒&lt;/h2>
+&lt;p>$$
+\vec{F} = m\ddot{\vec{r}} \Rightarrow \vec{F} = m \frac{d\vec{v}}{dt}
+$$&lt;/p>
+&lt;p>如果我们定义一个量
+$$T = \frac{1}{2}mv^2 $$&lt;/p>
+&lt;p>那么就有
+$$
+\vec{F}d\vec{r} = m\frac{d\vec{v}}{dt}d\vec{r} = d(\frac{1}{2}mv^2)
+$$&lt;/p>
+&lt;p>得到动能定理
+$$\vec{F}d\vec{r} = dT$$&lt;/p>
+&lt;p>其积分形式&lt;/p>
+&lt;p>$$
+T_2-T_1 = \int_{\vec{r_1}}^{\vec{r_2}}\vec{F}d\vec{r}
+$$&lt;/p>
+&lt;p>&lt;strong>如果$\vec{F} = 0$，运动前后动能不变&lt;/strong>.&lt;/p>
+&lt;h2 id="动量守恒">动量守恒&lt;/h2>
+&lt;p>$$
+\vec{F} = m\ddot{\vec{r}} \Rightarrow \vec{F} = m \frac{d\vec{v}}{dt}
+$$&lt;/p>
+&lt;p>如果我们定义一个量$\vec{p} = m\vec{v}$&lt;/p>
+&lt;p>就得到
+$$
+\vec{F} = \frac{d\vec{p}}{dt}
+$$&lt;/p>
+&lt;p>首先我们需要明白，动量定力和牛顿第二定律$\vec{F} = m\ddot{\vec{r}}$ 都是二阶微分方程，也就是他们的次数是一样的，从形式上来讲他们是等价的。实际上，牛顿最开始提出来的第二定律其实就是这个我们今天所熟悉的&lt;strong>动量定理&lt;/strong>$\vec{F} = \frac{d\vec{p}}{dt}$&lt;/p>
+&lt;p>然后我们把这个动量定理对&lt;strong>时间&lt;/strong>积分，得到
+$$
+\vec{p_2} - \vec{p_1} = \int_{t_1}^{t_2}\vec{F}dt
+$$&lt;/p>
+&lt;p>&lt;strong>如果$\vec{F} = 0$，运动前后动量不变&lt;/strong>, 因为和牛顿第二定律等价，所以也可以从牛顿第二定律的角度来解释，&lt;strong>如果合外力为0,那么速度不变&lt;/strong>。
+当然以上都是显而易见的结论，但重点在下面:&lt;/p>
+&lt;p>也就是说
+$$
+\vec{F} = 0 \Rightarrow \vec{p} = \vec{C}
+$$
+其中的这个 &lt;strong>$\vec{p}= \vec{C}$&lt;/strong> 是一个&lt;strong>守恒量&lt;/strong>。
+我们知道，$\vec{p}$里面的速度是$\vec{r}$的一阶导数，因此，如果我们以计算出系统的位置$\vec{r}$为目标，那么这个守恒量$\vec{p} = \vec{C}$就是一个一阶微分方程，相比于牛顿第二定律或者说动量定理，已经降了一阶了。&lt;/p>
+&lt;h2 id="动量矩守恒角动量守恒">动量矩守恒（角动量守恒）&lt;/h2>
+&lt;h3 id="矩">矩&lt;/h3>
+&lt;p>位置的矢量和矢量的叉积&lt;/p>
+&lt;h3 id="力矩">力矩&lt;/h3>
+&lt;p>位置矢量和力
+$$
+\vec{M} = \vec{r}\times\vec{F}
+$$&lt;/p>
+&lt;h3 id="动量矩角动量">动量矩（角动量）&lt;/h3>
+&lt;p>位置矢量和动量&lt;/p>
+&lt;p>$$
+\vec{J} = \vec{r}\times\vec{p}
+$$&lt;/p>
+&lt;p>所谓的动量矩定理，就是
+$$
+\vec{M} = \frac{\mathrm{d}{\vec{J}}}{\mathrm{d}{t}}
+$$&lt;/p>
+&lt;p>也就是动量矩对时间的导数是的力矩，&lt;strong>求导&lt;/strong> + &lt;strong>牛顿第二定律&lt;/strong> 就可以证明。
+所以，所以动量矩定理和牛顿第二定律等价。&lt;/p>
+&lt;p>我们类比之前的动量守恒，如果这里的力矩$\vec{M} = 0$，也可以得到积分后的量是一个不变量。这就是&lt;strong>动量矩（角动量）守恒&lt;/strong>。&lt;/p>
+&lt;blockquote>
+&lt;p>动量守恒或动量矩守恒发生前提（外力为0）是在是有点苛刻。然而我们解决的问题基本上不可能不受力的，所以，对于这两种守恒，我们一般使用其分量形式来解决问题。即在某一固定方向（对动量定理来说）或对于某一固定点（对于角动量守恒）分别使用这两个守恒。在某一固定方向上应用动量定理的典型问题是一个滑块在静止的斜坯上滑下，问这两个物体的运动规律。这当然是一个在水平方向上动量守恒的例子。对于角动量守恒的经典问题是只受有心力的物体叫动量守恒，比如天体的轨道运动规律。&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="机械能守恒">机械能守恒&lt;/h2>
+&lt;p>我们看到，前面的动能定理和动量定理本质上是在某种特殊的条件下(F=0)去得到&lt;strong>降过阶的微分方程&lt;/strong>。 使我们不用再去解$\vec{F}=m\ddot{\vec{r}}$这种复杂的二阶微分方程了。有了这种想法，我们自然更多的要去挖掘更多的&lt;strong>运动积分&lt;/strong>。 然而，我们从牛顿第二定律出发，似乎已经不能得到新的运动积分了。但是，如果我们继续&lt;strong>施加某种条件&lt;/strong>，可能又会发现一些守恒量。幸运的是，我们发现，如果只有&lt;strong>保守力&lt;/strong>为主动力，我们又可以的到&lt;strong>机械能守恒&lt;/strong>这个非常重要的运动积分。&lt;/p>
+&lt;p>之前的前置知识里面说了，保守力可以写作一个标量场的形式，就是势能。我们无时无刻不在的保守力重力场中，有:
+$$
+\nabla\times\vec{F} = 0 \Rightarrow \vec{F} = -\nabla V(\vec{r})
+$$&lt;/p>
+&lt;p>再通过之前得到动能定理的方式得到：
+$$
+\vec{F}\cdot\mathrm{d}{\vec{r}} = -\nabla V({\vec{r}})\cdot\mathrm{d}{\vec{r}} = -\mathrm{d}{V(\vec{r})}
+$$&lt;/p>
+&lt;blockquote>
+&lt;p>中间那一步关键的过程直接在迪卡尔坐标系下写完全就能把Nabla算子转换成一个三元函数的全微分.&lt;/p>
+&lt;/blockquote>
+&lt;p>因为之前我们得到的动能定理也是
+$$\vec{F}\cdot d\vec{r} = \mathrm{d}T$$&lt;/p>
+&lt;p>因此
+$$
+\mathrm{d}T = -\mathrm{d}{V(\vec{r})}
+$$
+即&lt;strong>保守力的势能&lt;/strong>和&lt;strong>动能&lt;/strong>相互转换。&lt;/p>
+&lt;p>积分的到新的运动积分为
+$$
+T + V = C
+$$
+这个就是&lt;strong>机械能守恒&lt;/strong>。&lt;/p>
+&lt;h3 id="一维势能曲线">一维势能曲线&lt;/h3>
+&lt;p>在&lt;strong>保守力&lt;/strong>的前提下，有一个这样的曲线。&lt;/p></content></item><item><title>\[Programming Language\] Rust vs C++</title><link>/post/programming-language/rust/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/post/programming-language/rust/</guid><description>&lt;p>这篇文章通过一些C++和Rust代码片段做对比，对Rust核心特点进行快速介绍。适合熟悉C/C++并且不熟悉Rust的读者，并且帮助他们快速熟悉Rust的特点。注意，这篇文章不能让你学会写Rust，只是帮助你快速理解Rust的一些特性。&lt;/p></description><content>&lt;p>这篇文章通过一些C++和Rust代码片段做对比，对Rust核心特点进行快速介绍。适合熟悉C/C++并且不熟悉Rust的读者，并且帮助他们快速熟悉Rust的特点。注意，这篇文章不能让你学会写Rust，只是帮助你快速理解Rust的一些特性。&lt;/p>
+&lt;h2 id="0x00">0x00&lt;/h2>
+&lt;p>关于Rust这门语言，大家或许都听说过。它是一门 &lt;del>&lt;strong>旨在取代C++&lt;/strong>&lt;/del> 的系统及编程语言。相比于C++，在&lt;strong>零代价抽象&lt;/strong>和&lt;strong>无GC&lt;/strong>的基础上，增加了编译期借用检查，及时阻止了C++中的一系列内存不安全的写法的，同时具有更加现代
+编程语言特性的一门年轻的语言(2015 1.0版本)。&lt;/p>
+&lt;p>三门语言的对比，星越多越利于程序员使用。&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th style="text-align:center">问题&lt;/th>
+&lt;th style="text-align:center">Rust&lt;/th>
+&lt;th style="text-align:center">C++&lt;/th>
+&lt;th style="text-align:center">C&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td style="text-align:center">阻止悬垂指针的使用&lt;/td>
+&lt;td style="text-align:center">⭐⭐⭐&lt;/td>
+&lt;td style="text-align:center">⭐&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:center">缓冲区溢出&lt;/td>
+&lt;td style="text-align:center">⭐⭐&lt;/td>
+&lt;td style="text-align:center">⭐&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:center">内存泄漏&lt;/td>
+&lt;td style="text-align:center">⭐⭐&lt;/td>
+&lt;td style="text-align:center">⭐&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:center">多线程数据竞争&lt;/td>
+&lt;td style="text-align:center">⭐⭐&lt;/td>
+&lt;td style="text-align:center">&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:center">抽象性&lt;/td>
+&lt;td style="text-align:center">⭐⭐⭐&lt;/td>
+&lt;td style="text-align:center">⭐⭐⭐&lt;/td>
+&lt;td style="text-align:center">⭐&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:center">学习曲线&lt;/td>
+&lt;td style="text-align:center">⭐&lt;/td>
+&lt;td style="text-align:center">⭐⭐&lt;/td>
+&lt;td style="text-align:center">⭐⭐⭐&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:center">通用性&lt;/td>
+&lt;td style="text-align:center">&lt;del>未来可期&lt;/del>&lt;/td>
+&lt;td style="text-align:center">⭐⭐&lt;/td>
+&lt;td style="text-align:center">⭐⭐⭐&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:center">生态&lt;/td>
+&lt;td style="text-align:center">&lt;del>未来可期&lt;/del>&lt;/td>
+&lt;td style="text-align:center">⭐⭐⭐&lt;/td>
+&lt;td style="text-align:center">⭐⭐⭐&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:center">包管理&lt;/td>
+&lt;td style="text-align:center">⭐⭐⭐&lt;/td>
+&lt;td style="text-align:center">⭐&lt;/td>
+&lt;td style="text-align:center">⭐&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>阻止悬垂指针是Rust的主打特性，只要写Safe Rust代码，基本上可以杜绝。所以这里是三颗星。
+C++只能靠智能指针解决一部分问题，因为只要有原生指针的存在，就有可能导致问题。并且C++在语法上不显式阻止原生指针的使用。&lt;/p>
+&lt;p>在内存泄漏方面Rust和C++面对的问题是一样的，由于没有GC，基于引用计数的内存管理无法处理这种设计上的缺陷，但是由于Safe Rust的特点以及借用检查机制，相比于C++，能够避免大多数情况的内存泄漏。比如Safe Rust内不允许出现显式的内存分配。另外，Rust当中写出循环引用的代码是比较困难的。&lt;/p>
+&lt;p>Rust的所有权系统在一定程度上可以做一些线程安全方面的检查工作。但无法解决死锁的问题。&lt;/p>
+&lt;h2 id="0x01-可变性和移动语义">0x01 可变性和移动语义&lt;/h2>
+&lt;h3 id="移动语义">移动语义&lt;/h3>
+&lt;p>Rust中，除了简单变量（内置基础类型和POD）默认是按位复制的之外，其余变量默认都是移动语义，对于这种变量，想要深复制，必须显式的操作&lt;code>clone()&lt;/code>。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-rust" data-lang="rust">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">let&lt;/span> foo &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">1&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">let&lt;/span> var &lt;span style="color:#f92672">=&lt;/span> foo; &lt;span style="color:#75715e">// Copy
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>println!(&lt;span style="color:#e6db74">&amp;#34;&lt;/span>&lt;span style="color:#e6db74">{}&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>, var); &lt;span style="color:#75715e">//Ok
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-rust" data-lang="rust">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">let&lt;/span> s &lt;span style="color:#f92672">=&lt;/span> String::from(&lt;span style="color:#e6db74">&amp;#34;hello world&amp;#34;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">let&lt;/span> s2 &lt;span style="color:#f92672">=&lt;/span> s;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>println!(&lt;span style="color:#e6db74">&amp;#34;&lt;/span>&lt;span style="color:#e6db74">{}&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>, s); &lt;span style="color:#75715e">// Error: the ownership of s has already been moved to s2
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-rust" data-lang="rust">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">let&lt;/span> s &lt;span style="color:#f92672">=&lt;/span> String::from(&lt;span style="color:#e6db74">&amp;#34;hello world&amp;#34;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">let&lt;/span> cp &lt;span style="color:#f92672">=&lt;/span> s.clone();
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>println!(&lt;span style="color:#e6db74">&amp;#34;&lt;/span>&lt;span style="color:#e6db74">{}&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>, s); &lt;span style="color:#75715e">// Ok
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>从上面这个例子可以看出，Rust默认的移动语义是语言特性保证的。C++中对右值的移动操作，可以理解为一种特殊的资源交换，并没有在语言级别上保证“所有权被移动”，因为就算移动了，还是可以访问这个变量的，只不过这个变量可能是不完整状态，但是状态的完整性还是要靠写代码保证的。但Rust的值一旦被移动，原来的这个值就变得不合法，再次访问编译会报错。
+Rust这种移动是保证内存安全的基础。&lt;/p>
+&lt;h3 id="可变性">可变性&lt;/h3>
+&lt;p>Rust中的可变性，只是针对变量绑定来说的。也就是说，可变性并不是变量的先天性质，而是后天的。这与C++不太一样。C++声明const类型的成员变量就是类型的一部分，就是我们通常说的“&lt;strong>const类型&lt;/strong>” 和 “&lt;strong>非const类型”&lt;/strong>。而rust中没有const类型和非const类型。代码如下&lt;/p>
+&lt;!-- raw HTML omitted -->
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-rust" data-lang="rust">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">let&lt;/span> s &lt;span style="color:#f92672">=&lt;/span> String::from(&lt;span style="color:#e6db74">&amp;#34;hello&amp;#34;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>s &lt;span style="color:#f92672">+=&lt;/span> &lt;span style="color:#e6db74">&amp;#34; world&amp;#34;&lt;/span>; &lt;span style="color:#75715e">// error
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;!-- raw HTML omitted -->
+&lt;!-- raw HTML omitted -->
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">const&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>string s &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;hello&amp;#34;&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>s &lt;span style="color:#f92672">+=&lt;/span> &lt;span style="color:#e6db74">&amp;#34; world&amp;#34;&lt;/span>; &lt;span style="color:#75715e">// error
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;!-- raw HTML omitted -->
+&lt;p>对于C++的const类型和rust的不可变绑定，都不可以被修改，我们似乎看不出&lt;strong>const类型&lt;/strong>和&lt;strong>不可变绑定&lt;/strong>的区别。
+我们再来对比一下struct就可以看出区别了。&lt;/p>
+&lt;!-- raw HTML omitted -->
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-rust" data-lang="rust">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">struct&lt;/span> &lt;span style="color:#a6e22e">Person&lt;/span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name:String,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> age:&lt;span style="color:#66d9ef">i32&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">fn&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>(){
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> &lt;span style="color:#66d9ef">mut&lt;/span> tom &lt;span style="color:#f92672">=&lt;/span> Person{name:&lt;span style="color:#e6db74">&amp;#34;tom&amp;#34;&lt;/span>.to_owned(), age:&lt;span style="color:#ae81ff">18&lt;/span>};
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> tom.name &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;jerry&amp;#34;&lt;/span>; &lt;span style="color:#75715e">// error: name field has been bound as immutable
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> &lt;span style="color:#66d9ef">mut&lt;/span> jerry &lt;span style="color:#f92672">=&lt;/span> Person{name:&lt;span style="color:#e6db74">&amp;#34;tom&amp;#34;&lt;/span>.to_owned(), age:&lt;span style="color:#ae81ff">18&lt;/span>};
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> jerry.name &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;tom&amp;#34;&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;!-- raw HTML omitted -->
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">struct&lt;/span> &lt;span style="color:#a6e22e">Person&lt;/span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">const&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>string name;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">int&lt;/span> age;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>};
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">int&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>(){
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Person tom &lt;span style="color:#f92672">=&lt;/span> Person();
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> tom.age &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">18&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> tom.name &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;Tom&amp;#34;&lt;/span>; &lt;span style="color:#75715e">//Error: name is always constant
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;!-- raw HTML omitted -->
+&lt;p>无论这个struct是否为const，相应的const成员变量总是const，不可以被修改。Rust中struct成员变量类型没有const与非const区别，成员的可变性在于是否用&lt;code>let mut&lt;/code>还是&lt;code>let&lt;/code>绑定的。&lt;code>let mut&lt;/code>绑定意味着可以被&lt;code>&amp;amp;mut T&lt;/code>类型借用，这种借用可以用来修改成员变量。&lt;/p>
+&lt;p>从以上可以看出，Rust的mut如果作为类型，只出现在&amp;amp;后面，也就是是有mut借用类型(&amp;amp;mut T)和非mut借用类型(&amp;amp;T)的。并且mut借用类型只能借用mut绑定的变量。
+Rust变量本身没有mut类型和非mut类型。变量的mut绑定可以随时更改。代码如下&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-rust" data-lang="rust">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">let&lt;/span> s &lt;span style="color:#f92672">=&lt;/span> String::from(&lt;span style="color:#e6db74">&amp;#34;hello&amp;#34;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">let&lt;/span> &lt;span style="color:#66d9ef">mut&lt;/span> s &lt;span style="color:#f92672">=&lt;/span> s;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>s &lt;span style="color:#f92672">+=&lt;/span> &lt;span style="color:#e6db74">&amp;#34; world&amp;#34;&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>assert_eq!(s, &lt;span style="color:#e6db74">&amp;#34;hello world&amp;#34;&lt;/span>);
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>变量s一开始是不可变的，之后可以重新绑定为可变绑定，我们能继续修改内容&amp;quot;hello&amp;quot;。而且，这里与C++不同的是，可以在同级作用域内隐藏同名变量。方便随时更改可变性。&lt;/p>
+&lt;h2 id="0x02-借用borrow">0x02 借用(Borrow)&lt;/h2>
+&lt;p>借用（Borrow）是Rust核心概念。先介绍一下借用记号&lt;code>&amp;amp;&lt;/code>，和我们熟悉的&lt;code>*&lt;/code>操作符。
+Rust中的&lt;strong>借用(Borrow)&lt;/strong> 相当于C/C++中的指针。更准确的说，Rust中没有C++中的&lt;strong>引用(Reference)&lt;/strong> 概念的，C++的引用只是相当于别名，实际上只是指针的语法糖，关于C++引用的引入，可以参考《C++语言的设计与演化》。
+虽然Rust的&amp;amp;形式的借用看起来和C++中的引用差不多，其实它还是a指针，只不过多了一些默认行为。我们可以看到Rust当中也有&lt;code>*&lt;/code>这个记号。
+&lt;code>*&lt;/code>这个记号和C/C++中的语义几乎是一样的，在指针变量前(包括&amp;amp;形式和*形式)作为解引用操作符，用作类型时表示指针，这个指针是Unsafe形式的。可以认为&amp;amp; 和 *类型的变量都看作指针，语义上是一样的。只不过&amp;amp;形式的指针（借用）为安全指针，安全指针多了如下几个特点：&lt;/p>
+&lt;ol>
+&lt;li>&lt;strong>不能为空&lt;/strong>&lt;/li>
+&lt;li>参与&lt;strong>借用和生命周期检查&lt;/strong>&lt;/li>
+&lt;li>&lt;strong>不能进行指针运算&lt;/strong>&lt;/li>
+&lt;li>&lt;a href="https://stackoverflow.com/questions/28519997/what-are-rusts-exact-auto-dereferencing-rules">在某些场合下自动解引用，以方便使用。&lt;/a>&lt;/li>
+&lt;/ol>
+&lt;p>因为有第四个特点，所以看起来才像C++引用。而&lt;code>*&lt;/code>形式的指针为非安全指针（原生指针），无以上特点，并且在safe代码中不可以解引用，只能在unsafe中进行解引用。&lt;/p>
+&lt;h3 id="静态借用检查--形式的安全指针">静态借用检查 —— &amp;amp;形式的安全指针&lt;/h3>
+&lt;p>&amp;amp;安全指针是rust的核心。核心原则是：&lt;strong>每个变量最多只能有一个可变借用，或者多个不可变借用。&lt;/strong>
+这个原则很好理解，如果有多个不可变借用的话，通过一个可变引用修改，会造成其它引用的数据不一致的问题。
+很容易的发现，这个条件非常苛刻。在一定程度上会造成写代码的不方便。&lt;/p>
+&lt;p>多个不可变借用&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-rust" data-lang="rust">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">fn&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>(){
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> x &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">5&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> rx1 &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#f92672">&amp;amp;&lt;/span>x;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> rx2 &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#f92672">&amp;amp;&lt;/span>x;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> println!(&lt;span style="color:#e6db74">&amp;#34;&lt;/span>&lt;span style="color:#e6db74">{}&lt;/span>&lt;span style="color:#e6db74"> &lt;/span>&lt;span style="color:#e6db74">{}&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>rx1, &lt;span style="color:#f92672">*&lt;/span>rx2);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Rust 2018引入了NLL，所以借用检查比之前版本智能了许多。之前变量的生命周期是作用域范围，现在成了最后一次使用变量的位置。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-rust" data-lang="rust">&lt;span style="display:flex;">&lt;span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> &lt;span style="color:#66d9ef">mut&lt;/span> x &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">5&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> mr &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#f92672">&amp;amp;&lt;/span>&lt;span style="color:#66d9ef">mut&lt;/span> x;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> ir &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#f92672">&amp;amp;&lt;/span>x;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// *mr = 1; // Error when uncomment this line
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>比如以上代码，Rust 2018之前是不能编译通过的。2018之后如果不使用mr，则可以编译通过。借用检查器认为&lt;code>mr&lt;/code>对&lt;code>x&lt;/code>的借用就截止到当前行。&lt;code>ir&lt;/code>he&lt;code>mr&lt;/code>的借用时机没有重叠。&lt;/p>
+&lt;p>还有一个有意思的代码片段&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-rust" data-lang="rust">&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> &lt;span style="color:#66d9ef">mut&lt;/span> v &lt;span style="color:#f92672">=&lt;/span> vec![&lt;span style="color:#ae81ff">1&lt;/span>];
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> v.resize(v.len() &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#ae81ff">10&lt;/span>, &lt;span style="color:#ae81ff">0&lt;/span>);
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>2018之前这段代码是不能通过编译的，因为&lt;code>v.reisize&lt;/code>是对&lt;code>v&lt;/code>的&lt;strong>可变引用&lt;/strong>（可查看&lt;code>resize&lt;/code>的第一个上下文参数类型）,&lt;code>v.len&lt;/code>是对&lt;code>v&lt;/code>的&lt;strong>不可变引用&lt;/strong>。在&lt;code>v.len&lt;/code>求值的过程当中相当于有一个对v的不可变借用，根据借用检查规则，此时&lt;code>v.resize&lt;/code>是不能再次进行可变借用的。但实际上，在对&lt;code>resize&lt;/code>求值的时候，函数参数作用域已经结束了，此时在对&lt;code>v&lt;/code>的借用时机上是没有重合的，事实上是安全的，理应编译通过。只能通过以下写法妥协，但是这非常的不方便。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-rust" data-lang="rust">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">let&lt;/span> &lt;span style="color:#66d9ef">mut&lt;/span> v&lt;span style="color:#f92672">=&lt;/span> vec![];
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">let&lt;/span> new_len &lt;span style="color:#f92672">=&lt;/span> v.len() &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#ae81ff">10&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>v.resize(new_len, &lt;span style="color:#ae81ff">0&lt;/span>);
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>好在这种局限性在2018时得到了改进。这个问题和上面的那个片段其实都是NLL的问题。我们可以再深入追究一下，即便在2018之前，按照没有NLL的规则来说，为什么&lt;code>len new_len = v.len() + 10;&lt;/code>和&lt;code>v.resize&lt;/code>没有借用重叠呢？因为这里的v.len()是&lt;strong>值表达式&lt;/strong>，借用作用域在得到new_len的时候就已经结束了。这里的&lt;strong>值表达式&lt;/strong>就是我们熟悉的&lt;strong>右值&lt;/strong>，相应的&lt;strong>左值&lt;/strong>对应&lt;strong>位置表达式&lt;/strong> 。&lt;/p>
+&lt;p>这就是Rust最基本的借用检查规则，这几个示例非常简单，只是用来说明最基本的规则。不过这种规则影响了整个Rust代码的构建，尤其是涉及到结构体之后，情况变得更加复杂。&lt;/p>
+&lt;h3 id="动态借用检查--内部可变性">动态借用检查 —— 内部可变性&lt;/h3>
+&lt;p>Rust的可变性绑定在结构体方面其实是有局限性的，如果不用特殊的手法，Rust结构体字段没有办法单独实现某些可变，某些不可变。比如以下C++代码，在Rust当中没有比较好的对应。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">struct&lt;/span> &lt;span style="color:#a6e22e">Person&lt;/span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">const&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>string name;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">const&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>string id_number;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">int&lt;/span> age;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Person(std&lt;span style="color:#f92672">::&lt;/span>string name, std&lt;span style="color:#f92672">::&lt;/span>string id)&lt;span style="color:#f92672">:&lt;/span>name(std&lt;span style="color:#f92672">::&lt;/span>move(name)),id_number(id),age(&lt;span style="color:#ae81ff">0&lt;/span>){}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">void&lt;/span> &lt;span style="color:#a6e22e">year&lt;/span>(){
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> age&lt;span style="color:#f92672">++&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">void&lt;/span> &lt;span style="color:#a6e22e">get_name&lt;/span>()&lt;span style="color:#66d9ef">const&lt;/span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> name;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>};
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>对于C++里面这种大多数字段不可变，只有少数字段可变的情景，在rust里面的办法还是用&lt;code>let&lt;/code>绑定，而不是&lt;code>let mut&lt;/code>绑定。因为&lt;code>let mut&lt;/code>会让所有字段可变（继承可变性，inherited mutability），破坏了不可变的一般情况。对于一小部分字段，我们可以开一个后门。
+这就是Rust的**内部可变性&lt;/p>
+&lt;p>所谓的内部可变性，就是对内可变（某些字段可变），对外不可变（这个结构体是&lt;code>let&lt;/code>绑定）。
+其实成员函数能不能修改自己的字段取决于上下文参数&lt;code>&amp;amp;mut self&lt;/code>还是&lt;code>&amp;amp;self&lt;/code>。而能不能调用这种成员函数取决于绑定时候的可变性。&lt;code>&amp;amp;self&lt;/code>和C++成员函数的const限定有些相似，但其实差别还是比较大的，const限定只是不能修改成员变量，和结构体本身的可变性无关。但是C++的成员函数const限定是函数签名的一部分，可以用来区分重载。不过幸运的是Rust当中没有重载，重载引入的坑还是挺多的，虽然没有重载确实不太方便，但是这种不方便忍忍就过去了，但是重载带来的坑比较难以察觉，有时候代价比较大，而且也不太好实现API统一，在编译器实现层面就有不少困难。&lt;/p>
+&lt;p>Rust通过&lt;code>RefCell&amp;lt;T&amp;gt;&lt;/code>实现内部可变性。因此，上面的C++代码对应到Rust是这样的&lt;/p>
+&lt;!-- raw HTML omitted -->
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-rust" data-lang="rust">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">struct&lt;/span> &lt;span style="color:#a6e22e">Person&lt;/span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">pub&lt;/span> name:String,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">pub&lt;/span> id_number:String,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">pub&lt;/span> age:&lt;span style="color:#66d9ef">i32&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">impl&lt;/span> Person{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">fn&lt;/span> &lt;span style="color:#a6e22e">new&lt;/span>(name:String, id:String, age:&lt;span style="color:#66d9ef">i32&lt;/span>){
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Self{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name:&lt;span style="color:#a6e22e">name&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id_number:&lt;span style="color:#a6e22e">id&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> age:&lt;span style="color:#a6e22e">age&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">fn&lt;/span> &lt;span style="color:#a6e22e">year&lt;/span>(&lt;span style="color:#f92672">&amp;amp;&lt;/span>&lt;span style="color:#66d9ef">mut&lt;/span> self)[
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self.age &lt;span style="color:#f92672">+=&lt;/span> &lt;span style="color:#ae81ff">1&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">fn&lt;/span> &lt;span style="color:#a6e22e">get_name&lt;/span>(&lt;span style="color:#f92672">&amp;amp;&lt;/span>self){
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self.name
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">let&lt;/span> p &lt;span style="color:#f92672">=&lt;/span> Person::new();
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>p.year(); &lt;span style="color:#75715e">// Error, not a mutable binding
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;!-- raw HTML omitted -->
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-rust" data-lang="rust">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">struct&lt;/span> &lt;span style="color:#a6e22e">Person&lt;/span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">pub&lt;/span> name:String,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">pub&lt;/span> id_number:String,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">pub&lt;/span> age:&lt;span style="color:#a6e22e">RefCell&lt;/span>&lt;span style="color:#f92672">&amp;lt;&lt;/span>&lt;span style="color:#66d9ef">i32&lt;/span>&lt;span style="color:#f92672">&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">impl&lt;/span> Person{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">fn&lt;/span> &lt;span style="color:#a6e22e">new&lt;/span>(name:String, id:String, age:&lt;span style="color:#66d9ef">i32&lt;/span>){
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Self{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name:&lt;span style="color:#a6e22e">name&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id_number:&lt;span style="color:#a6e22e">id&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> age:&lt;span style="color:#a6e22e">RefCell&lt;/span>::new(age)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">fn&lt;/span> &lt;span style="color:#a6e22e">year&lt;/span>(&lt;span style="color:#f92672">&amp;amp;&lt;/span>self)[
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">*&lt;/span>self.age.borrow_mut() &lt;span style="color:#f92672">+=&lt;/span> &lt;span style="color:#ae81ff">1&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">fn&lt;/span> &lt;span style="color:#a6e22e">get_name&lt;/span>(&lt;span style="color:#f92672">&amp;amp;&lt;/span>self){
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self.name
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">let&lt;/span> p &lt;span style="color:#f92672">=&lt;/span> Person::new();
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>p.year(); &lt;span style="color:#75715e">// age++
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;!-- raw HTML omitted -->
+&lt;ol>
+&lt;li>这里更适合用Cell，因为Cell是针对可复制的内置类型的。&lt;/li>
+&lt;li>Cell&lt;!-- raw HTML omitted -->实上对T进行了Copy，所以没有违反静态借用检查规则，。（因为没有借用）&lt;/li>
+&lt;li>RefCell&lt;!-- raw HTML omitted -->其实违反了静态借用检查规则，因为&lt;code>self.age.borrow_mut&lt;/code>中的self是个不可变借用，我们最终通过引用修改了age这个值，这个是静态借用检查所不允许的。这里用的就是&lt;strong>动态借用检查&lt;/strong>。&lt;/li>
+&lt;/ol>
+&lt;p>不过这不是RefCell的常规用法，RefCell的常规用法是和Rc组合成&lt;code>Rc&amp;lt;RefCell&amp;lt;T&amp;gt;&amp;gt;&lt;/code>，用来模拟在&lt;strong>单线程&lt;/strong>情况下接近C++意义上的指针的功能。&lt;/p>
+&lt;h3 id="动态借用检查">动态借用检查&lt;/h3>
+&lt;p>上面的内部可变性可以实现动态&lt;strong>动态借用检查&lt;/strong>。 所谓&lt;strong>动态借用检查&lt;/strong>就是借用检查不依赖词法作用域，不是根据引用的先后顺序，而是动态的。动态借用检查的规则仍然是&lt;strong>多个不可变借用或一个可变借用&lt;/strong>。&lt;/p>
+&lt;p>平常使用的&amp;amp; T指针，对应到动态借用检查的形式就是&lt;code>Rc&amp;lt;RefCell&amp;lt;T&amp;gt;&amp;gt;&lt;/code>。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-rust" data-lang="rust">&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">let&lt;/span> ptr &lt;span style="color:#f92672">=&lt;/span> Rc::new(RefCell::new(&lt;span style="color:#ae81ff">1&lt;/span>)); &lt;span style="color:#75715e">// 这里之所以可以不用let mut绑定就可以修改后面的，就是因为内部可变性的原因。因为Rc内部的字段就是一个RefCell字段。即内部可变字段，不用let mut绑定就可以改变内部值。
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">let&lt;/span> &lt;span style="color:#66d9ef">mut&lt;/span> r &lt;span style="color:#f92672">=&lt;/span> ptr.borrow_mut(); &lt;span style="color:#75715e">// 进行可变借用，返回的是一个BorrowMut对象。
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">*&lt;/span>r &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">2&lt;/span>; &lt;span style="color:#75715e">// 可变借用
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">let&lt;/span> ir &lt;span style="color:#f92672">=&lt;/span> ptr.borrow(); &lt;span style="color:#75715e">// 进行可变借用, 返回一个Borrow对象，运行时会panic
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>上面的代码能编译成功，但会运行时崩溃。究其原因就是违背了动态借用检查的原则。虽然看似还不如带有NLL的静态借用检查灵活，但借用检查是动态的，发生在运行期。关键就在于borrow_mut和borrow，分别返回BorrowMut和Borrow对象，这个对象是一个借用计数器，BorrowMut会记录可变引用的个数mut_ref_cnt，Borrow会记录不可变引用的个数ref_cnt，当在代码运行中发现计数 &lt;code>(mut_ref_cnt &amp;gt; 1 and ref_cnt == 0) or (mut_ref_cnt &amp;gt; 0 and ref_cnt &amp;gt; 0)&lt;/code>就会触发panic，程序终止。&lt;/p>
+&lt;p>如果改成下面这种写法，就可以运行。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-rust" data-lang="rust">&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">let&lt;/span> ptr &lt;span style="color:#f92672">=&lt;/span> Rc::new(RefCell::new(&lt;span style="color:#ae81ff">1&lt;/span>)); &lt;span style="color:#75715e">// 这里之所以可以不用let mut绑定就可以修改后面的，就是因为内部可变性的原因。因为Rc内部的字段就是一个RefCell字段。即内部可变字段，不用let mut绑定就可以改变内部值。
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> &lt;span style="color:#66d9ef">mut&lt;/span> r &lt;span style="color:#f92672">=&lt;/span> ptr.borrow_mut(); &lt;span style="color:#75715e">// 进行可变借用，返回的是一个BorrowMut对象。
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#f92672">*&lt;/span>r &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">2&lt;/span>; &lt;span style="color:#75715e">// 可变借用
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">let&lt;/span> ir &lt;span style="color:#f92672">=&lt;/span> ptr.borrow();
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;T&amp;gt;&amp;gt;&amp;gt;&lt;/code> 表达的意思是&lt;code>可空的&lt;/code>、带有共享所有权的指针，相当于C++中的，T* 或者 shared_ptr&lt;!-- raw HTML omitted -->
+&lt;code>Option&amp;lt;Rc&amp;lt;T&amp;gt;&amp;gt;&lt;/code> 相当于 const T * 或 shared_ptr&lt;!-- raw HTML omitted -->&lt;/p>
+&lt;h2 id="0x03-生命周期及其标记">0x03 生命周期及其标记&lt;/h2>
+&lt;p>我们非常熟悉C++中的作用域和生命周期的概念，以及相应的RAII机制。Rust在继承这些的基础之上，添加了生命周期的检查。比如以下返回栈上或者已经析构的对象的指针或引用这种典型的错误写法，在Safe Rust中会被编译器叫停。&lt;/p>
+&lt;!-- raw HTML omitted -->
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-rust" data-lang="rust">&lt;span style="display:flex;">&lt;span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> r;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> &lt;span style="color:#66d9ef">mut&lt;/span> v &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">5&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> r &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#f92672">&amp;amp;&lt;/span>&lt;span style="color:#66d9ef">mut&lt;/span> v;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">*&lt;/span>r &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">10&lt;/span>; &lt;span style="color:#75715e">// Error:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">fn&lt;/span> &lt;span style="color:#a6e22e">danger&lt;/span>()-&amp;gt;&lt;span style="color:#66d9ef">&amp;amp;&lt;/span>&lt;span style="color:#66d9ef">i32&lt;/span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> v &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">5&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;amp;&lt;/span>v &lt;span style="color:#75715e">// Error:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;!-- raw HTML omitted -->
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">int&lt;/span> &lt;span style="color:#f92672">*&lt;/span> r;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">int&lt;/span> v &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">5&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> r &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#f92672">&amp;amp;&lt;/span>v;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">*&lt;/span>r &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">10&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">int&lt;/span> &lt;span style="color:#f92672">*&lt;/span> &lt;span style="color:#a6e22e">danger&lt;/span>(){
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">int&lt;/span> v &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">5&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#f92672">&amp;amp;&lt;/span>v;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;!-- raw HTML omitted -->
+&lt;p>如果我们不违反生命周期写代码会出现什么情况？&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-rust" data-lang="rust">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">fn&lt;/span> &lt;span style="color:#a6e22e">max&lt;/span>(a: &lt;span style="color:#66d9ef">&amp;amp;&lt;/span>&lt;span style="color:#66d9ef">i32&lt;/span>, b: &lt;span style="color:#66d9ef">&amp;amp;&lt;/span>&lt;span style="color:#66d9ef">i32&lt;/span>)-&amp;gt;&lt;span style="color:#66d9ef">&amp;amp;&lt;/span>&lt;span style="color:#66d9ef">i32&lt;/span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> &lt;span style="color:#f92672">*&lt;/span>a &lt;span style="color:#f92672">&amp;gt;&lt;/span> &lt;span style="color:#f92672">*&lt;/span>b{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> a
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }&lt;span style="color:#66d9ef">else&lt;/span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> b
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>给出的编译信息为：&lt;/p>
+&lt;blockquote>
+&lt;p>missing lifetime specifier&lt;/p>
+&lt;p>this function&amp;rsquo;s return type contains a borrowed value,
+but the signature does not say whether it is borrowed from &lt;code>a&lt;/code> or &lt;code>b&lt;/code>&lt;/p>
+&lt;/blockquote>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-rust" data-lang="rust">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">fn&lt;/span> &lt;span style="color:#a6e22e">max&lt;/span>&lt;span style="color:#f92672">&amp;lt;&lt;/span>&lt;span style="color:#a6e22e">&amp;#39;a&lt;/span>&lt;span style="color:#f92672">&amp;gt;&lt;/span>(a: &lt;span style="color:#66d9ef">&amp;amp;&lt;/span>&lt;span style="color:#a6e22e">&amp;#39;a&lt;/span> &lt;span style="color:#66d9ef">i32&lt;/span>, b: &lt;span style="color:#66d9ef">&amp;amp;&lt;/span>&lt;span style="color:#a6e22e">&amp;#39;a&lt;/span> &lt;span style="color:#66d9ef">i32&lt;/span>)-&amp;gt;&lt;span style="color:#66d9ef">&amp;amp;&lt;/span>&lt;span style="color:#a6e22e">&amp;#39;a&lt;/span> &lt;span style="color:#66d9ef">i32&lt;/span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> &lt;span style="color:#f92672">*&lt;/span>a &lt;span style="color:#f92672">&amp;gt;&lt;/span> &lt;span style="color:#f92672">*&lt;/span>b{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> a
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }&lt;span style="color:#66d9ef">else&lt;/span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> b
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>改成如上形式就可以了。
+上面的&lt;code>`a&lt;/code>就是生命周期标记。接下来我们详细的介绍一下生命周期标记的意义。以及为什么有了这个标记就可以编译通过了。
+首先我们需要注意的是，Rust和C++里面的生命周期是一样的：无GC，超出作用域之后析构。通过生命周期标记并不能延长变量的生命周期。因此，只要代码给定了，所有变量的引用关系以及生命周期就已经确定。因此，生命周期标记的存在并不是程序的正确性（无悬垂引用）的充分条件。但通过前面的代码，我们发现生命周期标记是在某些情况下编译通过的必要条件。它不能帮我们纠正错误生命周期的引用，那为什么还需要它呢？&lt;/p>
+&lt;p>理论上，只要编译器分析所有的代码，都可以在编译期检查引用的生命周期是否正确，进而当代码出现悬垂引用时报错，达到编译期检查的目的。然而在实现上是不太可能的。比如对于如下的代码片段：&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-rust" data-lang="rust">&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">fn&lt;/span> &lt;span style="color:#a6e22e">foo&lt;/span>&lt;span style="color:#f92672">&amp;lt;&lt;/span>&lt;span style="color:#a6e22e">&amp;#39;a&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">，&lt;/span>&lt;span style="color:#a6e22e">&amp;#39;b&lt;/span>&lt;span style="color:#f92672">&amp;gt;&lt;/span>(x:&lt;span style="color:#66d9ef">&amp;amp;&lt;/span>&lt;span style="color:#a6e22e">&amp;#39;a&lt;/span> &lt;span style="color:#66d9ef">i32&lt;/span>, y:&lt;span style="color:#66d9ef">&amp;amp;&lt;/span>&lt;span style="color:#a6e22e">&amp;#39;b&lt;/span> &lt;span style="color:#66d9ef">i32&lt;/span>)-&amp;gt;&lt;span style="color:#66d9ef">&amp;amp;&lt;/span>&lt;span style="color:#a6e22e">&amp;#39;a&lt;/span> &lt;span style="color:#66d9ef">i32&lt;/span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> x
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> x &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">6&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> &lt;span style="color:#f92672">&amp;amp;&lt;/span>z &lt;span style="color:#f92672">=&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> y &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">5&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> foo(&lt;span style="color:#f92672">&amp;amp;&lt;/span>x, &lt;span style="color:#f92672">&amp;amp;&lt;/span>y)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>这段代码没有违反引用的生命周期规则，并且可以编译通过。即我们返回的引用的生命周期为&amp;rsquo;a，就是引用参数x,返回的引用也标明&amp;rsquo;a, 最终赋值给z这个引用，有相同生命周期&amp;rsquo;a，
+即最外层的x的引用。z这个和x在相同的生命周期内。&lt;/p>
+&lt;p>然而，你可能有疑问，当我们去掉&amp;rsquo;a， &amp;lsquo;b这些标记时，我们通过观察代码，也是能够判断出生命周期的引用是否正确。&lt;/p>
+&lt;p>比如&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-rust" data-lang="rust">&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> x &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">6&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> &lt;span style="color:#f92672">&amp;amp;&lt;/span>z &lt;span style="color:#f92672">=&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> y &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">5&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> foo(&lt;span style="color:#f92672">&amp;amp;&lt;/span>y, &lt;span style="color:#f92672">&amp;amp;&lt;/span>x)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>是错误的&lt;/p>
+&lt;p>而&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-rust" data-lang="rust">&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> x &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">6&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> &lt;span style="color:#f92672">&amp;amp;&lt;/span>z &lt;span style="color:#f92672">=&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> y &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">5&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> foo(&lt;span style="color:#f92672">&amp;amp;&lt;/span>x, &lt;span style="color:#f92672">&amp;amp;&lt;/span>y)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>是正确的。那标注的意义何在？而且增加了写代码的难度。实际上，编译器能够判断出这两段代码引用关系是否正确的前提是知道foo的实现，知道它返回的引用的变量生命周期和第一个变量相同。那么这就有一个问题，这个函数只套了一层，如果这个函数有十层，如果要靠编译器自动推导生命周期是否正确，编译器只有看到最后一层才能确定是否正确。不说效率问题，
+即使编译器发现了错误，到底是哪里的错误呢？是最后一个函数写错了，还是最外层函数用错了？。可以看到，如果不标记生命周期，全靠编译器检查错误的生命周期引用完全可以做到，但是得到任何的有效信息。因此，手动标明生命周期相当于用户的一个说明书，同时也充当了注释的作用，让我们明白如果我们的引用的生命周期一旦搞错，
+可以快速排查问题。同时，编译器只需要看函数的声明部分，就能马上给出判断，也简化了实现。这其实是一个妥协。Rust1.0版本之前只要有引用，都必须标注生命周期，当前版本的Rust在一些比较常见的情况下是不需要标注的，因为这些比较容易推导以及这些写法太常见了。未来不排除Rust会继续放松生命周期标注的原则。&lt;/p>
+&lt;p>总之，生命周期不会让我们本来写错的代码变得正确，因此，标注声明周期的最好办法是除了那几种常见的情况外，如果引用比较多，更加复杂，那我们就不标注，当编译器提醒我们的缺了的时候我们再根据我们的意图标注。对于初学者，大可不必在如何标记生命周期方面深究，随着写Rust代码的熟练程度增加，自然就会标记了。&lt;/p>
+&lt;h2 id="0x04-trait和面向对象">0x04 trait和面向对象&lt;/h2>
+&lt;h3 id="trait">trait&lt;/h3>
+&lt;h3 id="面向对象">面向对象&lt;/h3>
+&lt;p>通过上面的示例基本上可以看出，Rust弱化了面向对象，那种传统的面向对象设施在Rust当中是没有的，比如类，构造函数，析构函数，虚函数，数据继承，友元等。不过多态(动态分发)是保留的，是通过&lt;strong>trait对象&lt;/strong>实现的。&lt;strong>trait对象&lt;/strong>是&lt;strong>trait&lt;/strong>的自己，也就是满足一定条件的trait才是&lt;strong>trait对象&lt;/strong>&lt;/p>
+&lt;h2 id="0x05-并发">0x05 并发&lt;/h2>
+&lt;p>Rust的并发安全保证也是通过特殊的trait标记来完成的。简单来说，Rust通过给创建线程的入口添加某些trait约束，只有满足这些trait约束的对象，才能够被传入创建的线程，或者在线程之间共享变量。&lt;/p>
+&lt;h3 id="sync和send">Sync和Send&lt;/h3>
+&lt;h2 id="0x06-易用的包管理">0x06 易用的包管理&lt;/h2>
+&lt;h2 id="0x07-总结">0x07 总结&lt;/h2></content></item><item><title>\[Rendering\] Cameray, a camera lens simulator for fun.</title><link>/post/graphics/camera/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/post/graphics/camera/</guid><description>&lt;p>A practice of &lt;em>&lt;strong>Physically Based Rendering&lt;/strong>&lt;/em> 3rd Edition.&lt;/p></description><content>&lt;p>A practice of &lt;em>&lt;strong>Physically Based Rendering&lt;/strong>&lt;/em> 3rd Edition.&lt;/p>
+&lt;h2 id="相机变换在光栅化和光线追踪当中的不同">相机变换在光栅化和光线追踪当中的不同&lt;/h2>
+&lt;p>在光栅化中，我们通常使用MVP矩阵把顶点变换到裁剪空间，然后送给片段着色器进行着色。这时候我们最终要操作的步骤回到了片段上。然而对于光线追送，
+我们的出发点是屏幕上的采样点，然后根据给定的摄像机（观察矩阵）需要生成一个这个采样点对应的光线，最终是得到一个在世界空间当中的射线。可以发现，
+这两个过程是相反的。所以在观察变换这一块需要相反的变换。&lt;/p>
+&lt;p>对于一般光栅化的过程比较简单，只需经过$MVP$这种常规的变换就可以了。因为接触的比较多，所以很熟悉。&lt;/p>
+&lt;p>对于光线追踪，我们需要给定屏幕上的一个点，生成一条在世界坐标系中的射线。首先需要把屏幕上的点变换到观察空间，然后用这个点和相机原点得到在相机空间中的射线，
+最后通过V矩阵的逆矩阵变换到世界坐标系中。把屏幕上的点变换到观察空间首先需要变换到屏幕&amp;ndash;(缩放)&amp;ndash;&amp;gt; NDC&amp;ndash;(透视除法)&amp;ndash;&amp;gt;裁剪空间&amp;ndash;(P的逆矩阵)&amp;ndash;&amp;gt;观察空间。与光纤追踪不同的是，使用光栅化时，硬件
+帮我们完成了裁剪空间到屏幕空间的转换。在这里，我们需要把屏幕空间变换到裁剪空间中，这一步比较直白。因为我们假设屏幕就是裁剪空间中的前平面，z值为0。然后直接变换到相机空间。&lt;/p>
+&lt;h2 id="真实感相机">真实感相机&lt;/h2>
+&lt;p>在图形学中所使用的MVP矩阵定量的描述了物体到投影平面的空间变换关系。从真实感绘制的角度来讲，还需要从光学的角度去模拟相机拍摄的成像过程。一般在真实感绘制中，我们需要在几何光学的层次上去模拟光线的传输，其中就包括光线在镜头中的传播以及成像的过程。
+下面就简单的介绍一些光学模型。&lt;/p>
+&lt;p>如果不用任何成像系统，直接让把传感器对准场景，那么在传感器上成像的效果是什么？当然是模糊一片，在没有任何过滤的情况下，&lt;strong>场景中任何一点发出的光源都会对传感器上任何一点造成影响&lt;/strong>。呈现清晰的像的前提就是&lt;strong>场景中任何一点发出的光线只对传感器上的一点造成影响&lt;/strong>。也就是&lt;strong>一对多&lt;/strong>到&lt;strong>一对一&lt;/strong>的过程。最简单的滤镜就是&lt;strong>小孔成像&lt;/strong>。这是一种最理想化的成像模型，只有一条光线能经过小孔。这种成像系统没有焦距，也就是可以在小孔后的任意距离上呈现清晰的像，考虑到光线的衰减，只会有明暗的不同。根绝小孔成像的原理，如果我们把小孔尺寸调节到一个合适的位置，那么应该是可以呈现质量非常好的像的。但是由于衍射，在我们缩小小孔的过程中，成像会失真。这也就是为什么小孔成像的质量不高的原因。&lt;/p>
+&lt;p>然后就是&lt;strong>透镜成像&lt;/strong>。透镜的作用就是在规避小孔成像的缺点的情况下，产生&lt;strong>一对一&lt;/strong>的影响。这里又可以分为两种，第一种是单透镜，可以实现虚化(景深)效果。这里涉及到一些概念，包括光圈(aperture)，景深(depth of filed)，弥散圈(circle of confusion)。
+景深的程度其实由弥散圈，传感器性质以及人眼的分辨率共同决定的。&lt;/p>
+&lt;p>给定一个成像平面位于$z_f^{&amp;rsquo;}$（一般位于焦点内），有其所对应的一个能够对焦在这个成像平面上的物体的距离$z_f$。对焦的过程就是调节$z_f^{&amp;rsquo;}$的过程，当把成像平面调整到焦点的位置上时，就对焦在了无限远处，实际上就是能看清很远的地方。在$z_f$的前后范围内，有一个能够成人眼能够分辨的清晰度的像的范围。这个范围就是景深（Depth of Field）在这个范围的前后的边界的位置上所成的像不能在成像平面上会聚成一点，而是一个有一定直径的光斑。这个圆圈就是弥散圈。只需要简单的几何推导,弥散圈为$$\begin{align}d_c=conf(z)=\vert \frac{d_{1}f(z-z_f)}{z(f+z_f)} \vert，其中d_{1}为光圈大小\end{align}$$。如果我们把这个弥散圈当作一个衡量成像分辨率的指标，即当这个光斑大到一定程度，使得相机的传感器和人眼都不能识别出清晰的图像。那么给定一个弥散圈，就能确定在某位置物体的景深范围。这样的话，我们会有两个相同的解释方式：其他条件相同的情况下，相机的弥散圈越大（无论以怎样的方式实现，比如更高分辨率的成像传感器，或者是其他什么黑科技）景深越大，则成像清晰的范围就越大，越不容易产生模糊效果。与此等价的说法是：其他条件相同的情况下，景深越小，弥散圈越小。
+公式$(1)$ 的曲线形状类似于$\vert log(x) \vert$，$conf(z) = 0$的零点是 $z = z_f$。给定一个相机的$d_c$，在这个曲线上画一条横线，对应的两个$z_1$,$z_2$就是对焦在$z_f$处物体的景深范围，可见前景深与后景深的变化不是对称的。$d_1$对于这条曲线的影响就是在其他条件相同的情况下如果$d_1$越大，那么这个曲线越收紧，对应的景深就越小，越容易产生虚化效果。
+&lt;img src="img/4.png" alt="">&lt;/p>
+&lt;p>单个凸透镜头的成像系统可以摄影当中基本的概念。然而实际的单反相机的镜头是由多个透镜组成的。原因之一是可以实现变焦，同时多个透镜可以修正一个透镜引入的像差（这又是另外一个复杂的光学话题了），达到更好的成像效果。在真实感绘制中引入了多这种多透镜的相机模拟，这样我们需要为每个透镜建模，为了简单我们假设每个透镜都是球面镜，这样我们只需要一个半径参数就能描述透镜的几何特征。实际的相机镜头中为了获得更好的成像效果，都会加入非球面透镜，这已经是比较现代的技术了。因为在理论上，球面透镜不能把光汇聚在一点，产生了球差。在真实感绘制中，我们只模拟球面镜。
+一个透镜由四个参数决定：
+&lt;strong>曲率半径&lt;/strong> &lt;strong>厚度&lt;/strong> &lt;strong>折射系数&lt;/strong> &lt;strong>直径&lt;/strong>
+厚度是到下一个镜片的距离。&lt;/p>
+&lt;h2 id="模拟景深">模拟景深&lt;/h2>
+&lt;p>模拟景深需要两个额外的参数，即&lt;strong>光圈（Aperture）&lt;strong>和&lt;/strong>焦距(focus distance)&lt;/strong>，还有一个对焦距离，对焦距离就是能够清晰的成像的物体的距离。
+。景深所产生的模糊效果粗浅的解释为焦平面前后的物体在像平面上不能聚为一个点而是一个光斑。
+这里需要在光圈范围内进行圆盘均匀采样，然后以这个采样点到对焦距离的点（这个点是原始像素与透镜中心的连线与对焦平面的交点）的方向代替这个采样点的方向。
+进行多次采样最后取平均。&lt;/p>
+&lt;p>&lt;img src="img/5.png" alt="">
+&lt;img src="img/6.png" alt="">
+所以，最后景深的效果和光圈,也就是采样范围有关。但是从之前的公式看还应该与焦距有关。这个焦距已经暗含在了P矩阵的fov里了。因为焦距越大，镜头里像平面的距离越远，这也会对景深产生影响。
+具体体现在相对采样面积减小。&lt;/p>
+&lt;h2 id="光学系统">光学系统&lt;/h2>
+&lt;p>&lt;img src="img/bare.jpg" alt="">
+&lt;img src="img/bare_res.jpg" alt="">
+如果不用任何光学系统，直接成像最终结果是模糊一片。因为物体的任意一点发出的光都对传感器上的任意一点有贡献。&lt;/p>
+&lt;h3 id="小孔成像">小孔成像&lt;/h3>
+&lt;p>&lt;img src="img/pinhole.jpg" alt="">
+小孔成像是最简单的一个光学系统。&lt;/p>
+&lt;p>成像特点：锐利，每个像素只被物体的唯一一点影响。(不考虑衍射的理想情况下)&lt;/p>
+&lt;h3 id="透镜系统">透镜系统&lt;/h3>
+&lt;p>&lt;img src="img/lens.jpg" alt="">&lt;/p>
+&lt;p>一个理想的成像系统，应该&lt;strong>一对一&lt;/strong>的映射，并且具有高信噪比。这就是透镜组的作用&lt;/p>
+&lt;h3 id="一个光学系统的组成">一个光学系统的组成&lt;/h3>
+&lt;p>&lt;img src="img/lens_example.jpg" alt="">&lt;/p>
+&lt;p>这个表和图说明了光学系统的描述方式。表中的每一行代表一个镜面的属性。（一个镜子有两个镜面）。&lt;/p>
+&lt;ul>
+&lt;li>第一列是半径。其中正值为凸面镜，负值为凹面镜。凹凸是相对于镜头从外往里的。&lt;/li>
+&lt;li>第二列厚度代表当前表面到下一个表面的距离。中间的孔径光阑（光圈）是一个实实在在的孔，但也归为一个镜面。&lt;/li>
+&lt;li>第三列是折射系数。这里有个约定，当折射系数为0时，这个界面是出射界面。&lt;/li>
+&lt;li>下一列这个参数代表了镜面的材质，与波长相关。&lt;/li>
+&lt;li>最后一列是这个镜面的有效直径。&lt;/li>
+&lt;/ul>
+&lt;p>需要说明的是，镜片的组成有&lt;strong>组&lt;/strong>的概念。当两片镜子合在一起的时候可以作为一组。比如下图：
+&lt;img src="img/zeiss.jpg" alt="">&lt;/p>
+&lt;p>这个镜头1896年蔡司设计的&lt;strong>Zeiss Planar&lt;/strong>镜头。组成为6片/4组。l2，l3这两个镜子为一组，同时也被称作&lt;strong>高斯结构&lt;/strong>
+这里的&lt;strong>双高斯&lt;/strong>结构为经典的镜头结构，适合设计35mm-90mm焦段的镜头。&lt;/p>
+&lt;h3 id="理想薄透镜模型">理想薄透镜模型&lt;/h3>
+&lt;p>根据我们想要的成像效果，在物理（几何）上，我们可以抽象出一个理想的&lt;strong>薄透镜&lt;/strong>模型，这个模型有两个假设：&lt;/p>
+&lt;ol>
+&lt;li>穿过透镜中心的光线方向不变。&lt;/li>
+&lt;/ol>
+&lt;p>&lt;img src="img/assumption1.jpg" alt="">&lt;/p>
+&lt;ol start="2">
+&lt;li>平行的光束通过透镜时汇聚为一点，并且所有的平行光束组所汇聚成的一点在一个垂直于光轴的平面上。
+&lt;img src="img/assumption2.jpg" alt="">&lt;/li>
+&lt;/ol>
+&lt;p>其中这个平面到透镜的距离叫做&lt;strong>焦距(Focal Length)&lt;/strong>&lt;/p>
+&lt;p>根据这两个假设，可以推出一个结论:&lt;/p>
+&lt;ul>
+&lt;li>薄透镜一边的一点，发出来的光线，经过透镜的汇聚，一定在另一边汇聚成一点。（可以证明一下，用相似三角形, 目前我只知道反正法）&lt;/li>
+&lt;/ul>
+&lt;p>&lt;img src="img/lens_ray.jpg" alt="">&lt;/p>
+&lt;ul>
+&lt;li>薄透镜一边垂直于光轴的一个平面（物平面）发出的所有光线，经过透镜汇聚，一定在薄透镜另一边汇聚成一个平面（像平面）。&lt;/li>
+&lt;/ul>
+&lt;p>其中这个像平面到透镜的距离叫做&lt;strong>对焦距离（Focal Distance）&lt;/strong>&lt;/p>
+&lt;p>焦距和对焦距离一定要分清楚，不要弄混。&lt;/p>
+&lt;p>当然第二条时第一条的一个非常自然的结论。&lt;/p>
+&lt;p>从第一条可以看出，这个理想的薄透镜实现了我们一开始想要的目标，能够形成&lt;strong>一对一&lt;/strong>的光源映射，使得成像锐利，信噪比高。&lt;/p>
+&lt;h3 id="高斯公式">高斯公式&lt;/h3>
+&lt;p>&lt;img src="img/gauss1.jpg" alt="">
+&lt;img src="img/gauss2.jpg" alt="">
+&lt;img src="img/gauss3.jpg" alt="">&lt;/p>
+&lt;p>通过简单的相似三角形，可以得到高斯公式（薄透镜下适用）&lt;/p>
+&lt;p>$$
+\frac{1}{z^{\prime}} - \frac{1}{z} = \frac{1}{f}
+$$&lt;/p>
+&lt;p>（实际上我们能够如此简单地得到薄透镜的高斯公式，是因为我们预先给定了薄透镜的性质，因此这些结论都是显然的。其实我们之间给出的薄透镜的两个假设也都是结论。）&lt;/p>
+&lt;h2 id="代码实现">代码实现&lt;/h2>
+&lt;h3 id="坐标系约定">坐标系约定&lt;/h3>
+&lt;p>我们约定，相机空间和透镜空间 $z$ 轴方向相反，相机朝向 $+z$ 方向, 透镜空间朝向 $-z$ 方向。
+即从镜头外往传感器的方向是透镜空间的正方向。也就是从底片像外看去，是透镜空间的 $-z$ 方向。从场景向透镜看去，是透镜空间的 $+z$ 方向。
+这样约定方便透镜组的描述。如前一张图。&lt;/p>
+&lt;h3 id="核心函数">核心函数&lt;/h3>
+&lt;p>&lt;img src="img/trace_alg.jpg" alt="">&lt;/p>
+&lt;p>真实感相机的实现两个核心的函数是&lt;/p>
+&lt;ul>
+&lt;li>给定场景外入射到镜头中的一条射线，判断是否有这条入射射线对应的从透镜组最后一个镜片出射到底片方向的射线。如果有，则返回。&lt;/li>
+&lt;/ul>
+&lt;pre tabindex="0">&lt;code>TraceRayFromFilm(rayFromFilm) -&amp;gt; exist, rayToScene
+&lt;/code>&lt;/pre>&lt;ul>
+&lt;li>给定从底片到透镜组最后一个镜片方向的一条射线，判断是否有这条射线对应的从透镜组第一个（镜头）镜片出射到场景中的射线。如果有，则返回。&lt;/li>
+&lt;/ul>
+&lt;pre tabindex="0">&lt;code>TraceRayFromScene(rayFromScene) -&amp;gt; exist, rayToFilm
+&lt;/code>&lt;/pre>&lt;p>这两个函数的差别仅仅是追踪的方向相反。用这两个的函数的目的在于计算透镜组的&lt;strong>厚度&lt;/strong>然后通过&lt;strong>厚透镜的高斯公式&lt;/strong>用于对焦。&lt;/p>
+&lt;p>中间的大体过程就是，遍历透镜组，对每一个镜面应用球面求交，反射定理，判断是否是有效折射，如果不是，直接结束。重复以上步骤直到遍历完所有的镜面。得到最后结果。&lt;/p>
+&lt;p>&lt;img src="img/thick_lens.jpg" alt="">&lt;/p>
+&lt;h3 id="对焦">对焦&lt;/h3>
+&lt;p>给定一个成像平面位于$z_f^{&amp;rsquo;}$（一般位于焦点内），有其所对应的一个能够对焦在这个成像平面上的物体的距离$z_f$。对焦的过程就是调节$z_f^{&amp;rsquo;}$的过程，当把成像平面调整到焦点的位置上时，就对焦在了无限远处，实际上就是能看清很远的地方。在$z_f$的前后范围内，有一个能够成人眼能够分辨的清晰度的像的范围。这个范围就是景深（Depth of Field）在这个范围的前后的边界的位置上所成的像不能在成像平面上会聚成一点，而是一个有一定直径的光斑。这个圆圈就是弥散圈。只需要简单的几何推导,弥散圈为$$\begin{align}d_c=conf(z)=\vert \frac{d_{1}f(z-z_f)}{z(f+z_f)} \vert，其中d_{1}为透镜的直径 (f/n)\end{align}$$。如果我们把这个弥散圈当作一个衡量成像分辨率的指标，即当这个光斑大到一定程度，使得相机的传感器和人眼都不能识别出清晰的图像。那么给定一个弥散圈，就能确定在某位置物体的景深范围。这样的话，我们会有两个相同的解释方式：其他条件相同的情况下，相机的弥散圈越大（无论以怎样的方式实现，比如更高分辨率的成像传感器，或者是其他什么黑科技）景深越大，则成像清晰的范围就越大，越不容易产生模糊效果。与此等价的说法是：其他条件相同的情况下，景深越小，弥散圈越小。
+公式$(1)$ 的曲线形状类似于$\vert log(x) \vert$，$conf(z) = 0$的零点是 $z = z_f$。给定一个相机的$d_c$，在这个曲线上画一条横线，对应的两个$z_1$,$z_2$就是对焦在$z_f$处物体的景深范围，可见前景深与后景深的变化不是对称的。$d_1$对于这条曲线的影响就是在其他条件相同的情况下如果$d_1$越大，那么这个曲线越收紧，对应的景深就越小，越容易产生虚化效果。&lt;/p>
+&lt;p>&lt;img src="img/4.png" alt="">&lt;/p>
+&lt;p>对于厚透镜来说，有高斯公式&lt;/p>
+&lt;p>$$
+\frac{1}{z^{\prime} - p_{z}^{\prime}} - \frac{1}{z - p_{z}} = \frac{1}{f}
+$$&lt;/p>
+&lt;p>$p_{z}$ 和 $p_{z}^{\prime}$ 的意义如下图, $p_{z}$ 和 $p_{z}^{\prime}$之间的距离为透镜组的等效厚度，可以看到，薄透镜就是$p_{z} = p_{z}^{\prime}$的情况。&lt;/p>
+&lt;p>所以，计算透镜厚度的方式就是从场景平行摄入一条光纤，与使用&lt;code>TraceRayFromScene&lt;/code>之后返回的那条出射光纤的反向延长线的焦点的$z$位置垂直于光轴作为一个基平面(Cardinal Plane)$p_{z}$，以同样的方式用&lt;code>TraceRayFromFilm&lt;/code>找到另一个基准平面。这两个基准平面之间的距离就是厚度。&lt;/p>
+&lt;h3 id="采样预处理">采样预处理&lt;/h3>
+&lt;p>&lt;img src="img/pupil.jpg" alt="">&lt;/p>
+&lt;p>由于直接暴力采样收敛比较慢，所以在第一个透镜上确定采样点的时候需要有一个预设范围，这个预设范围就是出瞳(exit pupil)，这个范围是能最终能射出透镜方向上的点的集合。&lt;/p>
+&lt;p>因为像场是中心对称的，我们在水平的径向上做预计算就可以。可以去底片对角线的长度为径向的最大长度，然后
+对这个镜像分成很多小分，每个小份上均匀采样，作为起点，在镜头上随机采样作为终点形成一条光纤，调用&lt;code>TraceRayFromFilm&lt;/code>测试这条光纤是不是能穿过相机，然后扩大这个穿过的包围盒的范围。采样测试足够多的数量，最后这个包围盒作为这个区间段的一个出瞳范围存储起来，作为光线追踪时的预计算信息。&lt;/p>
+&lt;p>&lt;img src="img/preprocess.jpg" alt="">&lt;/p>
+&lt;p>在实际做光线追踪采样时，我们可以根据采样点在底片上的位置先通过旋转，算出落在径向区间段的索引，然后根据对应的包围盒范围，在这个范围内采样，这个范围内的光线都是可以保证有对应的出射光线的。&lt;/p>
+&lt;h3 id="具体流程">具体流程&lt;/h3>
+&lt;pre tabindex="0">&lt;code>1. 输入镜头数据
+2. 对焦：计算透镜厚度，给定对焦距离，通过高斯公式算出透镜离底片的距离，然后改变透镜组的位置。
+3. 预计算采样范围
+4. tracing
+&lt;/code>&lt;/pre>&lt;p>&lt;a href="https://github.com/yslib/Cameray">Cameray&lt;/a>&lt;/p></content></item><item><title>\[Rendering\] Introduction to Vulkan</title><link>/post/graphics/vulkan/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/post/graphics/vulkan/</guid><description/><content>&lt;h1 id="vulkan-overview">Vulkan Overview&lt;/h1>
+&lt;p>Explicitly,Statically,Seperately&lt;/p>
+&lt;pre tabindex="0">&lt;code class="language-mermaid" data-lang="mermaid">graph BT
+linkStyle default interpolate basis;
+subgraph g0[Vulkan]
+subgraph g1[Vulkan Context]
+A(VkDevice):::vkobj --&amp;gt; B(VkPhysicalDevice):::vkobj
+B --&amp;gt; C(VkInstance):::vkobj
+D(VkSurfaceKHR):::khr--Present support--&amp;gt;B
+D--&amp;gt;C
+D--&amp;gt;W{{NativeWindowHandle}}
+S(VkSwapchainKHR):::khr--&amp;gt;D
+S--&amp;gt;A
+end
+subgraph g2[Resources]
+i(vkimage):::vkobj-.-&amp;gt;A
+b(vkbuffer):::vkobj-.-&amp;gt;A
+end
+end
+classDef khr fill:#98971a,stroke-width:0px;
+classDef vkobj fill:#d79921,stroke-width:0px;
+style g1 fill:#928374,stroke-width:0px,color:#ebdbb2;
+style g2 fill:#928374,stroke-width:0px,color:#ebdbb2;
+style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
+style W fill:#4585ff55,stroke-dasharray:4
+&lt;/code>&lt;/pre>&lt;p>&lt;strong>Explicit, Explicit, Explicit&lt;/strong>&lt;/p>
+&lt;h2 id="实例vkinstance">实例(vkinstance)&lt;/h2>
+&lt;h3 id="简介">简介&lt;/h3>
+&lt;p>vulkan实例隔离了不同的vulkan环境，在一个应用程序中，可以创建多个实例。但是实例之间的对象不能共享，如内存。（在不涉及扩展的情况下）&lt;/p>
+&lt;pre tabindex="0">&lt;code class="language-mermaid" data-lang="mermaid">graph LR
+subgraph g0[vkInstance]
+linkStyle default interpolate basis
+ci[CreateInfo]
+i(VkInstance):::vkobj
+o([应用]):::none--查询当前Vulkan支持的扩展--&amp;gt;b([指定扩展]):::field
+subgraph g1[功能]
+b --&amp;gt;ci:::cistyle
+c([指定验证层]):::field--&amp;gt;ci
+d([指定Vulkan对象的全局内存分配器]):::field--&amp;gt;ci
+z([...]):::field--&amp;gt;ci
+end
+end
+ci--VkCreateInstance--&amp;gt;i
+classDef field fill:#689d6a,stroke-width:0px;
+classDef vkobj fill:#d79921,stroke-width:0px;
+classDef cistyle fill:#b16286,stroke-width:0px;
+style o fill:#fe8019,stroke-width:0px;
+style g1 fill:#928374,stroke-width:0px,color:#ebdbb2;
+style g2 fill:#928374,stroke-width:0px,color:#ebdbb2;
+style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
+&lt;/code>&lt;/pre>&lt;h3 id="功能">功能&lt;/h3>
+&lt;ol>
+&lt;li>
+&lt;p>枚举当前环境支持的扩展:&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>是否启用扩展：&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;p>真正启用扩展的地方是在创建逻辑设备的时候，但是是否允许开启扩展的地方是在创建实例时。&lt;/p>
+&lt;ol start="3">
+&lt;li>是否开启验证层：&lt;/li>
+&lt;/ol>
+&lt;p>包括调试回调。调试回调也属于扩展。&lt;/p>
+&lt;ol start="4">
+&lt;li>指定全局内存分配器：&lt;/li>
+&lt;/ol>
+&lt;p>Vulkan提供了一个全局内存分配器回调，让用户可以接管Vulkan对象的所需要使用主机端的内存的分配。&lt;/p>
+&lt;h2 id="物理设备vkphysicaldevice">物理设备(vkPhysicalDevice)&lt;/h2>
+&lt;h3 id="简介-1">简介&lt;/h3>
+&lt;p>在初始化Vulkan的物理设备时，除了选择需要的物理设别外，还应该获取关于物理设备的一些属性供之后使用&lt;/p>
+&lt;pre tabindex="0">&lt;code class="language-mermaid" data-lang="mermaid">graph LR
+subgraph g0[VkPhysicalDevice]
+linkStyle default interpolate basis
+i(vkInstance):::vkobj--VkEnumeratePhysicalDevices--&amp;gt;p(vkPhysicalDevice):::vkobj
+subgraph g1[物理设备的Get 查询]
+p--&amp;gt;a([vkGetPhysicalDeviceFormatProperties]):::get
+p--&amp;gt;c([vkGetPhysicalDeviceMemoryProperties]):::get
+p--&amp;gt;d([vkGetPhysicalDeviceQueueFamilyProperties]):::get
+p--&amp;gt;e([vkGetPhysicalDeviceFeatures]):::get
+p--&amp;gt;f([vkGetPhysicalDeviceXXXKHR]):::get2
+end
+end
+classDef field fill:#689d6a,stroke-width:0px;
+classDef vkobj fill:#d79921,stroke-width:0px;
+classDef cistyle fill:#b16286,stroke-width:0px;
+classDef get fill:#458588,stroke-width:0px;
+classDef get2 fill:#fb4934,stroke-width:0px
+style g1 fill:#928374,stroke-width:0px,color:#ebdbb2;
+style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
+&lt;/code>&lt;/pre>&lt;h3 id="功能-1">功能&lt;/h3>
+&lt;ol>
+&lt;li>图像格式属性(vkGetPhysicalDeviceFormatProperties)：&lt;/li>
+&lt;/ol>
+&lt;p>图像格式属性的描述结构体为：&lt;/p>
+&lt;p>通常，为了完整性，在创建一个需要指定格式的Vulkan对象时，比如创建一个R8B8GBA8格式的纹理，或者格式为24位的深度缓冲，需要查询物理设备是不是支持这种格式。但是一个格式还有附加的属性，比如这个格式是不是支持&lt;/p>
+&lt;ol start="2">
+&lt;li>
+&lt;p>设备内存：&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>支持的队列族：&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;p>同样也用索引来标识，创建逻辑设备时需要指定。队列也是不同于之前传统API的新特性。&lt;/p>
+&lt;ol start="4">
+&lt;li>物理设备属性(VkPhysicalDeviceProperties via vkGetPhysicalDeviceProperties)&lt;/li>
+&lt;/ol>
+&lt;p>物理设备属性字段中有一个设备限制（VkPhysicalDeviceLimits）字段，这个字段给出了当前物理设备支持的各种属性的极限或者说是最大值。
+其中比较基础的有以下几项：&lt;/p>
+&lt;pre>&lt;code>- 最大采样数
+-
+&lt;/code>&lt;/pre>
+&lt;ol start="5">
+&lt;li>物理设备特性(VkPhysicalDeviceFeatures via vkGetPhysicalDeviceFeatures)&lt;/li>
+&lt;/ol>
+&lt;p>注意物理属性做区分，这个字段当中都是Bool变量，描述了此物理设备是否支持某一个特性。在之后创建逻辑设备中，要指定一些特性，这些特性必须是物理设备支持的。&lt;/p>
+&lt;h2 id="逻辑设备vkdevice">逻辑设备(vkDevice)&lt;/h2>
+&lt;h3 id="简介-2">简介&lt;/h3>
+&lt;p>逻辑设备是Vulkan对物理设备的抽象。可以从一个物理设备上创建多个逻辑设备。逻辑设备对象负责vulkan的设备资源分配。
+负责的主要功能有：&lt;/p>
+&lt;h3 id="功能-2">功能&lt;/h3>
+&lt;ol>
+&lt;li>
+&lt;p>开启扩展：&lt;/p>
+&lt;p>如果需要窗口显示功能，这里需要开启交换链扩展&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>指定设备要用到的队列：&lt;/p>
+&lt;p>如果需要绘制流水线功能就指定图形队列，如果要使用计算着色器的功能，就指定计算队列。&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;h2 id="表面vksurfacekhr-扩展">表面（vkSurfaceKHR, 扩展）&lt;/h2>
+&lt;h3 id="简介-3">简介&lt;/h3>
+&lt;p>表面是展示渲染结果的那个窗口对象，可以不严谨地理解为呈现绘制结果的区域。表面不是Vulkan核心的一部分。因为显示窗口不具备跨平台特性。&lt;/p>
+&lt;h3 id="功能-3">功能&lt;/h3>
+&lt;p>表面并且和表面相关的API带有&lt;strong>KHR&lt;/strong>后缀。&lt;/p>
+&lt;ul>
+&lt;li>表面的创建需要依赖与实例(VkInstance)。&lt;/li>
+&lt;li>表面是否被支持取决于于物理设备(VkPhysicalDevice)(vkGetPhysicalDeviceSurfaceSupportKHR)。可见物理设备章节的说明图中红色的部分。&lt;/li>
+&lt;li>表面的创建需要依赖于一个平台相关的窗口句柄。&lt;/li>
+&lt;/ul>
+&lt;p>以Windows上的平台为例，下面是创建表面所需要的信息&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Provided by VK_KHR_win32_surface
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">typedef&lt;/span> &lt;span style="color:#66d9ef">struct&lt;/span> &lt;span style="color:#a6e22e">VkWin32SurfaceCreateInfoKHR&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkStructureType sType;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span>&lt;span style="color:#f92672">*&lt;/span> pNext;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkWin32SurfaceCreateFlagsKHR flags;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> HINSTANCE hinstance;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> HWND hwnd; &lt;span style="color:#75715e">// win32 native window handle
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>} VkWin32SurfaceCreateInfoKHR;
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>创建函数,需要用到Vulkan实例&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Provided by VK_KHR_win32_surface
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>VkResult &lt;span style="color:#a6e22e">vkCreateWin32SurfaceKHR&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkInstance instance, &lt;span style="color:#75715e">// vulkan instance is needed
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#66d9ef">const&lt;/span> VkWin32SurfaceCreateInfoKHR&lt;span style="color:#f92672">*&lt;/span> pCreateInfo,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">const&lt;/span> VkAllocationCallbacks&lt;span style="color:#f92672">*&lt;/span> pAllocator,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkSurfaceKHR&lt;span style="color:#f92672">*&lt;/span> pSurface);
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>从接口来看，判断设备是否支持交换链之后，在窗口系统下，我们就可以直接窗前表面（VkObject）对象了。&lt;/p>
+&lt;h2 id="平面plane扩展">平面(Plane,扩展)&lt;/h2>
+&lt;h3 id="简介-4">简介&lt;/h3>
+&lt;p>与平面平行的概念是窗口句柄。根据Vulkan规范，这个扩展由VK_KHR_display提供。这个对象用来代替之前创建表面(VkSurface)用的平台相关的窗口句柄来创建一个表面。也就是说，这个扩展可以实现在没有窗口系统上直接把结果绘制到显示器上的功能。（目前为止，没见过使用这个扩展的任何Demo，我自己也没考察过）&lt;/p>
+&lt;p>可以通过与之前创建表面的信息结构体做对比会发现，通过这种方法创建表面不许要窗口句柄。而是一个Plane，这个Plane对象直接从物理设备获得支持。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">typedef&lt;/span> &lt;span style="color:#66d9ef">struct&lt;/span> &lt;span style="color:#a6e22e">VkDisplaySurfaceCreateInfoKHR&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>VkStructureType sType;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span>&lt;span style="color:#f92672">*&lt;/span> pNext;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>VkDisplaySurfaceCreateFlagsKHR flags;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>VkDisplayModeKHR displayMode;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">uint32_t&lt;/span> planeIndex;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">uint32_t&lt;/span> planeStackIndex;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>VkSurfaceTransformFlagBitsKHR transform;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">float&lt;/span> globalAlpha;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>VkDisplayPlaneAlphaFlagBitsKHR alphaMode;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>VkExtent2D imageExtent;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>} VkDisplaySurfaceCreateInfoKHR;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// no need for native window handle
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>注意与之前的&lt;code>vkCreateWin32SurfaceKHR&lt;/code> 对比&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Provided by VK_KHR_display
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>VkResult &lt;span style="color:#a6e22e">vkCreateDisplayPlaneSurfaceKHR&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>VkInstance instance,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">const&lt;/span> VkDisplaySurfaceCreateInfoKHR&lt;span style="color:#f92672">*&lt;/span> pCreateInfo, &lt;span style="color:#75715e">// replace somthing like VkWin32SurfaceCreateInfoKHR that must be supported by window system
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">const&lt;/span> VkAllocationCallbacks&lt;span style="color:#f92672">*&lt;/span> pAllocator,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>VkSurfaceKHR&lt;span style="color:#f92672">*&lt;/span> pSurface);
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="交换链vkswapchainkhr-扩展">交换链(vkSwapchainKHR, 扩展)&lt;/h2>
+&lt;h3 id="简介-5">简介&lt;/h3>
+&lt;p>交换链提供和管理表面中的绘制结果数据，一般情况下是一个环形的缓冲，一些表面用来显示在窗口上，一些表面用来接受绘制的结果供接下来的展示用。相当于帧缓冲的管理器，把绘制完成的数据呈现到表面上。
+创建交换链需要指定之前创建的表面以及逻辑设备。因此交换链是被逻辑设备所拥有的。
+交换链由&lt;strong>VK_KHR_swapchain&lt;/strong>扩展提供，因此如果需要交换链，创建逻辑设备时需要启用这个扩展。&lt;/p>
+&lt;p>创建交换链时，至少有三个属性是有必要检查的。(或者说是必要的)&lt;/p>
+&lt;ul>
+&lt;li>交换链的图像个数（缓冲个数），图像大小(&lt;code>vkGetPhysicalDeviceSurfaceCapabilitiesKHR&lt;/code>)&lt;/li>
+&lt;li>支持的表面格式(&lt;code>vkGetPhysicalDeviceSurfaceFormatsKHR&lt;/code>)&lt;/li>
+&lt;li>呈现模式(立即刷新，三缓冲等)(&lt;code>vkGetPhysicalDeviceSurfacePresentModesKHR&lt;/code>)&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Provided by VK_KHR_swapchain
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">typedef&lt;/span> &lt;span style="color:#66d9ef">struct&lt;/span> &lt;span style="color:#a6e22e">VkSwapchainCreateInfoKHR&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkStructureType sType;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span>&lt;span style="color:#f92672">*&lt;/span> pNext;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkSwapchainCreateFlagsKHR flags;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkSurfaceKHR surface; &lt;span style="color:#75715e">// create before
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#66d9ef">uint32_t&lt;/span> minImageCount; &lt;span style="color:#75715e">// check
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> VkFormat imageFormat; &lt;span style="color:#75715e">// check
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> VkColorSpaceKHR imageColorSpace; &lt;span style="color:#75715e">// check
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> VkExtent2D imageExtent; &lt;span style="color:#75715e">// check
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#66d9ef">uint32_t&lt;/span> imageArrayLayers;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkImageUsageFlags imageUsage;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkSharingMode imageSharingMode;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">uint32_t&lt;/span> queueFamilyIndexCount;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#66d9ef">uint32_t&lt;/span>&lt;span style="color:#f92672">*&lt;/span> pQueueFamilyIndices;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkSurfaceTransformFlagBitsKHR preTransform;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkCompositeAlphaFlagBitsKHR compositeAlpha;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkPresentModeKHR presentMode; &lt;span style="color:#75715e">// check
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> VkBool32 clipped;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkSwapchainKHR oldSwapchain;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>} VkSwapchainCreateInfoKHR;
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>VkResult &lt;span style="color:#a6e22e">vkCreateSwapchainKHR&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkDevice device,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">const&lt;/span> VkSwapchainCreateInfoKHR&lt;span style="color:#f92672">*&lt;/span> pCreateInfo,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">const&lt;/span> VkAllocationCallbacks&lt;span style="color:#f92672">*&lt;/span> pAllocator,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkSwapchainKHR&lt;span style="color:#f92672">*&lt;/span> pSwapchain);
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="如何使用-vulkan">如何使用 Vulkan&lt;/h2>
+&lt;p>前面所涉及的实例、物理设备逻辑设备、表面、交换链都是使用Vulkan之前必须要做的基础性工作，不涉及任何渲染的操作。我们把渲染一帧大概三部分&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>ConfigureGraphicsAPI(){
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 对于Vulkan来说，枚举物理设备，创建物理设备，逻辑设备交换链等
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#75715e">// 创建窗口
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">while&lt;/span>(true){
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span>(not Init){
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Initialize(){
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 数据初始化工作，载入模型，建立渲染管线状态等
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> vertexBuffer &lt;span style="color:#f92672">=&lt;/span> device&lt;span style="color:#f92672">-&amp;gt;&lt;/span>CreateBuffer(USAGE_VERTEX_BUFFER);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> vertexBuffer&lt;span style="color:#f92672">-&amp;gt;&lt;/span>SetData(vertexData)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> uniform &lt;span style="color:#f92672">=&lt;/span> device&lt;span style="color:#f92672">-&amp;gt;&lt;/span>CreateBuffer(USAGE_SHADER_UNIFORM);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> vertexBuffer&lt;span style="color:#f92672">-&amp;gt;&lt;/span>SetData(uniformData)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> pipelineState &lt;span style="color:#f92672">=&lt;/span> device&lt;span style="color:#f92672">-&amp;gt;&lt;/span>CreatePipelineState(pipelineDesc);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Update(){
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 更新每帧数据
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> context&lt;span style="color:#f92672">-&amp;gt;&lt;/span>UpdateBuffer()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Render(){
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 提交绘制指令
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> context&lt;span style="color:#f92672">-&amp;gt;&lt;/span>SetPipelineState(pip)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>我们之前所涉及的仅仅是在&lt;code>ConfigGraphicsAPI()&lt;/code>中的需要进行的工作。完成了前几个章节的工作之后，我们就需要开始使用Vulkan来绘制东西了。但是由于Vulkan的复杂性，如果不清楚接下来要做什么，就会给接下来的学习带来困难。首先我们要明确Vulkan和OpenGL的最大的不同是什么。其中一个最明显的区别就是指令的显式执行。&lt;/p>
+&lt;p>例如在OpenGL中，如果我们创建一个Buffer并且给Buffer传数据(对于纹理对象大体也是如此)，基本上只需要两个主要的API：&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 其他工作
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>glCreateBuffer(&lt;span style="color:#f92672">&amp;amp;&lt;/span>bufferHandle); &lt;span style="color:#75715e">// 创建缓冲对象
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>glNamedBufferSubData(bufferHandle,vertexData) &lt;span style="color:#75715e">// 给缓冲对象传数据
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 使用缓冲对象
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>然而在Vulkan中，要想完成同样的操作，需要更多的工作:&lt;/p>
+&lt;ul>
+&lt;li>创建Buffer对象的时候，我们需要给Buffer分配内存，这就需要提前创建一个Memory对象。然后从Memory中给Buffer分配内存，这样这个Buffer才能是一个完整可用的Buffer。&lt;/li>
+&lt;/ul>
+&lt;p>上面的这个工作大致对应&lt;code>glCreateBuffer&lt;/code>。&lt;/p>
+&lt;p>接下来，要给Buffer数据，&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>则需要建立一个命令缓冲池(&lt;strong>VkCommandPool&lt;/strong>)&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>从中分配命令缓冲(&lt;strong>VkCommandBuffer&lt;/strong>)&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>向命令缓冲中提交从SrcBuffer到DstBuffer的复制命令(&lt;strong>VkCmdCopyBuffer&lt;/strong>)&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>然后把这个命令缓冲提交到我们之前创建的图形队列中。(&lt;strong>VkQueueSubmit&lt;/strong>)&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;p>因为我们最终使用的顶点数据是以设备内存形式存在的，对CPU不可见。所以我们还需要需要构造一个暂存缓冲(Staging Buffer)作为可以直接传输数据的Buffer(其内存类型是CPU可见的内存类型，这种Buffer我们只要用memcpy就可以往里面写数据),然后通过GPU指令，把Staging复制到真正的顶点缓冲中。&lt;/p>
+&lt;h2 id="管线状态">管线状态&lt;/h2>
+&lt;h3 id="简介-6">简介&lt;/h3>
+&lt;p>在Vulkan当中，管线的所有状态被抽象成了一个对象，不再像OpenGL那样，是一个全局的隐式状态， 每个状态可以随时更改。而Vulkan需要在使用之前指定好所有的固定状态，
+然后创建管线状态对象(VkPipelineState)，这个管线状态需要绑定到一个渲染通道的子通道(VkSubpass of VkRenderPass)上使用。&lt;/p>
+&lt;pre tabindex="0">&lt;code class="language-dot" data-lang="dot">digraph g {
+rankdir=TB
+graph [
+bgcolor=&amp;#34;#665c54&amp;#34;
+style=&amp;#34;filled&amp;#34;
+];
+node [
+shape=&amp;#34;record&amp;#34;
+fontsize = &amp;#34;16&amp;#34;
+style = &amp;#34;filled&amp;#34;
+gradientangle=90
+];
+edge [];
+subgraph cluster0
+{
+label=&amp;#34;PipelineStateObject&amp;#34;
+&amp;#34;node0&amp;#34;[ label= &amp;#34;Shader|PrimitiveType|Viewport|Scissor|Uniforms|Attributus|BlendState|DepthStencil|Rasterization|SampleState&amp;#34; ]
+}
+subgraph cluster1{
+label=&amp;#34;DynamicStates&amp;#34;
+&amp;#34;node1&amp;#34;[label=&amp;#34;...|LineWidth|...&amp;#34;]
+}
+}
+&lt;/code>&lt;/pre>&lt;h3 id="组成">组成&lt;/h3>
+&lt;ol>
+&lt;li>
+&lt;h4 id="着色器模块">着色器模块&lt;/h4>
+&lt;/li>
+&lt;/ol>
+&lt;p>着色器相对来说是一个独立的模块。这个模块作为渲染管线状态的一部分，是创建管线必须的参数。Vulkan核心功能中的着色器只支持SPIR-V字节码，NVDIA扩展支持GLSL。但是我们在编写着色器时一般都用高级的着色语言比如GLSL,HLSL。有很多工具可以把GLSL,HSLS先编译成字节码然后供Vulkan。&lt;a href="https://github.com/KhronosGroup/glslang">glslang&lt;/a>是Khronos官方维护的将GLSL（同时也支持HLSL）转换成AST的前端，以及将AST转换成SPIR-V的后端。通过这个除了可以实现把高级的着色语言转换成SPIR-V用来给Vulkan使用，还可以用来在不同的高级着色语言之间互转。除此之外，还有很多基于这个工具的二次封装的工具，更加易用。&lt;/p>
+&lt;pre tabindex="0">&lt;code class="language-dot" data-lang="dot">
+digraph g {
+rankdir=LR
+graph [
+bgcolor=&amp;#34;#665c54&amp;#34;
+style=&amp;#34;filled&amp;#34;
+];
+node [
+shape=&amp;#34;record&amp;#34;
+fontsize = &amp;#34;16&amp;#34;
+style=&amp;#34;filled&amp;#34;
+gradientangle=90
+];
+edge [];
+subgraph cluster0{
+label=&amp;#34;Shader&amp;#34;
+&amp;#34;node0&amp;#34;[label=&amp;#34;... | VkShaderModule* |...&amp;#34;]
+}
+}
+&lt;/code>&lt;/pre>&lt;blockquote>
+&lt;p>[!TIP|style:flat]
+当管线创建完成之后，着色器模块对象就可以被销毁了。&lt;/p>
+&lt;/blockquote>
+&lt;ol start="2">
+&lt;li>
+&lt;h4 id="渲染通道">渲染通道&lt;/h4>
+&lt;/li>
+&lt;/ol>
+&lt;p>&lt;img src="./res/renderpass.drawio.svg" alt="renderpass">&lt;/p>
+&lt;h2 id="资源缓冲vkbuffer-和-图像vkimage">资源：缓冲(VkBuffer) 和 图像(VkImage)&lt;/h2>
+&lt;h3 id="简介-7">简介&lt;/h3>
+&lt;p>需要指名Buffer 的用法。与OpenGL不同的是，这里创建好的buffer没有内存，需要绑定到另外的内存对象上。
+Buffer通常用来存储线性的机构化或非结构化的数据。
+相比于OpenGL，Vulkan中的Buffer设计的更为一般化和清晰，OpenGL由于沉重的历史包袱，各种版本的Buffer的API非常混乱。
+从缓冲对象和图像对象我们可以观察到，Vulkan的概念反而更容易理解。下面的表格是关于缓冲对象的基本功能对应的API在Vulkan 和不同OpenGL版本之间的对比。&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>功能&lt;/th>
+&lt;th>Vulkan&lt;/th>
+&lt;th>OpenGL(DSA)&lt;/th>
+&lt;th>OpenGL(non-DSA)&lt;/th>
+&lt;th>OpenGL(legacy)&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>创建缓冲对象&lt;/td>
+&lt;td>vkCreateBuffer&lt;/td>
+&lt;td>glCreateBuffers&lt;/td>
+&lt;td>glGenBuffers+glBindBuffer&lt;/td>
+&lt;td>&amp;mdash;-&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>分配缓冲存储空间&lt;/td>
+&lt;td>vkBindBufferMemory&lt;/td>
+&lt;td>glNamedBufferStorage&lt;/td>
+&lt;td>glBufferData&lt;/td>
+&lt;td>&amp;mdash;&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>暂存缓冲(host visible)数据传输&lt;/td>
+&lt;td>memcpy+vkMapMemory&lt;/td>
+&lt;td>glMapNamedBufferRange&lt;/td>
+&lt;td>glMapBufferRange&lt;/td>
+&lt;td>&amp;mdash;&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>设备缓冲(device local)数据传输&lt;/td>
+&lt;td>暂存缓冲+vkCmdCopyBuffer(*)&lt;/td>
+&lt;td>glNamedBufferData&lt;/td>
+&lt;td>glBufferData&lt;/td>
+&lt;td>&amp;mdash;&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>创建图像对象&lt;/td>
+&lt;td>vkCreateImage&lt;/td>
+&lt;td>glCreateTextures&lt;/td>
+&lt;td>glGenTextures+glBindTexture&lt;/td>
+&lt;td>glGenTextures+glBindTexture&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>分配图像存储空间&lt;/td>
+&lt;td>vkBindBufferMemory&lt;/td>
+&lt;td>glTextureStorage{x}D&lt;/td>
+&lt;td>glTexStorage{x}D&lt;/td>
+&lt;td>glTexImage{x}D&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>设备本地图像数据传输1&lt;/td>
+&lt;td>暂存缓冲+vkCmdCopyImage(*)&lt;/td>
+&lt;td>glTextureSubImage{x}D&lt;/td>
+&lt;td>glTexSubImage{x}D&lt;/td>
+&lt;td>glTexImage{x}D&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>设备本地图像数据传输2&lt;/td>
+&lt;td>暂存缓冲+vkCmdCopyImage(*)&lt;/td>
+&lt;td>glMapNamedBufferRange+glReadPixel(PBO)&lt;/td>
+&lt;td>glMapBufferRange+glReadPixel&lt;/td>
+&lt;td>&amp;mdash;&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>这个表格基本上展示了Vulkan 的缓冲和图像的基本功能的API。但是图像的使用在Vulkan中更加复杂，因为Vulkan的特点之一，显式同步会在图像这里得到体现。具体来说就是图像的布局之间的转换需要自己编写代码进行转换。&lt;/p>
+&lt;p>资源这一部分属于各个Graphics API的核心内容，由于Vulkan的特性，这一部分更加复杂。在这里不做过多的说明。&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://github.com/fendevel/Guide-to-Modern-OpenGL-Functions">Modern OpenGL Functions&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;h2 id="资源视图缓冲视图vkbufferview和-图像视图vkimageview">资源视图：缓冲视图（VkBufferView）和 图像视图（VkImageView）&lt;/h2>
+&lt;h3 id="简介-8">简介&lt;/h3>
+&lt;p>资源视图是对资源的重新解释，并且赋予了这个资源更加具体的属性。尤其是对于图像来说，图像资源本身的信息并不多，如果要使用图像资源，还应该赋予更加具体的解释，这样才能实现资源的复用。&lt;/p>
+&lt;h2 id="内存vkmemory">内存(VkMemory)&lt;/h2>
+&lt;h3 id="简介-9">简介&lt;/h3>
+&lt;p>Vulkan的内存是Vulkan的重点特性之一。Vulkan中的资源对象与对应的内存是分离的。资源在使用之前，需要根据用途来绑定到不同的类型的内存对象。&lt;/p>
+&lt;p>Vulkan的内存属性比较复杂，任何需要设备内存的对象的创建都需要指定内存类型。如Image和Buffer。内存类型有很多，并且每种类型都由某种类型的堆负责创建。
+当使用&lt;code>vkGetPhysicalDeviceMemoryProperty&lt;/code> 查询相应物理设备支持的内存时，获取到的内存属性包括两个数组。第一个是支持的内存类型，
+第二个是支持的内存堆。支持的内存类型是由一系列bitflags决定的，并且支持的内存类型里还包括了一个索引，这个索引就是由相应支持分配的堆所在数组的索引。&lt;/p>
+&lt;p>总体来说，Vulkan的设备内存属性用&lt;strong>堆类型&lt;/strong>和&lt;strong>内存类型&lt;/strong>两个维度来描述。从设计上来说，这两个维度是正交的。实际上考虑到实现，这两个维度并不是完全独立的。关于内存这一块，
+下面会有详细的介绍，这里只是简要的引出内存属性这个概念。
+分配设备内存的时候需要指定&lt;strong>内存类型&lt;/strong>和&lt;strong>堆类型&lt;/strong>&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>内存类型&lt;/p>
+&lt;p>内存类型标志位大概有这几种类型：（其余见官方规范手册）&lt;/p>
+&lt;ol>
+&lt;li>
+&lt;p>&lt;strong>DEVICE_LOCAL_BIT&lt;/strong>： 设备专用内存，一般是纹理或者顶点缓冲使用的内存&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>HOST_VISIBLE_BIT&lt;/strong>： 主机可见内存，表明内从可以被主机端映射，可以在主机端像访问CPU内存一样直接存取&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>COHERENT_BIT&lt;/strong>：对于主机可见内存的访问保持一致性，否则需要手动更新内存。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>HOST_CACHED_BIT&lt;/strong>：这种内存会缓存在cpu端，但是主机端的访问可能会慢一些。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>LAZILY_ALLOCATED_BIT&lt;/strong>：延迟分配。&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;p>这几种并不是随意组合的，合法的组合请参照Vulkan规范手册&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>堆类型&lt;/p>
+&lt;p>堆类型标志位大概由这几种类型：（其余见官方规范手册）&lt;/p>
+&lt;ol>
+&lt;li>
+&lt;p>&lt;strong>DEVICE_LOCAL_BIT&lt;/strong>: 设备中的堆，一般位于是运行Vulkan的硬件设备，比如GPU。这种就是大多数情况。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>MULTI_INSTANCE_BIT&lt;/strong>: 当一个逻辑设备是由多个物理设备构成时，分配内存的时候会重复分配到每个物理设备中。（用在分布式上？）&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;/li>
+&lt;/ul>
+&lt;p>Vulkan本身的内存分配次数有限制，鼓励分配大块内存作为内存池，然后在这个基础上进行二次分配。然后把资源绑定在分配的内存区间段上。所以，如果编写一个基于Vulkan的通用RHI，需要自己实现一个高效的内存分配器。&lt;/p>
+&lt;p>&lt;img src="./res/memory.drawio.svg" alt="Memory">&lt;/p>
+&lt;h2 id="资源绑定">资源绑定&lt;/h2>
+&lt;h3 id="简介-10">简介&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-glsl" data-lang="glsl">&lt;span style="display:flex;">&lt;span>layout(location &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">0&lt;/span>) &lt;span style="color:#66d9ef">in&lt;/span> &lt;span style="color:#66d9ef">vec3&lt;/span> pos;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>layout(location &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">1&lt;/span>) &lt;span style="color:#66d9ef">in&lt;/span> &lt;span style="color:#66d9ef">vec3&lt;/span> color;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>layout(location &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">2&lt;/span>) &lt;span style="color:#66d9ef">in&lt;/span> &lt;span style="color:#66d9ef">vec2&lt;/span> texCoord;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>layout(binding &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">0&lt;/span>) &lt;span style="color:#66d9ef">uniform&lt;/span> MVP{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mat4 model;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mat4 view;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mat4 proj;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}mvp;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>layout(binding &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">1&lt;/span>) &lt;span style="color:#66d9ef">uniform&lt;/span> Sampler2D tex;
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>资源绑定就是如何为在渲染管线中的上述着色器代码中的变量指定数据。
+局部变量对应逐顶点属性(Attribute)，共享变量对应统一变量(Uniform)。至于属性(Attribute) 和统一变量(Uniform)只是glsl中的修饰符。不同API名字虽然不同，
+但对应的都是这两个概念。&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Vulkan(OpenGL)&lt;/th>
+&lt;th>D3D12&lt;/th>
+&lt;th>说明&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>UBO(Uniform Buffer Object)&lt;/td>
+&lt;td>Constant Buffer&lt;/td>
+&lt;td>全局统一变量&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Texel Buffer&lt;/td>
+&lt;td>typed buffer&lt;/td>
+&lt;td>纹素缓冲&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>SSBO&lt;/td>
+&lt;td>UAV buffer(Unordered Access View)&lt;/td>
+&lt;td>通用缓冲&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Image&lt;/td>
+&lt;td>UAV texture&lt;/td>
+&lt;td>可写的图像类型&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>在Vulkan 的API中，着色器局部变量也就是Attribute，用属性(Attribute)来描述。着色器共享变量(Uniform)信息用描述符(Descriptor)来描述。区分这两个概念有助于理清繁琐的Vulkan API。&lt;/p>
+&lt;h3 id="功能-4">功能&lt;/h3>
+&lt;p>描述符集布局（以下简称描述符布局）是描述都有哪些Uniform变量的对象，创建描述符布局需要一个CreateInfo（VkDescriptorSetLayoutCreateInfo）,其中一个数组字段包含了每个Uniform变量的信息（VkDescriptorSetLayoutBinding）。&lt;/p>
+&lt;p>注意，描述符集和描述符布局的区别是，描述符&lt;strong>布局&lt;/strong>并没有和具体的数据关联，而&lt;strong>集&lt;/strong>却关联了数据。例如，布局只是说这个集有一个uniform buffer 和 一个 uniform sampler。
+而在这个布局的基础上通过池分配出来的集需要关联哪一个uniform buffer和uniform sampler数据。&lt;/p>
+&lt;ul>
+&lt;li>描述符集布局绑定（单个变量的信息对象）&lt;/li>
+&lt;li>描述符集布局（单个变量信息对象的集和）&lt;/li>
+&lt;li>描述符池: 创建这个池需要指定将要从这个池中分配多少个描述符以及多少个描述符集。分配方式为描述符个数以最大描述符集个数的一个划分。&lt;/li>
+&lt;li>描述符集（根据布局通过池分配出来的带有真正数据的对象）
+描述符集属于管线资源，在绘制指令的时候进行绑定。绑定的这个描述符集要和&lt;/li>
+&lt;/ul>
+&lt;p>如果直接从API翻译，这几个概念对应的中文很拗口。他们几个之间的关系如下图&lt;/p>
+&lt;p>&lt;img src="./res/resbind.drawio.svg" alt="B">&lt;/p>
+&lt;p>顶点属性的buffer 也是要通过绘制指令绑定到管线。顶点属性一般指定：&lt;/p>
+&lt;ul>
+&lt;li>对应的顶点缓冲数组的索引（Buffer Index）&lt;/li>
+&lt;li>指定着色其中的绑定点（Binding）&lt;/li>
+&lt;li>步长（Stride）&lt;/li>
+&lt;li>偏移 (Offset)&lt;/li>
+&lt;li>格式（Format） （在OpenGL中，这一步通过分量格式和分量个数表示）&lt;/li>
+&lt;/ul>
+&lt;p>在vulkan中，上面5个属性的指定被分配在了两个结构体中。分别是&lt;code>VkVertexInputBindingDescription&lt;/code> 和 &lt;code>VkVertexInputAttributeDescription&lt;/code>其中前者指定了绑定索引(binding),这个也就是在后续进行绘制指令提交时指定的缓冲区数组的索引。以及步长(stride),即每一个被解释的元素的大小。后者指定了绑定的着色器中的变量（location）。这两个描述结构体是的参数正交地描述了顶点属性的配置。&lt;/p>
+&lt;ul>
+&lt;li>下图为Vulkan和OpenGL 中进行逐顶点属性绑定API的对比表格&lt;/li>
+&lt;/ul>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Vulkan&lt;/th>
+&lt;th>OpenGL(DSA version)&lt;/th>
+&lt;th>OpenGL(non-DSA)&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>VkVertexInputBindingDescription&lt;/td>
+&lt;td>glVertexArrayVertexBuffer&lt;/td>
+&lt;td>glVertexAttribPointer&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>VkVertexInputAttributeDescription&lt;/td>
+&lt;td>glVertexAttribFormat&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h2 id="gpu指令和指令缓冲区">GPU指令和指令缓冲区&lt;/h2>
+&lt;h3 id="简介-11">简介&lt;/h3>
+&lt;p>在Vulkan当中，&lt;code>vkCmd*&lt;/code>类型的GPU指令（比如数据传输，管线绑定，渲染通道操作，以及Drawcall）都是通过提交到指令缓冲(VkCommandBuffer)中异步执行的。
+指令缓冲需要从指令池中分配，指令池的创建需要指定队列族的索引。我们在创建逻辑设备的时候指定了这个逻辑设备所需要的队列族。因此创建指令池指定的队列族要是创建指令池的逻辑设备所包含队列族的子集。&lt;/p>
+&lt;p>下面是一些常用的GPU指令，这些指令的上下文参数就是指令缓冲。调用每个指令的时候需要指定一个指令缓冲。当最终提交命令缓冲时，调用VkQueueSubmit提交相应的指令缓冲，指令开始真正地执行。&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th style="text-align:left">Vulkan&lt;/th>
+&lt;th style="text-align:left">Render Pass Scope&lt;/th>
+&lt;th style="text-align:left">Supported Queue Types&lt;/th>
+&lt;th style="text-align:left">Pipeline Type&lt;/th>
+&lt;th style="text-align:left">Level&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td style="text-align:left">vkCmdCopyImage&lt;/td>
+&lt;td style="text-align:left">Outside&lt;/td>
+&lt;td style="text-align:left">Transfer Graphics Compute&lt;/td>
+&lt;td style="text-align:left">Transfer&lt;/td>
+&lt;td style="text-align:left">Primary Secondary&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">vkCmdCopyBuffer&lt;/td>
+&lt;td style="text-align:left">Outside&lt;/td>
+&lt;td style="text-align:left">Transfer Graphics Compute&lt;/td>
+&lt;td style="text-align:left">Transfer&lt;/td>
+&lt;td style="text-align:left">Primary Secondary&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">vkCmdCopyBufferToImage&lt;/td>
+&lt;td style="text-align:left">Outside&lt;/td>
+&lt;td style="text-align:left">Transfer Graphics Compute&lt;/td>
+&lt;td style="text-align:left">Transfer&lt;/td>
+&lt;td style="text-align:left">Primary Secondary&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">vkCmdVertexBuffer&lt;/td>
+&lt;td style="text-align:left">Both&lt;/td>
+&lt;td style="text-align:left">Graphics&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">Primary Secondary&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">vkCmdDraw&lt;/td>
+&lt;td style="text-align:left">Inside&lt;/td>
+&lt;td style="text-align:left">Graphics&lt;/td>
+&lt;td style="text-align:left">Graphics&lt;/td>
+&lt;td style="text-align:left">Primary Secondary&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">vkCmdDrawIndexed&lt;/td>
+&lt;td style="text-align:left">Inside&lt;/td>
+&lt;td style="text-align:left">Graphics&lt;/td>
+&lt;td style="text-align:left">Graphics&lt;/td>
+&lt;td style="text-align:left">Primary Secondary&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">vkCmdDrawIndirected&lt;/td>
+&lt;td style="text-align:left">Inside&lt;/td>
+&lt;td style="text-align:left">Graphics&lt;/td>
+&lt;td style="text-align:left">Graphics&lt;/td>
+&lt;td style="text-align:left">Primary Secondary&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">vkCmdBindPipeline&lt;/td>
+&lt;td style="text-align:left">Both&lt;/td>
+&lt;td style="text-align:left">Graphics Compute&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">Primary Secondary&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">vkCmdBeingRenderPass&lt;/td>
+&lt;td style="text-align:left">Outside&lt;/td>
+&lt;td style="text-align:left">Graphics&lt;/td>
+&lt;td style="text-align:left">Graphics&lt;/td>
+&lt;td style="text-align:left">Primary&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">vkCmdEndRenderPass&lt;/td>
+&lt;td style="text-align:left">Inside&lt;/td>
+&lt;td style="text-align:left">Graphics&lt;/td>
+&lt;td style="text-align:left">Graphics&lt;/td>
+&lt;td style="text-align:left">Primary&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">vkCmdNextSubpass&lt;/td>
+&lt;td style="text-align:left">Inside&lt;/td>
+&lt;td style="text-align:left">Grahpics&lt;/td>
+&lt;td style="text-align:left">Graphics&lt;/td>
+&lt;td style="text-align:left">Primary&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">vkCmdPipelineBarrier&lt;/td>
+&lt;td style="text-align:left">Both&lt;/td>
+&lt;td style="text-align:left">Transfer Graphics Compute&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">Primary Secondary&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">&lt;strong>vkQueueSubmit&lt;/strong>&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">&lt;strong>vkQueuePresentKHR&lt;/strong>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>执行指令的具体流程如下:&lt;/p>
+&lt;p>在开始执行指令之前需要做以下操作&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>创建指令池&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>从指令池中分配相应的指令缓冲，并指定指令缓冲的级别&lt;/p>
+&lt;p>指令缓冲级别表明这个指令缓冲对应的指令是否可以作为另外一个指令缓冲的子指令序列。也就是我们可以把一个标记为Secondary的指令缓冲作为标记为Primary指令缓冲的子指令序列(通过&lt;code>vkBeginCommandBuffer&lt;/code>来指定)。这样的好处是，我们可以把一些列常用的指令预定义为一个Secondary指令缓冲，然后作为一个指令序列复用。&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;p>执行指令时：
+所有&lt;code>vkCmd*&lt;/code>类型的往指令缓冲中提交指令的API需要在&lt;code>vkBeginCommandBuffer&lt;/code> 和 &lt;code>vkEndCommandBuffer&lt;/code>之间调用，用指令缓冲对象作为上下文参数。
+&lt;code>vkBeginCommandBuffer&lt;/code>为指令缓冲指定了一个很重要的参数，即指定这个指令缓冲的具体用法。其次，这个指令起到了重置指令缓冲的作用。&lt;/p>
+&lt;ul>
+&lt;li>VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT: 提交后就被用来记录新的指令。适合存储一次性的指令序列，比如数据传输。&lt;/li>
+&lt;li>VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT:在渲染通道内使用的辅助指令缓冲。&lt;/li>
+&lt;li>VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT：在等待执行的时候，仍然可以提交指令。&lt;/li>
+&lt;/ul>
+&lt;p>&lt;img src="./res/cmd.drawio.svg" alt="Command">&lt;/p>
+&lt;h2 id="资源同步">资源同步&lt;/h2>
+&lt;h3 id="简介-12">简介&lt;/h3>
+&lt;p>GPU的工作模式相对于CPU端来说是异步的，也就是当我们提交了指令缓冲的时候，API立即返回，并且执行。同时，我们CPU端也做了很多往GPU进行数据传输或者读写GPU中数据的工作。由于是异步的工作流，如果没有任何同步措施，我们无法保证GPU是否已经读取到我们传输的最新数据，或者CPU读取到GPU已经处理好的数据。因此，为了正确完成渲染工作，我们还需要让CPU和GPU之间在资源访问这一部分进行先后的配合，这就是同步。&lt;/p>
+&lt;p>除此之外，Vulkan为我们提供了一个非常重要的同步方法，那就是指令缓冲。指令缓冲中的指令是保证按提交顺序执行的，这也是指令缓冲的意义。但是提交的多个指令缓冲之间，以及每个指令缓冲中的GPU指令和CPU端的操作之间的
+逻辑上的依赖关系，是Vulkan不保证的。因为GPU要通过异步的方式实现高并发来达到最高的效率。&lt;/p>
+&lt;p>上一章介绍了Vulkan中的GPU指令的执行过程，由于Vulkan是一个完全显式的API，它的资源同步自然也需要应用程序来控制。Vulkan提供了三种不同粒度的同步方法。&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>栅栏(VkFence)
+栅栏是同步GPU和CPU之间的一种方式。一般在&lt;code>vkQueueSubmit&lt;/code>当中指定栅栏对象，CPU端负责查询栅栏状态，判断所提交的执行序列是否执行完成。是一种指令缓冲级别的同步对象。粒度较大。见而言之，栅栏就是CPU端去查询这个对象状态，然后判断伴随这个对象提交的一系列指令是否执行完成，并且栅栏可以以等待的方式判断栅栏的状态（挂起，线程切换），因此需要操作系统的支持。等待单一的栅栏和直接使用&lt;code>vkQueueWaitIdle&lt;/code>本质上是一样的。&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th style="text-align:left">Vulkan&lt;/th>
+&lt;th style="text-align:left">Render Pass Scope&lt;/th>
+&lt;th style="text-align:left">Supported Queue Types&lt;/th>
+&lt;th style="text-align:left">Pipeline Type&lt;/th>
+&lt;th style="text-align:left">Level&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td style="text-align:left">vkQueueSubmit&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">vkQueuePresentKHR&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;/li>
+&lt;li>
+&lt;p>事件(VkEvent)&lt;/p>
+&lt;p>事件是细粒度的同步方法。它可以同步一个指令缓冲内部之间的指令。因此，它除了在主机端可以查询事件状态之外，还可以在GPU端查询时间状态。同时，设备端是不能以等待的方式查询事件的状态的，只能自旋查询。
+相反，事件在设备端以挂起的方式等待事件的完成。&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th style="text-align:left">Vulkan&lt;/th>
+&lt;th style="text-align:left">Render Pass Scope&lt;/th>
+&lt;th style="text-align:left">Supported Queue Types&lt;/th>
+&lt;th style="text-align:left">Pipeline Type&lt;/th>
+&lt;th style="text-align:left">Level&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td style="text-align:left">vkCmdSetEvent&lt;/td>
+&lt;td style="text-align:left">Outside&lt;/td>
+&lt;td style="text-align:left">Graphics Compute&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">Primary Secondary&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">vkCmdResetEvent&lt;/td>
+&lt;td style="text-align:left">Outside&lt;/td>
+&lt;td style="text-align:left">Graphics Compute&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">Primary Secondary&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;/li>
+&lt;li>
+&lt;p>信号量(VkSemophore)
+信号量不能显式的设置或等待。它同步不同缓冲区之间的资源。使用&lt;code>vkQueueSubmit&lt;/code>时，指定了需要等待信号和通知信号。所提交的指令还中只有在指定的等待信号被通知时执行，执行完成后通知指定的通知信号。
+典型的应用是向不同的队列中提交指令缓冲，并且指令缓冲之间有逻辑上的先后顺序。比如绘制一些东西的时候需要依赖计算管线的结果，那么就向创建自计算队列的指令缓冲里提计算作指令，向创建自图形队列的指令缓冲里提交绘制指令。然后设置好决定先后依赖关系的信号量。然后一次性用&lt;code>vkQueueSubmit&lt;/code>提交。&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th style="text-align:left">Vulkan&lt;/th>
+&lt;th style="text-align:left">Render Pass Scope&lt;/th>
+&lt;th style="text-align:left">Supported Queue Types&lt;/th>
+&lt;th style="text-align:left">Pipeline Type&lt;/th>
+&lt;th style="text-align:left">Level&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td style="text-align:left">vkQueueSubmit&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">vkQueuePresentKHR&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;/li>
+&lt;/ul>
+&lt;p>下表列出了三种同步原语的对比。&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th style="text-align:left">&lt;/th>
+&lt;th style="text-align:left">栅栏(VkFence)&lt;/th>
+&lt;th style="text-align:left">事件(VkEvent)&lt;/th>
+&lt;th style="text-align:left">信号量(VkSemophore)&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td style="text-align:left">粒度&lt;/td>
+&lt;td style="text-align:left">指令缓冲和主机端&lt;/td>
+&lt;td style="text-align:left">指令缓冲之内&lt;/td>
+&lt;td style="text-align:left">指令缓冲之间&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">是否涉及主机端同步&lt;/td>
+&lt;td style="text-align:left">是&lt;/td>
+&lt;td style="text-align:left">是&lt;/td>
+&lt;td style="text-align:left">否&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>图示：&lt;/p>
+&lt;p>&lt;img src="./res/sync.drawio.svg" alt="Sync">&lt;/p></content></item><item><title>When do you need other smart pointer instead of std::shared_ptr?</title><link>/post/dev/smartpointer/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/post/dev/smartpointer/</guid><description>&lt;p>Most C++ programmers known more or less about &lt;code>std::shared_ptr&lt;/code>, but what is its limitations?&lt;/p></description><content>&lt;p>Most C++ programmers known more or less about &lt;code>std::shared_ptr&lt;/code>, but what is its limitations?&lt;/p>
+&lt;p>C++ standard library smart pointer &lt;code>std::shared_ptr&lt;/code> is based on the RAII and reference counting, an ingenious way to manange memory than C. As long as be careful with the circular reference (not 100% to avoid them virtually), you can always coding without too much concerns.&lt;/p>
+&lt;p>Supposed you need to manage a DAG, which is very common in organizing software architecture. Usually, DAG would be used along with Observer Pattern. Since one need to response to changes or events from its dependencies. It has a bidirectional link between one node and its successor.&lt;/p>
+&lt;figure class="center" >
+&lt;img src="./img/dag.drawio.svg" alt="DAG" style="border-radius: 8px; width: 400px" />
+&lt;figcaption class="center" >DAG&lt;/figcaption>
+&lt;/figure>
+&lt;p>It&amp;rsquo;s okay in a programming with GC, but in C++, there is usually a strong reference point (solid arrow in the chart) to its successor and at the same time, a weak reference point to the predecessor. (dash arrow in the chart) in order to avoid cycling referencing.&lt;/p>
+&lt;p>Saying that you want to create two objects with this kind of relationship as the fowlling chart, you may allocate one successor and observe it immediately after it being created in constructor, which is straightforward.&lt;/p>
+&lt;figure class="center" >
+&lt;img src="./img/two.drawio.svg" alt="DAG" style="border-radius: 8px; width: 100px" />
+&lt;figcaption class="center" >cycling reference&lt;/figcaption>
+&lt;/figure>
+&lt;p>The code is like this&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-c++" data-lang="c++">&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">struct&lt;/span> &lt;span style="color:#a6e22e">Node&lt;/span> &lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#66d9ef">public&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>enable_shared_from_this&lt;span style="color:#f92672">&amp;lt;&lt;/span>Node&lt;span style="color:#f92672">&amp;gt;&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> std&lt;span style="color:#f92672">::&lt;/span>vector&lt;span style="color:#f92672">&amp;lt;&lt;/span>std&lt;span style="color:#f92672">::&lt;/span>weak_ptr&lt;span style="color:#f92672">&amp;lt;&lt;/span>Node&lt;span style="color:#f92672">&amp;gt;&amp;gt;&lt;/span> subscribers;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">void&lt;/span> &lt;span style="color:#a6e22e">observe&lt;/span>(std&lt;span style="color:#f92672">::&lt;/span>shared_ptr&lt;span style="color:#f92672">&amp;lt;&lt;/span>Node&lt;span style="color:#f92672">&amp;gt;&lt;/span> sub) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// ... do some check
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> sub&lt;span style="color:#f92672">-&amp;gt;&lt;/span>subscribers.push_back(&lt;span style="color:#66d9ef">this&lt;/span>&lt;span style="color:#f92672">-&amp;gt;&lt;/span>shared_from_this());
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>};
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">struct&lt;/span> &lt;span style="color:#a6e22e">Bar&lt;/span> &lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#66d9ef">public&lt;/span> Node {};
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">struct&lt;/span> &lt;span style="color:#a6e22e">Foo&lt;/span> &lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#66d9ef">public&lt;/span> Node {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> std&lt;span style="color:#f92672">::&lt;/span>shared_ptr&lt;span style="color:#f92672">&amp;lt;&lt;/span>Node&lt;span style="color:#f92672">&amp;gt;&lt;/span> object2;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Foo(std&lt;span style="color:#f92672">::&lt;/span>shared_ptr&lt;span style="color:#f92672">&amp;lt;&lt;/span>Bar&lt;span style="color:#f92672">&amp;gt;&lt;/span> observed ) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> object2 &lt;span style="color:#f92672">=&lt;/span> observed;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> observe(std&lt;span style="color:#f92672">::&lt;/span>move(observed));
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>};
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">int&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>() { &lt;span style="color:#66d9ef">auto&lt;/span> object1 &lt;span style="color:#f92672">=&lt;/span> std&lt;span style="color:#f92672">::&lt;/span>make_shared&lt;span style="color:#f92672">&amp;lt;&lt;/span>Foo&lt;span style="color:#f92672">&amp;gt;&lt;/span>(std&lt;span style="color:#f92672">::&lt;/span>make_shared&lt;span style="color:#f92672">&amp;lt;&lt;/span>Bar&lt;span style="color:#f92672">&amp;gt;&lt;/span>); }
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>If you run the code, it will throw &lt;code>std::bad_weak_ptr&lt;/code> and terminate the program. The reason is that the object2 is not constructed yet when the &lt;code>shared_from_this&lt;/code> is called in the constructor of Foo. So the weak reference is not constructed yet. That&amp;rsquo;s the limitation of &lt;code>std::shared_ptr&lt;/code> when it comes to this case. You may even notice that using &lt;code>auto object1 = std::make_shared&amp;lt;Foo&amp;gt;()&lt;/code> to create a shared object needs two steps rather than one. The first step is construct the object itself, and the second step, creating &lt;code>shared_ptr&amp;lt;T&amp;gt;&lt;/code> wrapper and putting the object into it.&lt;/p>
+&lt;p>It&amp;rsquo;s so often that observing another object in one object&amp;rsquo;s constructor. You definitely could achieve it using &lt;code>std::shared_ptr&lt;/code>, but it&amp;rsquo;s verbose when you need to deal with massive kind of this DAG network.
+So when your system heavily relies on this kind of DAG, you need another smart pointer to help you out.&lt;/p>
+&lt;p>That&amp;rsquo;s what intrusive smart pointer does. It&amp;rsquo;s a smart pointer that doesn&amp;rsquo;t allocate memory for the reference count, but put the reference count in the object itself. It&amp;rsquo;s intrusive because it needs to modify the object itself to add the reference count. It&amp;rsquo;s a trade-off between memory and performance. It&amp;rsquo;s more efficient than &lt;code>std::shared_ptr&lt;/code> in terms of memory usage and performance. But it&amp;rsquo;s less flexible than &lt;code>std::shared_ptr&lt;/code> because it needs to modify the object itself. Usually it&amp;rsquo;s not a problem because when you need it, it means that you system is designed on purpose, the cost of instrusive modification is such a small part compared to the whole system.&lt;/p>
+&lt;p>The intrusive pointer don&amp;rsquo;t support weak reference counting by default. Thinking a weak pointer means that when when the strong reference count is 0 and the weak reference count is not 0, the object should be destroyed according to the weak reference counting semantic. But also according to the definition of intrusive, if the object is destroyed, the counters in the object should be destroyed as well. So you cannot put the counter inside the object directly if you want to support weak reference counting. You need to put the counter outside the object, and the object should be able to access the counter. It&amp;rsquo;s a little bit tricky, but it&amp;rsquo;s doable. You just put the strong/weak counting part all together out of the object itself and point to it.&lt;/p>
+&lt;figure class="center" >
+&lt;img src="./img/diagram.drawio.svg" alt="ref_ptr" style="border-radius: 8px; width: 8000px" />
+&lt;figcaption class="center" >smart pointer layout&lt;/figcaption>
+&lt;/figure>
+&lt;p>The interface of &lt;em>&lt;strong>RefCnt&lt;/strong>&lt;/em> is straight forward and intuitive.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-c++" data-lang="c++">&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">RefCnt&lt;/span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">public&lt;/span>&lt;span style="color:#f92672">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">virtual&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span> ref() &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">0&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">virtual&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span> &lt;span style="color:#a6e22e">deref&lt;/span>() &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">0&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">virtual&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span> &lt;span style="color:#a6e22e">ref_weak&lt;/span>() &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">0&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">virtual&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span> &lt;span style="color:#a6e22e">deref_weak&lt;/span>() &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">0&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">virtual&lt;/span> size_t &lt;span style="color:#a6e22e">ref_count&lt;/span>() &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">0&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">virtual&lt;/span> size_t &lt;span style="color:#a6e22e">ref_weak_count&lt;/span>() &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">0&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>};
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>You can implement of your own &lt;code>RefCnt&lt;/code> by inheriting from it. In most senarios, you can using &lt;code>final&lt;/code> keyword and give the most-concret instance to eliminate the cost of virtual call.&lt;/p>
+&lt;p>Here is the &lt;a href="https://github.com/yslib/ref_ptr">implementation&lt;/a>.&lt;/p></content></item></channel></rss>

@@ -1,0 +1,88 @@
+<!doctype html><html lang=en><head><title>\[Principia\] Introduction on Coordination System :: YSL Blog</title>
+<meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content><meta name=keywords content="Blog,Personal Website"><meta name=robots content="noodp"><link rel=canonical href=/post/principia/coordinates/><link rel=stylesheet href=/styles.css><link rel="shortcut icon" href=/img/theme-colors/white.png><link rel=apple-touch-icon href=/img/theme-colors/white.png><meta name=twitter:card content="summary"><meta name=twitter:site content><meta name=twitter:creator content="Yang Shuoliu"><meta property="og:locale" content="en"><meta property="og:type" content="article"><meta property="og:title" content="\[Principia\] Introduction on Coordination System"><meta property="og:description" content><meta property="og:url" content="/post/principia/coordinates/"><meta property="og:site_name" content="YSL Blog"><meta property="og:image" content="/img/favicon/white.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="627"><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css integrity=sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X crossorigin=anonymous><script defer src=https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js integrity=sha384-g7c+Jr9ZivxKLnZTDUhnkOnsh30B4H0rpLUpJ4jAIKs4fnJI+sEnkvrMWph2EDg4 crossorigin=anonymous></script><script defer src=https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js integrity=sha384-mll67QQFJfxn0IYznZYonOWZ644AWYC+Pt2cHqMaRhXVrursRwvLnLaebdGIlYNa crossorigin=anonymous onload=renderMathInElement(document.body)></script><script>document.addEventListener("DOMContentLoaded",function(){renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:!0},{left:"$",right:"$",display:!1}]})})</script></head><body class=white><div class="container center headings--one-size"><header class=header><div class=header__inner><div class=header__logo><a href=/><div class=logo>YSL Blog</div></a></div><ul class="menu menu--mobile"><li class=menu__trigger>Menu&nbsp;▾</li><li><ul class=menu__dropdown><li><a href=/about/>About Me</a></li><li><a href=https://github.com/yslib>GitHub</a></li><li><a href=https://picysl.com>Photography</a></li></ul></li></ul></div><nav class=navigation-menu><ul class="navigation-menu__inner menu--desktop"><li><a href=/about/>About Me</a></li><li><a href=https://github.com/yslib>GitHub</a></li><li><a href=https://picysl.com>Photography</a></li></ul></nav></header><div class=content><article class=post><h1 class=post-title><a href=/post/principia/coordinates/>[Principia] Introduction on Coordination System</a></h1><div class=post-meta><span class=post-author>Yang Shuoliu</span></div><span class=post-tags>#<a href=/tags/physics/>Physics</a>&nbsp;
+#<a href=/tags/math/>Math</a>&nbsp;
+#<a href=/tags/game-development/>Game development</a>&nbsp;</span><div class=post-content><div><h1 id=坐标系>坐标系<a href=#坐标系 class=hanchor arialabel=Anchor>&#8983;</a></h1><p>为了避免这个笔记成为毫无意义的摘抄，所以这里不机械式地罗列各种坐标系地笔记公式，只针对我们不常用的极坐标和自然坐标系，来写出这两个坐标系下的动力学表示。</p><p>坐标系是用来干什么的？<strong>当然是方便人解决问题的</strong>。这篇笔记的目的是给出每种坐标系下物体的<strong>速度、加速度、动能和动量的表示</strong>。以上目的在于方便地处理各种问题。并且给出这些坐标系所能处理的典型问题。</p><p>我们的目的是把<strong>位置、速度和加速度</strong>在各个坐标系下用这个坐标系的基底来表示。</p><p>这两个坐标系不同于笛卡尔直角坐标系，它们的基底是随时间变化的，也就是这些基底对时间求导还是有信息的。并且如果我们要达到我们的目的，也就是用基底表示速度和加速度，也必然涉及到对基底的求导。因为速度和加速度是由<strong>位移对时间</strong>求导得到的，一旦对用基底表示的位移求导，那么不可避免地涉及到对基底的求导。所以，为了在各个坐标系下用基向量表示<strong>位置、速度和加速度</strong> ,我们首先必须得出这个坐标系下基向量对时间求导的表示。</p><blockquote><p>注意，只有对时间求导，才写成函数上加点。$\dot{x}$表示为$x$对时间$t$求导</p></blockquote><h2 id=极坐标基底对时间导数的表示>极坐标基底对时间导数的表示<a href=#极坐标基底对时间导数的表示 class=hanchor arialabel=Anchor>&#8983;</a></h2><p>极坐标需要选取一个定点作为坐标原点。通常，极坐标系适合处理有心力的问题。所以，这个极点通常为力心，这样整个坐标系就成了惯性系。</p><h3 id=极坐标系的定义>极坐标系的定义<a href=#极坐标系的定义 class=hanchor arialabel=Anchor>&#8983;</a></h3><p>极坐标系的两个基底分别是径向和垂直于径向的单位矢量。这两个基本矢量用笛卡尔坐标系表示为：</p><p>$$
+\vec{e_r}=\cos\theta\vec{i}+\sin\theta\vec{j}
+$$</p><p>$$
+\vec{e_{\theta}}=-\sin\theta\vec{i}+\cos\theta\vec{j}
+$$</p><h3 id=推导>推导<a href=#推导 class=hanchor arialabel=Anchor>&#8983;</a></h3><p>如果把 <strong>$\vec{e_r}$对$\theta$求导</strong>，会发现就是$\vec{e_{\theta}}$，这是极坐标非常舒服的地方。</p><p>$$
+\frac{d\vec{e_r}}{d\theta}=-\sin\theta\vec{i}+\cos\theta\vec{j} = \vec{e_\theta}
+$$</p><p>同理</p><p>$$
+\frac{d\vec{e_\theta}}{d\theta}=-\cos\theta\vec{i}-\sin\theta\vec{j} = -\vec{e_r}
+$$</p><p>这样就能写出基本矢量随着时间的变化规律</p><p>$$
+\dot{\vec{e_r}} = \frac{d\vec{e_r}}{dt} = \frac{d\vec{e_r}}{d\theta}\frac{d\theta}{dt} = \dot{\theta}\vec{e_\theta}
+$$</p><p>同理得:</p><h2 id=heading>$$
+\dot{\vec{e_\theta}} = -\dot{\theta}\vec{e_r}
+$$</h2><p>$$
+\dot{\vec{e_r}} = \dot{\theta}\vec{e_\theta}
+$$
+$$
+\dot{\vec{e_\theta}} = -\dot{\theta}\vec{e_r}
+$$</p><h2 id=自然坐标基底对时间导数的表示>自然坐标基底对时间导数的表示<a href=#自然坐标基底对时间导数的表示 class=hanchor arialabel=Anchor>&#8983;</a></h2><p>自然坐标系的参数化相对复杂一些，自然坐标系用来处理具有<strong>向心加速度</strong>的问题。
+它除了具有额外的曲率半径这个参数，还有角度正负号的问题。（补图）在推导之前，我们先引入自然坐标系的定义，这个定义比较复杂</p><h3 id=自然坐标系的定义>自然坐标系的定义<a href=#自然坐标系的定义 class=hanchor arialabel=Anchor>&#8983;</a></h3><p>首先我们能通过定义得到切线方向基底：
+$$
+\vec{e_t}= \frac{d\vec{r}}{|d\vec{r}|}
+$$
+这个非常的简单。</p><p>但是法向的基底如何表示呢？首先，我们规定法线方向在<strong>曲线的凹侧</strong></p><p>接下来回想之前的极坐标的横向基底对时间导数的表达式$\vec{e_\theta}$具有形式 <strong>$$\frac{d\vec{e_r}}{d\theta}=-\sin\theta\vec{i}+\cos\theta\vec{j} = \vec{e_\theta}$$</strong></p><p>因为在极坐标系种$\vec{e_r}$ 和 $\vec{e_\theta}$相互垂直，在自然坐标系种，这两个分量也定义为相互垂直，所以对于自然坐标系，只要我们找到一个在形式上相当于极坐标系中的$\theta$，也就随意规定一个固定轴,其与切向夹角为$\theta$，我们就可以认为在自然坐标系中，其法向基底$\vec{e_n}$也可以表示为</p><p>$$
+\vec{e_n} = \frac{d\vec{e_t}}{d\theta}
+$$
+这里相对于极坐标系，只是把$\theta$替换为$n$，$r$ 替换为$t$，形式不变。</p><p>这里其实就是法向的定义。</p><p>最后一个参数就是<strong>曲率</strong>：</p><p>$$
+\rho = \frac{ds}{d\theta}
+$$</p><p>为什么这里引入了一个$\rho$呢，因为如果只靠我们选取的最基本变量$r$和$\theta$来表示最终结果非常复杂，所以我们引入了一个中间变量。</p><p>$$
+\rho = |\frac{[r^2+(dr/d\theta)^2]^{\frac{3}{2}}}{r^2+2(dr/d\theta)^2 - r\frac{d^2 r}{d\theta^2}}|
+$$</p><p><strong>注意</strong>，虽然$\vec{e_n} \vec{e_t}$和 极坐标中的$\vec{e_\theta} \vec{e_r}$在形式上相同，但是在自然坐标系下，我们规定了法向的方向，也就是<strong>曲线的凹侧</strong>，然而在极坐标系下，横向的方向就是 <strong>$\theta$增大的方向</strong>，所以<strong>曲线的凹侧</strong> 和 <strong>$\theta$增大的方向</strong> 不完全等价。所以对于自然坐标系，需要按$d\theta$的符号来进行分类。之所在自然坐标系下对于法线方向需要分类，是因为 <strong>法线的正方向在曲线的凹侧</strong>这个定义是不连续的，没办法用统一的表达式来表述。因为我们必须规定一个方向，只能通过曲线的形状来规定一个方向，否则法向的正向到底朝向哪里呢？因此，在曲线的凹侧变化的时候，也就是 <strong>$d\theta$</strong> 的符号改变的时候，法向的正向定义也是要变的。所以结论就是：</p><p>在选定一个固定轴后，与切向的基底的夹角为 **$\theta$**时:</p><p>当 <strong>$d\theta > 0$</strong>:
+$$
+\vec{e_t}= \frac{d\vec{r}}{|d\vec{r}|} = \frac{d\vec{r}}{ds}
+$$</p><p>$$
+\vec{e_n} = \frac{d\vec{e_t}}{d\theta}
+$$</p><p>$$
+\rho = \frac{ds}{d\theta}
+$$</p><p>当 <strong>$d\theta &lt; 0$</strong>:
+$$
+\vec{e_t} = \frac{d\vec{r}}{|d\vec{r}}|= \frac{d\vec{r}}{ds}
+$$</p><p>$$
+\vec{e_n} = -\frac{d\vec{e_t}}{d\theta}
+$$</p><p>$$
+\rho = -\frac{ds}{d\theta}
+$$</p><h3 id=推导-1>推导<a href=#推导-1 class=hanchor arialabel=Anchor>&#8983;</a></h3><p>在自然坐标系下，我们不像在极坐标系下，需要考虑基底对时间的导数，因为通过计算我们发现速度的基底表示并不涉及基底对时间的导数。</p><p>速度:</p><p>$$
+\vec{\dot{v}} =\dot{\vec{r}} = \frac{d\vec{r}}{dt} = \frac{d\vec{r}}{ds}\frac{ds}{dt}
+$$
+其中，$\frac{ds}{dt}$就是我们所熟悉的速率的定义。
+因此：
+$$
+\vec{\dot{v}} = v\vec{e_t} + 0\vec{e_n}
+$$</p><p>加速度：</p><p>$$
+\vec{a} = \frac{d\vec{v}}{dt} = \frac{d}{dt}(v\vec{e_t}) = \dot{v}\vec{e_t} + \frac{v^2}{\rho}\vec{e_n}
+$$</p><h2 id=结论>结论<a href=#结论 class=hanchor arialabel=Anchor>&#8983;</a></h2><p>有了上面的基底求导的结果，我们就能得到<strong>位移、速度和加速度</strong>用基底的表示。</p><h3 id=在极坐标系下>在极坐标系下<a href=#在极坐标系下 class=hanchor arialabel=Anchor>&#8983;</a></h3><h4 id=位置矢量>位置矢量<a href=#位置矢量 class=hanchor arialabel=Anchor>&#8983;</a></h4><p>$$
+\vec{r} = r\vec{e_r}
+$$
+这是极坐标的定义</p><h4 id=速度矢量>速度矢量<a href=#速度矢量 class=hanchor arialabel=Anchor>&#8983;</a></h4><p>$$
+\vec{v} = \dot{\vec{r}} =\vec{\dot{r}}\vec{e_r}+r(\dot{\theta}\vec{e_\theta})
+$$</p><p>则
+<strong>$$v_r=\dot{r}$$</strong>
+<strong>$$v_\theta = r\dot{\theta}$$</strong></p><h4 id=加速度矢量>加速度矢量<a href=#加速度矢量 class=hanchor arialabel=Anchor>&#8983;</a></h4><p>$$
+\vec{a} = \dot{\vec{v}} = \frac{d}{dt}(\vec{\dot{r}}\vec{e_r}+r\dot{\theta}\vec{e_\theta})
+$$</p><p>这一步略去计算,最后我们得到
+$$
+\vec{a}=(\ddot{r}-r\dot{\theta}^2)\vec{e_r} + (2\dot{r}\dot{\theta}+r\ddot{\theta})\vec{e_\theta}
+$$</p><p>则
+<strong>$$a_r=\ddot{r}-r\dot{\theta}^2$$</strong>
+<strong>$$a_\theta = 2\dot{r}\dot{\theta}+r\ddot{\theta}$$</strong>
+到这里，我们就把三大量在极坐标系下的分量表示写出来了。</p><p>如果比较敏感的话，可以看到在横向分量下的加速度的部分，是某种形式的全微分。这就可以写成更简洁的形式（当然，发现这一步其实挺需要敏感度的）</p><p><strong>$$a_\theta =\frac{1}{r}\frac{d}{dt}(r^2\dot{\theta})$$</strong>
+这个形式非常有用，放在之后的极坐标的应用里说明。</p><h3 id=在自然坐标系下>在自然坐标系下<a href=#在自然坐标系下 class=hanchor arialabel=Anchor>&#8983;</a></h3><p>因为在上一节中直接推出了运动学的表示，所以我们这里直接抄过来</p><h4 id=位置矢量-1>位置矢量<a href=#位置矢量-1 class=hanchor arialabel=Anchor>&#8983;</a></h4><h4 id=速度矢量-1>速度矢量<a href=#速度矢量-1 class=hanchor arialabel=Anchor>&#8983;</a></h4><p>$$v_t = v$$</p><p>$$v_n = 0$$</p><h4 id=加速度矢量-1>加速度矢量<a href=#加速度矢量-1 class=hanchor arialabel=Anchor>&#8983;</a></h4><p>$$
+a_t = \dot{v}
+$$</p><p>$$
+a_n = \frac{v^2}{\rho}
+$$</p><h2 id=极坐标的银弹silver-bullet级的应用>极坐标的银弹(Silver Bullet)级的应用<a href=#极坐标的银弹silver-bullet级的应用 class=hanchor arialabel=Anchor>&#8983;</a></h2><ul><li><strong>由掠面面积所想到的</strong></li></ul><p>根据掠面的定义，我们可以写出掠面的微分表达式（补图）:</p><p>$$
+dA = \frac{1}{2}r^2 d\theta
+$$</p><p>那么掠面速率就是:
+$$
+\dot{A} = \frac{dA}{dt} = \frac{1}{2}r^2\frac{d\theta}{dt}
+$$</p><p>利用全微分形式的横向加速分量，我们可以看到，掠面速率是横向加速度<strong>横向分量</strong>的一部分
+$$
+a_\theta = \frac{2}{r}\frac{d}{dt}(\dot{A})
+$$</p><ul><li><strong>惊人的巧合</strong></li></ul><p>我们知道<strong>开普勒第一定律</strong>。开普勒通过观测发现行星的掠面速度是常数，也就是$\frac{d}{dt}(\dot{A})$这一项为$0$，那么就得出结论：</p><p><strong>$a_\theta = 0$ $\Rightarrow$ 行星的横向加速度为$0$ $\Rightarrow$ 行星横向的力为$0$ $\Rightarrow$ 行星所受到的力是有心力</strong></p><p>这么复杂的一个天体问题，通过观测，并且经过极坐标的计算，就可以得出非常简洁的结论:<strong>万有引力是有心力</strong>。</p><blockquote><p>我们现在再来思考一下，这是巧合吗？这当然不是巧合，因为如果给了极坐标的定义，速度、加速度的定义，这个横向加速度的形式本就应该如此。它本来就在那里，不会因为我们的精妙计算而存在,也不会因为我们的愚钝算不出而不存在。当然，如果非要说成是极坐标系“巧合”，那这个“巧合”其实就是 <strong>在数学上（用极坐标系）对这个问题的本质(只受到了极坐标所定义的径向方向的力)的做出的解答。</strong> 而我们把这种在极坐标系下定义的只有径向的力的这种力叫做 <strong>有心力(Central Force)</strong> 。</p></blockquote><blockquote><p>注意横向加速和切向加速度不一样。切向加速度是自然坐标系下的表示。</p></blockquote><p>从这里我们可以发现极坐标的杀手级应用：处理有心力的问题。毕竟对于有心力，横向上的加速度为0，这就使其表示以及运算非常的简单。而且有心力是自然界最常见最基本的力，小到库仑力，大到万有引力。都是有心力。当然需要先证明有心力只会引起平面运动，只有平面运动，才能用平面极坐标系。这个之后涉及。</p></div></div><div class=pagination><div class=pagination__title><span class=pagination__title-h>Read other posts</span><hr></div><div class=pagination__buttons><span class="button previous"><a href=/post/principia/physics/><span class=button__icon>←</span>
+<span class=button__text>\[Principia\] Hamillton's Principle</span>
+</a></span><span class="button next"><a href=/post/principia/conservation/><span class=button__text>\[Principia\] The Laws of Conservation</span>
+<span class=button__icon>→</span></a></span></div></div></article></div><footer class=footer><div class=footer__inner><div class=copyright><span>© 2024 Powered by <a href=https://gohugo.io>Hugo</a></span>
+<span>:: <a href=https://github.com/panr/hugo-theme-terminal target=_blank>Theme</a> made by <a href=https://github.com/panr target=_blank>panr</a></span></div></div></footer><script type=text/javascript src=/bundle.min.js></script></div></body></html>

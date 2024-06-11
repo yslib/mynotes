@@ -1,0 +1,150 @@
+<svg host="65bd71144e" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="791px" height="411px" viewBox="-0.5 -0.5 791 411" content="&lt;mxfile&gt;&lt;diagram id=&quot;YWTbgbScF5jgk4wjhSac&quot; name=&quot;Page-1&quot;&gt;7VjLcpswFP0aZpxFM7YJuF4GO04z0zSdOH2tOjJcQK1AVMivfn2vkLDBxg5t0yaZ1otEOpLuW0dIlj1KVpeCZPE1D4BZ/W6wsuyx1e8PBi7+VcBaA25voIFI0EBDvS0wpd/BgF2DzmkAeW2i5JxJmtVBn6cp+LKGESH4sj4t5KyuNSMR7AFTn7B99AMNZGzQnjvcDrwCGsVG9cu+8S8h5WTjSR6TgC8rkH1h2SPBudStZDUCpmJXxkWvmxwY3RgmIJVtFrzUCxaEzY1vVt9luNQLOUpQIWRcFCPut7myyrP6dlj8qpAbqf++XL3ANkky7BTIFOQtpAGIOyIikB0hF5bjWQ7KGwX54qTUNhOHZYwYENEspf36MWQynkpIfco6Vc0YG+2qXr4vsE1AXPcnAvIehISVNw9DEJ1FpdPKGxRwhaEo19Nt+2FdCsMh/lq69JZmwGgKnaz7sFZ0u4OWgR3xJKFyivsJsFhyPhc+5J2HtcbGqNh2G2vGgiyLNEHwUzYUnCDXJdFgaSg8lglDoIfNXAr+FUbGupSnoGymjO1AhNEoxa6PRACIe6rQKFLYuRlIaBAoNd4yphKmGfGVziXyNWKCz9F4xRFdpRMHaRrd8UwZoZCYC/odXSGlWcovw9M9d7vE41LypFy1T06Gr/QmqECGrC6BJyDFGqeY0c0RYE6O3sD0l1sets8MFlco+KxcSAz3RxvZW3rEhmHIZrYcHmTLgC5qmSsrRCXwhcnFOc5gEMr9+vkdzo2YhxwwESSBmaaE++oN4cLcOvrnPWhPkroetDsorRDUrTLls/ewoO0dBytUfo9/v1InhxnvmQTx2Thw6OSM2EVKZgye7AY9ZPjp6ekjWoxHSdooxvigJIho1uk7jtpKfWTxbs+xq+2TlsnQqlqU2zNz9qgvTU4/VgUe+tzTh5zmRo/k0Ll8/fndm6vJze31Z+/dZHJx+1T31HGP7lDPXDxdRjhu/RQPNPbIHxx/d3v+0uWAxPhpjR+eaaCeLorI4RUQUPO5EGR9M/sCvnyyJXDIrYht7jj/UAHcr+3/De74Dc51dm5ww4YbnNNwg7OHD3CDK2+BtSvcTsrymGSqGbJih6rnOQ/SwDTHPiN5Tv16UnejBysqP5ox1f6kEnHqmN54ZfJSdNZlkmqFgVtvUvyOhV0/c9Se8iCovV3u56ES56Ywl5gARiRd1F88m0JvNLzltCARk2ZnWE/zmb2TPW26WVV9odwR5J7VBdkDpy5IFm+Ce4KKSti43VQc2N0+tOrp29dq++IH&lt;/diagram&gt;&lt;/mxfile&gt;">
+    <defs/>
+    <g>
+        <rect x="0" y="0" width="340" height="410" fill="none" stroke="none" pointer-events="all"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject style="overflow: visible; text-align: left;" pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 338px; height: 1px; padding-top: 205px; margin-left: 1px;">
+                        <div style="box-sizing: border-box; font-size: 0; text-align: center; ">
+                            <div style="display: inline-block; font-size: 16px; font-family: Helvetica; color: #000000; line-height: 1.2; pointer-events: all; white-space: normal; word-wrap: normal; ">
+                                <font color="#ffffff">
+                                    ctx-&gt;SetRenderTarget(rtv[],dsv)
+                                    <br/>
+                                    ctx-&gt;ClearRenderTarget(rtv[])
+                                    <br/>
+                                    ctx-&gt;ClearDepthStencil(dsv)
+                                </font>
+                                <br/>
+                                <font color="#66ffff">
+                                    ctx-&gt;SetVertexBuffer(vertexBuffer)
+                                    <br/>
+                                    ctx-&gt;SetIndexBuffer(indexBuffer)
+                                </font>
+                                <br/>
+                                <font color="#ff9999">
+                                    ctx-&gt;SetPipeline(p0)
+                                </font>
+                                <br/>
+                                <font color="#007fff">
+                                    ctx-&gt;CommitShaderResources()
+                                </font>
+                                <br/>
+                                <font color="#33ff33">
+                                    ctx-&gt;DrawIndexed()
+                                </font>
+                                <br/>
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="170" y="210" fill="#000000" font-family="Helvetica" font-size="16px" text-anchor="middle">
+                    ctx-&gt;SetRenderTarget(rtv[],dsv)...
+                </text>
+            </switch>
+        </g>
+        <rect x="440" y="20" width="350" height="390" fill="none" stroke="none" pointer-events="all"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject style="overflow: visible; text-align: left;" pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 348px; height: 1px; padding-top: 215px; margin-left: 441px;">
+                        <div style="box-sizing: border-box; font-size: 0; text-align: center; ">
+                            <div style="display: inline-block; font-size: 16px; font-family: Helvetica; color: #000000; line-height: 1.2; pointer-events: all; white-space: normal; word-wrap: normal; ">
+                                <div style="text-align: left">
+                                    <font color="#ffffff">
+                                        glBindFramebuffer()
+                                    </font>
+                                </div>
+                                <div style="text-align: left">
+                                    <font color="#66ffff">
+                                        ctx-&gt;vertexbuffer = vertexBuffer
+                                    </font>
+                                </div>
+                                <div style="text-align: left">
+                                    <font color="#66ffff">
+                                        ctx-&gt;indexbuffer = indexBuffer
+                                    </font>
+                                    <font color="#ffffff">
+                                        <br/>
+                                    </font>
+                                </div>
+                                <div style="text-align: left">
+                                    <font color="#66ffff">
+                                        <br/>
+                                    </font>
+                                </div>
+                                <div style="text-align: left">
+                                    <font color="#ff9999">
+                                        glEnable()
+                                    </font>
+                                </div>
+                                <div style="text-align: left">
+                                    <font color="#ff9999">
+                                        ...
+                                    </font>
+                                </div>
+                                <div style="text-align: left">
+                                    <span style="color: rgb(255 , 153 , 153)">
+                                        glEnable()
+                                    </span>
+                                    <br/>
+                                </div>
+                                <div style="text-align: left">
+                                    <span style="color: rgb(255 , 153 , 153)">
+                                        <br/>
+                                    </span>
+                                </div>
+                                <div style="text-align: left">
+                                    <font color="#007fff">
+                                        glBindBufferBase(GL_UNIFORM_BUFFER)
+                                    </font>
+                                </div>
+                                <div style="text-align: left">
+                                    <font color="#007fff">
+                                        glBindTexture()
+                                    </font>
+                                </div>
+                                <div style="text-align: left">
+                                    <font color="#007fff">
+                                        glBindSampler()
+                                    </font>
+                                </div>
+                                <div style="text-align: left">
+                                    <br/>
+                                </div>
+                                <div style="text-align: left">
+                                    <font color="#33ff33">
+                                        cahce and glBindVeretexArrayObject()
+                                    </font>
+                                </div>
+                                <div style="text-align: left">
+                                    <font color="#33ff33">
+                                        glDrawIndex()
+                                    </font>
+                                </div>
+                                <div style="text-align: left">
+                                    <br/>
+                                </div>
+                                <div style="text-align: left">
+                                    <br/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="615" y="220" fill="#000000" font-family="Helvetica" font-size="16px" text-anchor="middle">
+                    glBindFramebuffer()...
+                </text>
+            </switch>
+        </g>
+        <path d="M 340.5 210 L 340.5 200 L 410.5 200 L 410.5 189.5 L 429.5 205 L 410.5 220.5 L 410.5 210 Z" fill="none" stroke="#ffffff" stroke-linejoin="round" stroke-miterlimit="10" pointer-events="all"/>
+    </g>
+    <switch>
+        <g requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"/>
+        <a transform="translate(0,-5)" xlink:href="https://www.diagrams.net/doc/faq/svg-export-text-problems" target="_blank">
+            <text text-anchor="middle" font-size="10px" x="50%" y="100%">
+                Viewer does not support full SVG 1.1
+            </text>
+        </a>
+    </switch>
+</svg>

@@ -1,0 +1,829 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Graphics API on YSL Blog</title><link>/tags/graphics-api/</link><description>Recent content in Graphics API on YSL Blog</description><generator>Hugo -- gohugo.io</generator><language>en</language><atom:link href="/tags/graphics-api/index.xml" rel="self" type="application/rss+xml"/><item><title>\[Rendering\] Introduction to Vulkan</title><link>/post/graphics/vulkan/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/post/graphics/vulkan/</guid><description/><content>&lt;h1 id="vulkan-overview">Vulkan Overview&lt;/h1>
+&lt;p>Explicitly,Statically,Seperately&lt;/p>
+&lt;pre tabindex="0">&lt;code class="language-mermaid" data-lang="mermaid">graph BT
+linkStyle default interpolate basis;
+subgraph g0[Vulkan]
+subgraph g1[Vulkan Context]
+A(VkDevice):::vkobj --&amp;gt; B(VkPhysicalDevice):::vkobj
+B --&amp;gt; C(VkInstance):::vkobj
+D(VkSurfaceKHR):::khr--Present support--&amp;gt;B
+D--&amp;gt;C
+D--&amp;gt;W{{NativeWindowHandle}}
+S(VkSwapchainKHR):::khr--&amp;gt;D
+S--&amp;gt;A
+end
+subgraph g2[Resources]
+i(vkimage):::vkobj-.-&amp;gt;A
+b(vkbuffer):::vkobj-.-&amp;gt;A
+end
+end
+classDef khr fill:#98971a,stroke-width:0px;
+classDef vkobj fill:#d79921,stroke-width:0px;
+style g1 fill:#928374,stroke-width:0px,color:#ebdbb2;
+style g2 fill:#928374,stroke-width:0px,color:#ebdbb2;
+style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
+style W fill:#4585ff55,stroke-dasharray:4
+&lt;/code>&lt;/pre>&lt;p>&lt;strong>Explicit, Explicit, Explicit&lt;/strong>&lt;/p>
+&lt;h2 id="实例vkinstance">实例(vkinstance)&lt;/h2>
+&lt;h3 id="简介">简介&lt;/h3>
+&lt;p>vulkan实例隔离了不同的vulkan环境，在一个应用程序中，可以创建多个实例。但是实例之间的对象不能共享，如内存。（在不涉及扩展的情况下）&lt;/p>
+&lt;pre tabindex="0">&lt;code class="language-mermaid" data-lang="mermaid">graph LR
+subgraph g0[vkInstance]
+linkStyle default interpolate basis
+ci[CreateInfo]
+i(VkInstance):::vkobj
+o([应用]):::none--查询当前Vulkan支持的扩展--&amp;gt;b([指定扩展]):::field
+subgraph g1[功能]
+b --&amp;gt;ci:::cistyle
+c([指定验证层]):::field--&amp;gt;ci
+d([指定Vulkan对象的全局内存分配器]):::field--&amp;gt;ci
+z([...]):::field--&amp;gt;ci
+end
+end
+ci--VkCreateInstance--&amp;gt;i
+classDef field fill:#689d6a,stroke-width:0px;
+classDef vkobj fill:#d79921,stroke-width:0px;
+classDef cistyle fill:#b16286,stroke-width:0px;
+style o fill:#fe8019,stroke-width:0px;
+style g1 fill:#928374,stroke-width:0px,color:#ebdbb2;
+style g2 fill:#928374,stroke-width:0px,color:#ebdbb2;
+style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
+&lt;/code>&lt;/pre>&lt;h3 id="功能">功能&lt;/h3>
+&lt;ol>
+&lt;li>
+&lt;p>枚举当前环境支持的扩展:&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>是否启用扩展：&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;p>真正启用扩展的地方是在创建逻辑设备的时候，但是是否允许开启扩展的地方是在创建实例时。&lt;/p>
+&lt;ol start="3">
+&lt;li>是否开启验证层：&lt;/li>
+&lt;/ol>
+&lt;p>包括调试回调。调试回调也属于扩展。&lt;/p>
+&lt;ol start="4">
+&lt;li>指定全局内存分配器：&lt;/li>
+&lt;/ol>
+&lt;p>Vulkan提供了一个全局内存分配器回调，让用户可以接管Vulkan对象的所需要使用主机端的内存的分配。&lt;/p>
+&lt;h2 id="物理设备vkphysicaldevice">物理设备(vkPhysicalDevice)&lt;/h2>
+&lt;h3 id="简介-1">简介&lt;/h3>
+&lt;p>在初始化Vulkan的物理设备时，除了选择需要的物理设别外，还应该获取关于物理设备的一些属性供之后使用&lt;/p>
+&lt;pre tabindex="0">&lt;code class="language-mermaid" data-lang="mermaid">graph LR
+subgraph g0[VkPhysicalDevice]
+linkStyle default interpolate basis
+i(vkInstance):::vkobj--VkEnumeratePhysicalDevices--&amp;gt;p(vkPhysicalDevice):::vkobj
+subgraph g1[物理设备的Get 查询]
+p--&amp;gt;a([vkGetPhysicalDeviceFormatProperties]):::get
+p--&amp;gt;c([vkGetPhysicalDeviceMemoryProperties]):::get
+p--&amp;gt;d([vkGetPhysicalDeviceQueueFamilyProperties]):::get
+p--&amp;gt;e([vkGetPhysicalDeviceFeatures]):::get
+p--&amp;gt;f([vkGetPhysicalDeviceXXXKHR]):::get2
+end
+end
+classDef field fill:#689d6a,stroke-width:0px;
+classDef vkobj fill:#d79921,stroke-width:0px;
+classDef cistyle fill:#b16286,stroke-width:0px;
+classDef get fill:#458588,stroke-width:0px;
+classDef get2 fill:#fb4934,stroke-width:0px
+style g1 fill:#928374,stroke-width:0px,color:#ebdbb2;
+style g0 fill:#665c54,stroke-width:0px,color:#ebdbb2;
+&lt;/code>&lt;/pre>&lt;h3 id="功能-1">功能&lt;/h3>
+&lt;ol>
+&lt;li>图像格式属性(vkGetPhysicalDeviceFormatProperties)：&lt;/li>
+&lt;/ol>
+&lt;p>图像格式属性的描述结构体为：&lt;/p>
+&lt;p>通常，为了完整性，在创建一个需要指定格式的Vulkan对象时，比如创建一个R8B8GBA8格式的纹理，或者格式为24位的深度缓冲，需要查询物理设备是不是支持这种格式。但是一个格式还有附加的属性，比如这个格式是不是支持&lt;/p>
+&lt;ol start="2">
+&lt;li>
+&lt;p>设备内存：&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>支持的队列族：&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;p>同样也用索引来标识，创建逻辑设备时需要指定。队列也是不同于之前传统API的新特性。&lt;/p>
+&lt;ol start="4">
+&lt;li>物理设备属性(VkPhysicalDeviceProperties via vkGetPhysicalDeviceProperties)&lt;/li>
+&lt;/ol>
+&lt;p>物理设备属性字段中有一个设备限制（VkPhysicalDeviceLimits）字段，这个字段给出了当前物理设备支持的各种属性的极限或者说是最大值。
+其中比较基础的有以下几项：&lt;/p>
+&lt;pre>&lt;code>- 最大采样数
+-
+&lt;/code>&lt;/pre>
+&lt;ol start="5">
+&lt;li>物理设备特性(VkPhysicalDeviceFeatures via vkGetPhysicalDeviceFeatures)&lt;/li>
+&lt;/ol>
+&lt;p>注意物理属性做区分，这个字段当中都是Bool变量，描述了此物理设备是否支持某一个特性。在之后创建逻辑设备中，要指定一些特性，这些特性必须是物理设备支持的。&lt;/p>
+&lt;h2 id="逻辑设备vkdevice">逻辑设备(vkDevice)&lt;/h2>
+&lt;h3 id="简介-2">简介&lt;/h3>
+&lt;p>逻辑设备是Vulkan对物理设备的抽象。可以从一个物理设备上创建多个逻辑设备。逻辑设备对象负责vulkan的设备资源分配。
+负责的主要功能有：&lt;/p>
+&lt;h3 id="功能-2">功能&lt;/h3>
+&lt;ol>
+&lt;li>
+&lt;p>开启扩展：&lt;/p>
+&lt;p>如果需要窗口显示功能，这里需要开启交换链扩展&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>指定设备要用到的队列：&lt;/p>
+&lt;p>如果需要绘制流水线功能就指定图形队列，如果要使用计算着色器的功能，就指定计算队列。&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;h2 id="表面vksurfacekhr-扩展">表面（vkSurfaceKHR, 扩展）&lt;/h2>
+&lt;h3 id="简介-3">简介&lt;/h3>
+&lt;p>表面是展示渲染结果的那个窗口对象，可以不严谨地理解为呈现绘制结果的区域。表面不是Vulkan核心的一部分。因为显示窗口不具备跨平台特性。&lt;/p>
+&lt;h3 id="功能-3">功能&lt;/h3>
+&lt;p>表面并且和表面相关的API带有&lt;strong>KHR&lt;/strong>后缀。&lt;/p>
+&lt;ul>
+&lt;li>表面的创建需要依赖与实例(VkInstance)。&lt;/li>
+&lt;li>表面是否被支持取决于于物理设备(VkPhysicalDevice)(vkGetPhysicalDeviceSurfaceSupportKHR)。可见物理设备章节的说明图中红色的部分。&lt;/li>
+&lt;li>表面的创建需要依赖于一个平台相关的窗口句柄。&lt;/li>
+&lt;/ul>
+&lt;p>以Windows上的平台为例，下面是创建表面所需要的信息&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Provided by VK_KHR_win32_surface
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">typedef&lt;/span> &lt;span style="color:#66d9ef">struct&lt;/span> &lt;span style="color:#a6e22e">VkWin32SurfaceCreateInfoKHR&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkStructureType sType;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span>&lt;span style="color:#f92672">*&lt;/span> pNext;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkWin32SurfaceCreateFlagsKHR flags;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> HINSTANCE hinstance;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> HWND hwnd; &lt;span style="color:#75715e">// win32 native window handle
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>} VkWin32SurfaceCreateInfoKHR;
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>创建函数,需要用到Vulkan实例&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Provided by VK_KHR_win32_surface
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>VkResult &lt;span style="color:#a6e22e">vkCreateWin32SurfaceKHR&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkInstance instance, &lt;span style="color:#75715e">// vulkan instance is needed
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#66d9ef">const&lt;/span> VkWin32SurfaceCreateInfoKHR&lt;span style="color:#f92672">*&lt;/span> pCreateInfo,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">const&lt;/span> VkAllocationCallbacks&lt;span style="color:#f92672">*&lt;/span> pAllocator,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkSurfaceKHR&lt;span style="color:#f92672">*&lt;/span> pSurface);
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>从接口来看，判断设备是否支持交换链之后，在窗口系统下，我们就可以直接窗前表面（VkObject）对象了。&lt;/p>
+&lt;h2 id="平面plane扩展">平面(Plane,扩展)&lt;/h2>
+&lt;h3 id="简介-4">简介&lt;/h3>
+&lt;p>与平面平行的概念是窗口句柄。根据Vulkan规范，这个扩展由VK_KHR_display提供。这个对象用来代替之前创建表面(VkSurface)用的平台相关的窗口句柄来创建一个表面。也就是说，这个扩展可以实现在没有窗口系统上直接把结果绘制到显示器上的功能。（目前为止，没见过使用这个扩展的任何Demo，我自己也没考察过）&lt;/p>
+&lt;p>可以通过与之前创建表面的信息结构体做对比会发现，通过这种方法创建表面不许要窗口句柄。而是一个Plane，这个Plane对象直接从物理设备获得支持。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">typedef&lt;/span> &lt;span style="color:#66d9ef">struct&lt;/span> &lt;span style="color:#a6e22e">VkDisplaySurfaceCreateInfoKHR&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>VkStructureType sType;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span>&lt;span style="color:#f92672">*&lt;/span> pNext;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>VkDisplaySurfaceCreateFlagsKHR flags;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>VkDisplayModeKHR displayMode;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">uint32_t&lt;/span> planeIndex;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">uint32_t&lt;/span> planeStackIndex;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>VkSurfaceTransformFlagBitsKHR transform;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">float&lt;/span> globalAlpha;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>VkDisplayPlaneAlphaFlagBitsKHR alphaMode;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>VkExtent2D imageExtent;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>} VkDisplaySurfaceCreateInfoKHR;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// no need for native window handle
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>注意与之前的&lt;code>vkCreateWin32SurfaceKHR&lt;/code> 对比&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Provided by VK_KHR_display
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>VkResult &lt;span style="color:#a6e22e">vkCreateDisplayPlaneSurfaceKHR&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>VkInstance instance,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">const&lt;/span> VkDisplaySurfaceCreateInfoKHR&lt;span style="color:#f92672">*&lt;/span> pCreateInfo, &lt;span style="color:#75715e">// replace somthing like VkWin32SurfaceCreateInfoKHR that must be supported by window system
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">const&lt;/span> VkAllocationCallbacks&lt;span style="color:#f92672">*&lt;/span> pAllocator,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>VkSurfaceKHR&lt;span style="color:#f92672">*&lt;/span> pSurface);
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="交换链vkswapchainkhr-扩展">交换链(vkSwapchainKHR, 扩展)&lt;/h2>
+&lt;h3 id="简介-5">简介&lt;/h3>
+&lt;p>交换链提供和管理表面中的绘制结果数据，一般情况下是一个环形的缓冲，一些表面用来显示在窗口上，一些表面用来接受绘制的结果供接下来的展示用。相当于帧缓冲的管理器，把绘制完成的数据呈现到表面上。
+创建交换链需要指定之前创建的表面以及逻辑设备。因此交换链是被逻辑设备所拥有的。
+交换链由&lt;strong>VK_KHR_swapchain&lt;/strong>扩展提供，因此如果需要交换链，创建逻辑设备时需要启用这个扩展。&lt;/p>
+&lt;p>创建交换链时，至少有三个属性是有必要检查的。(或者说是必要的)&lt;/p>
+&lt;ul>
+&lt;li>交换链的图像个数（缓冲个数），图像大小(&lt;code>vkGetPhysicalDeviceSurfaceCapabilitiesKHR&lt;/code>)&lt;/li>
+&lt;li>支持的表面格式(&lt;code>vkGetPhysicalDeviceSurfaceFormatsKHR&lt;/code>)&lt;/li>
+&lt;li>呈现模式(立即刷新，三缓冲等)(&lt;code>vkGetPhysicalDeviceSurfacePresentModesKHR&lt;/code>)&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Provided by VK_KHR_swapchain
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">typedef&lt;/span> &lt;span style="color:#66d9ef">struct&lt;/span> &lt;span style="color:#a6e22e">VkSwapchainCreateInfoKHR&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkStructureType sType;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span>&lt;span style="color:#f92672">*&lt;/span> pNext;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkSwapchainCreateFlagsKHR flags;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkSurfaceKHR surface; &lt;span style="color:#75715e">// create before
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#66d9ef">uint32_t&lt;/span> minImageCount; &lt;span style="color:#75715e">// check
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> VkFormat imageFormat; &lt;span style="color:#75715e">// check
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> VkColorSpaceKHR imageColorSpace; &lt;span style="color:#75715e">// check
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> VkExtent2D imageExtent; &lt;span style="color:#75715e">// check
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#66d9ef">uint32_t&lt;/span> imageArrayLayers;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkImageUsageFlags imageUsage;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkSharingMode imageSharingMode;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">uint32_t&lt;/span> queueFamilyIndexCount;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#66d9ef">uint32_t&lt;/span>&lt;span style="color:#f92672">*&lt;/span> pQueueFamilyIndices;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkSurfaceTransformFlagBitsKHR preTransform;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkCompositeAlphaFlagBitsKHR compositeAlpha;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkPresentModeKHR presentMode; &lt;span style="color:#75715e">// check
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> VkBool32 clipped;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkSwapchainKHR oldSwapchain;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>} VkSwapchainCreateInfoKHR;
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>VkResult &lt;span style="color:#a6e22e">vkCreateSwapchainKHR&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkDevice device,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">const&lt;/span> VkSwapchainCreateInfoKHR&lt;span style="color:#f92672">*&lt;/span> pCreateInfo,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">const&lt;/span> VkAllocationCallbacks&lt;span style="color:#f92672">*&lt;/span> pAllocator,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VkSwapchainKHR&lt;span style="color:#f92672">*&lt;/span> pSwapchain);
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="如何使用-vulkan">如何使用 Vulkan&lt;/h2>
+&lt;p>前面所涉及的实例、物理设备逻辑设备、表面、交换链都是使用Vulkan之前必须要做的基础性工作，不涉及任何渲染的操作。我们把渲染一帧大概三部分&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>ConfigureGraphicsAPI(){
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 对于Vulkan来说，枚举物理设备，创建物理设备，逻辑设备交换链等
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#75715e">// 创建窗口
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">while&lt;/span>(true){
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span>(not Init){
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Initialize(){
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 数据初始化工作，载入模型，建立渲染管线状态等
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> vertexBuffer &lt;span style="color:#f92672">=&lt;/span> device&lt;span style="color:#f92672">-&amp;gt;&lt;/span>CreateBuffer(USAGE_VERTEX_BUFFER);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> vertexBuffer&lt;span style="color:#f92672">-&amp;gt;&lt;/span>SetData(vertexData)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> uniform &lt;span style="color:#f92672">=&lt;/span> device&lt;span style="color:#f92672">-&amp;gt;&lt;/span>CreateBuffer(USAGE_SHADER_UNIFORM);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> vertexBuffer&lt;span style="color:#f92672">-&amp;gt;&lt;/span>SetData(uniformData)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> pipelineState &lt;span style="color:#f92672">=&lt;/span> device&lt;span style="color:#f92672">-&amp;gt;&lt;/span>CreatePipelineState(pipelineDesc);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Update(){
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 更新每帧数据
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> context&lt;span style="color:#f92672">-&amp;gt;&lt;/span>UpdateBuffer()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Render(){
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 提交绘制指令
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> context&lt;span style="color:#f92672">-&amp;gt;&lt;/span>SetPipelineState(pip)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>我们之前所涉及的仅仅是在&lt;code>ConfigGraphicsAPI()&lt;/code>中的需要进行的工作。完成了前几个章节的工作之后，我们就需要开始使用Vulkan来绘制东西了。但是由于Vulkan的复杂性，如果不清楚接下来要做什么，就会给接下来的学习带来困难。首先我们要明确Vulkan和OpenGL的最大的不同是什么。其中一个最明显的区别就是指令的显式执行。&lt;/p>
+&lt;p>例如在OpenGL中，如果我们创建一个Buffer并且给Buffer传数据(对于纹理对象大体也是如此)，基本上只需要两个主要的API：&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cpp" data-lang="cpp">&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 其他工作
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>glCreateBuffer(&lt;span style="color:#f92672">&amp;amp;&lt;/span>bufferHandle); &lt;span style="color:#75715e">// 创建缓冲对象
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>glNamedBufferSubData(bufferHandle,vertexData) &lt;span style="color:#75715e">// 给缓冲对象传数据
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 使用缓冲对象
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>然而在Vulkan中，要想完成同样的操作，需要更多的工作:&lt;/p>
+&lt;ul>
+&lt;li>创建Buffer对象的时候，我们需要给Buffer分配内存，这就需要提前创建一个Memory对象。然后从Memory中给Buffer分配内存，这样这个Buffer才能是一个完整可用的Buffer。&lt;/li>
+&lt;/ul>
+&lt;p>上面的这个工作大致对应&lt;code>glCreateBuffer&lt;/code>。&lt;/p>
+&lt;p>接下来，要给Buffer数据，&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>则需要建立一个命令缓冲池(&lt;strong>VkCommandPool&lt;/strong>)&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>从中分配命令缓冲(&lt;strong>VkCommandBuffer&lt;/strong>)&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>向命令缓冲中提交从SrcBuffer到DstBuffer的复制命令(&lt;strong>VkCmdCopyBuffer&lt;/strong>)&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>然后把这个命令缓冲提交到我们之前创建的图形队列中。(&lt;strong>VkQueueSubmit&lt;/strong>)&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;p>因为我们最终使用的顶点数据是以设备内存形式存在的，对CPU不可见。所以我们还需要需要构造一个暂存缓冲(Staging Buffer)作为可以直接传输数据的Buffer(其内存类型是CPU可见的内存类型，这种Buffer我们只要用memcpy就可以往里面写数据),然后通过GPU指令，把Staging复制到真正的顶点缓冲中。&lt;/p>
+&lt;h2 id="管线状态">管线状态&lt;/h2>
+&lt;h3 id="简介-6">简介&lt;/h3>
+&lt;p>在Vulkan当中，管线的所有状态被抽象成了一个对象，不再像OpenGL那样，是一个全局的隐式状态， 每个状态可以随时更改。而Vulkan需要在使用之前指定好所有的固定状态，
+然后创建管线状态对象(VkPipelineState)，这个管线状态需要绑定到一个渲染通道的子通道(VkSubpass of VkRenderPass)上使用。&lt;/p>
+&lt;pre tabindex="0">&lt;code class="language-dot" data-lang="dot">digraph g {
+rankdir=TB
+graph [
+bgcolor=&amp;#34;#665c54&amp;#34;
+style=&amp;#34;filled&amp;#34;
+];
+node [
+shape=&amp;#34;record&amp;#34;
+fontsize = &amp;#34;16&amp;#34;
+style = &amp;#34;filled&amp;#34;
+gradientangle=90
+];
+edge [];
+subgraph cluster0
+{
+label=&amp;#34;PipelineStateObject&amp;#34;
+&amp;#34;node0&amp;#34;[ label= &amp;#34;Shader|PrimitiveType|Viewport|Scissor|Uniforms|Attributus|BlendState|DepthStencil|Rasterization|SampleState&amp;#34; ]
+}
+subgraph cluster1{
+label=&amp;#34;DynamicStates&amp;#34;
+&amp;#34;node1&amp;#34;[label=&amp;#34;...|LineWidth|...&amp;#34;]
+}
+}
+&lt;/code>&lt;/pre>&lt;h3 id="组成">组成&lt;/h3>
+&lt;ol>
+&lt;li>
+&lt;h4 id="着色器模块">着色器模块&lt;/h4>
+&lt;/li>
+&lt;/ol>
+&lt;p>着色器相对来说是一个独立的模块。这个模块作为渲染管线状态的一部分，是创建管线必须的参数。Vulkan核心功能中的着色器只支持SPIR-V字节码，NVDIA扩展支持GLSL。但是我们在编写着色器时一般都用高级的着色语言比如GLSL,HLSL。有很多工具可以把GLSL,HSLS先编译成字节码然后供Vulkan。&lt;a href="https://github.com/KhronosGroup/glslang">glslang&lt;/a>是Khronos官方维护的将GLSL（同时也支持HLSL）转换成AST的前端，以及将AST转换成SPIR-V的后端。通过这个除了可以实现把高级的着色语言转换成SPIR-V用来给Vulkan使用，还可以用来在不同的高级着色语言之间互转。除此之外，还有很多基于这个工具的二次封装的工具，更加易用。&lt;/p>
+&lt;pre tabindex="0">&lt;code class="language-dot" data-lang="dot">
+digraph g {
+rankdir=LR
+graph [
+bgcolor=&amp;#34;#665c54&amp;#34;
+style=&amp;#34;filled&amp;#34;
+];
+node [
+shape=&amp;#34;record&amp;#34;
+fontsize = &amp;#34;16&amp;#34;
+style=&amp;#34;filled&amp;#34;
+gradientangle=90
+];
+edge [];
+subgraph cluster0{
+label=&amp;#34;Shader&amp;#34;
+&amp;#34;node0&amp;#34;[label=&amp;#34;... | VkShaderModule* |...&amp;#34;]
+}
+}
+&lt;/code>&lt;/pre>&lt;blockquote>
+&lt;p>[!TIP|style:flat]
+当管线创建完成之后，着色器模块对象就可以被销毁了。&lt;/p>
+&lt;/blockquote>
+&lt;ol start="2">
+&lt;li>
+&lt;h4 id="渲染通道">渲染通道&lt;/h4>
+&lt;/li>
+&lt;/ol>
+&lt;p>&lt;img src="./res/renderpass.drawio.svg" alt="renderpass">&lt;/p>
+&lt;h2 id="资源缓冲vkbuffer-和-图像vkimage">资源：缓冲(VkBuffer) 和 图像(VkImage)&lt;/h2>
+&lt;h3 id="简介-7">简介&lt;/h3>
+&lt;p>需要指名Buffer 的用法。与OpenGL不同的是，这里创建好的buffer没有内存，需要绑定到另外的内存对象上。
+Buffer通常用来存储线性的机构化或非结构化的数据。
+相比于OpenGL，Vulkan中的Buffer设计的更为一般化和清晰，OpenGL由于沉重的历史包袱，各种版本的Buffer的API非常混乱。
+从缓冲对象和图像对象我们可以观察到，Vulkan的概念反而更容易理解。下面的表格是关于缓冲对象的基本功能对应的API在Vulkan 和不同OpenGL版本之间的对比。&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>功能&lt;/th>
+&lt;th>Vulkan&lt;/th>
+&lt;th>OpenGL(DSA)&lt;/th>
+&lt;th>OpenGL(non-DSA)&lt;/th>
+&lt;th>OpenGL(legacy)&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>创建缓冲对象&lt;/td>
+&lt;td>vkCreateBuffer&lt;/td>
+&lt;td>glCreateBuffers&lt;/td>
+&lt;td>glGenBuffers+glBindBuffer&lt;/td>
+&lt;td>&amp;mdash;-&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>分配缓冲存储空间&lt;/td>
+&lt;td>vkBindBufferMemory&lt;/td>
+&lt;td>glNamedBufferStorage&lt;/td>
+&lt;td>glBufferData&lt;/td>
+&lt;td>&amp;mdash;&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>暂存缓冲(host visible)数据传输&lt;/td>
+&lt;td>memcpy+vkMapMemory&lt;/td>
+&lt;td>glMapNamedBufferRange&lt;/td>
+&lt;td>glMapBufferRange&lt;/td>
+&lt;td>&amp;mdash;&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>设备缓冲(device local)数据传输&lt;/td>
+&lt;td>暂存缓冲+vkCmdCopyBuffer(*)&lt;/td>
+&lt;td>glNamedBufferData&lt;/td>
+&lt;td>glBufferData&lt;/td>
+&lt;td>&amp;mdash;&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>创建图像对象&lt;/td>
+&lt;td>vkCreateImage&lt;/td>
+&lt;td>glCreateTextures&lt;/td>
+&lt;td>glGenTextures+glBindTexture&lt;/td>
+&lt;td>glGenTextures+glBindTexture&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>分配图像存储空间&lt;/td>
+&lt;td>vkBindBufferMemory&lt;/td>
+&lt;td>glTextureStorage{x}D&lt;/td>
+&lt;td>glTexStorage{x}D&lt;/td>
+&lt;td>glTexImage{x}D&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>设备本地图像数据传输1&lt;/td>
+&lt;td>暂存缓冲+vkCmdCopyImage(*)&lt;/td>
+&lt;td>glTextureSubImage{x}D&lt;/td>
+&lt;td>glTexSubImage{x}D&lt;/td>
+&lt;td>glTexImage{x}D&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>设备本地图像数据传输2&lt;/td>
+&lt;td>暂存缓冲+vkCmdCopyImage(*)&lt;/td>
+&lt;td>glMapNamedBufferRange+glReadPixel(PBO)&lt;/td>
+&lt;td>glMapBufferRange+glReadPixel&lt;/td>
+&lt;td>&amp;mdash;&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>这个表格基本上展示了Vulkan 的缓冲和图像的基本功能的API。但是图像的使用在Vulkan中更加复杂，因为Vulkan的特点之一，显式同步会在图像这里得到体现。具体来说就是图像的布局之间的转换需要自己编写代码进行转换。&lt;/p>
+&lt;p>资源这一部分属于各个Graphics API的核心内容，由于Vulkan的特性，这一部分更加复杂。在这里不做过多的说明。&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://github.com/fendevel/Guide-to-Modern-OpenGL-Functions">Modern OpenGL Functions&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;h2 id="资源视图缓冲视图vkbufferview和-图像视图vkimageview">资源视图：缓冲视图（VkBufferView）和 图像视图（VkImageView）&lt;/h2>
+&lt;h3 id="简介-8">简介&lt;/h3>
+&lt;p>资源视图是对资源的重新解释，并且赋予了这个资源更加具体的属性。尤其是对于图像来说，图像资源本身的信息并不多，如果要使用图像资源，还应该赋予更加具体的解释，这样才能实现资源的复用。&lt;/p>
+&lt;h2 id="内存vkmemory">内存(VkMemory)&lt;/h2>
+&lt;h3 id="简介-9">简介&lt;/h3>
+&lt;p>Vulkan的内存是Vulkan的重点特性之一。Vulkan中的资源对象与对应的内存是分离的。资源在使用之前，需要根据用途来绑定到不同的类型的内存对象。&lt;/p>
+&lt;p>Vulkan的内存属性比较复杂，任何需要设备内存的对象的创建都需要指定内存类型。如Image和Buffer。内存类型有很多，并且每种类型都由某种类型的堆负责创建。
+当使用&lt;code>vkGetPhysicalDeviceMemoryProperty&lt;/code> 查询相应物理设备支持的内存时，获取到的内存属性包括两个数组。第一个是支持的内存类型，
+第二个是支持的内存堆。支持的内存类型是由一系列bitflags决定的，并且支持的内存类型里还包括了一个索引，这个索引就是由相应支持分配的堆所在数组的索引。&lt;/p>
+&lt;p>总体来说，Vulkan的设备内存属性用&lt;strong>堆类型&lt;/strong>和&lt;strong>内存类型&lt;/strong>两个维度来描述。从设计上来说，这两个维度是正交的。实际上考虑到实现，这两个维度并不是完全独立的。关于内存这一块，
+下面会有详细的介绍，这里只是简要的引出内存属性这个概念。
+分配设备内存的时候需要指定&lt;strong>内存类型&lt;/strong>和&lt;strong>堆类型&lt;/strong>&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>内存类型&lt;/p>
+&lt;p>内存类型标志位大概有这几种类型：（其余见官方规范手册）&lt;/p>
+&lt;ol>
+&lt;li>
+&lt;p>&lt;strong>DEVICE_LOCAL_BIT&lt;/strong>： 设备专用内存，一般是纹理或者顶点缓冲使用的内存&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>HOST_VISIBLE_BIT&lt;/strong>： 主机可见内存，表明内从可以被主机端映射，可以在主机端像访问CPU内存一样直接存取&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>COHERENT_BIT&lt;/strong>：对于主机可见内存的访问保持一致性，否则需要手动更新内存。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>HOST_CACHED_BIT&lt;/strong>：这种内存会缓存在cpu端，但是主机端的访问可能会慢一些。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>LAZILY_ALLOCATED_BIT&lt;/strong>：延迟分配。&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;p>这几种并不是随意组合的，合法的组合请参照Vulkan规范手册&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>堆类型&lt;/p>
+&lt;p>堆类型标志位大概由这几种类型：（其余见官方规范手册）&lt;/p>
+&lt;ol>
+&lt;li>
+&lt;p>&lt;strong>DEVICE_LOCAL_BIT&lt;/strong>: 设备中的堆，一般位于是运行Vulkan的硬件设备，比如GPU。这种就是大多数情况。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>MULTI_INSTANCE_BIT&lt;/strong>: 当一个逻辑设备是由多个物理设备构成时，分配内存的时候会重复分配到每个物理设备中。（用在分布式上？）&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;/li>
+&lt;/ul>
+&lt;p>Vulkan本身的内存分配次数有限制，鼓励分配大块内存作为内存池，然后在这个基础上进行二次分配。然后把资源绑定在分配的内存区间段上。所以，如果编写一个基于Vulkan的通用RHI，需要自己实现一个高效的内存分配器。&lt;/p>
+&lt;p>&lt;img src="./res/memory.drawio.svg" alt="Memory">&lt;/p>
+&lt;h2 id="资源绑定">资源绑定&lt;/h2>
+&lt;h3 id="简介-10">简介&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-glsl" data-lang="glsl">&lt;span style="display:flex;">&lt;span>layout(location &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">0&lt;/span>) &lt;span style="color:#66d9ef">in&lt;/span> &lt;span style="color:#66d9ef">vec3&lt;/span> pos;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>layout(location &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">1&lt;/span>) &lt;span style="color:#66d9ef">in&lt;/span> &lt;span style="color:#66d9ef">vec3&lt;/span> color;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>layout(location &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">2&lt;/span>) &lt;span style="color:#66d9ef">in&lt;/span> &lt;span style="color:#66d9ef">vec2&lt;/span> texCoord;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>layout(binding &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">0&lt;/span>) &lt;span style="color:#66d9ef">uniform&lt;/span> MVP{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mat4 model;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mat4 view;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mat4 proj;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}mvp;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>layout(binding &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">1&lt;/span>) &lt;span style="color:#66d9ef">uniform&lt;/span> Sampler2D tex;
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>资源绑定就是如何为在渲染管线中的上述着色器代码中的变量指定数据。
+局部变量对应逐顶点属性(Attribute)，共享变量对应统一变量(Uniform)。至于属性(Attribute) 和统一变量(Uniform)只是glsl中的修饰符。不同API名字虽然不同，
+但对应的都是这两个概念。&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Vulkan(OpenGL)&lt;/th>
+&lt;th>D3D12&lt;/th>
+&lt;th>说明&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>UBO(Uniform Buffer Object)&lt;/td>
+&lt;td>Constant Buffer&lt;/td>
+&lt;td>全局统一变量&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Texel Buffer&lt;/td>
+&lt;td>typed buffer&lt;/td>
+&lt;td>纹素缓冲&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>SSBO&lt;/td>
+&lt;td>UAV buffer(Unordered Access View)&lt;/td>
+&lt;td>通用缓冲&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Image&lt;/td>
+&lt;td>UAV texture&lt;/td>
+&lt;td>可写的图像类型&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>在Vulkan 的API中，着色器局部变量也就是Attribute，用属性(Attribute)来描述。着色器共享变量(Uniform)信息用描述符(Descriptor)来描述。区分这两个概念有助于理清繁琐的Vulkan API。&lt;/p>
+&lt;h3 id="功能-4">功能&lt;/h3>
+&lt;p>描述符集布局（以下简称描述符布局）是描述都有哪些Uniform变量的对象，创建描述符布局需要一个CreateInfo（VkDescriptorSetLayoutCreateInfo）,其中一个数组字段包含了每个Uniform变量的信息（VkDescriptorSetLayoutBinding）。&lt;/p>
+&lt;p>注意，描述符集和描述符布局的区别是，描述符&lt;strong>布局&lt;/strong>并没有和具体的数据关联，而&lt;strong>集&lt;/strong>却关联了数据。例如，布局只是说这个集有一个uniform buffer 和 一个 uniform sampler。
+而在这个布局的基础上通过池分配出来的集需要关联哪一个uniform buffer和uniform sampler数据。&lt;/p>
+&lt;ul>
+&lt;li>描述符集布局绑定（单个变量的信息对象）&lt;/li>
+&lt;li>描述符集布局（单个变量信息对象的集和）&lt;/li>
+&lt;li>描述符池: 创建这个池需要指定将要从这个池中分配多少个描述符以及多少个描述符集。分配方式为描述符个数以最大描述符集个数的一个划分。&lt;/li>
+&lt;li>描述符集（根据布局通过池分配出来的带有真正数据的对象）
+描述符集属于管线资源，在绘制指令的时候进行绑定。绑定的这个描述符集要和&lt;/li>
+&lt;/ul>
+&lt;p>如果直接从API翻译，这几个概念对应的中文很拗口。他们几个之间的关系如下图&lt;/p>
+&lt;p>&lt;img src="./res/resbind.drawio.svg" alt="B">&lt;/p>
+&lt;p>顶点属性的buffer 也是要通过绘制指令绑定到管线。顶点属性一般指定：&lt;/p>
+&lt;ul>
+&lt;li>对应的顶点缓冲数组的索引（Buffer Index）&lt;/li>
+&lt;li>指定着色其中的绑定点（Binding）&lt;/li>
+&lt;li>步长（Stride）&lt;/li>
+&lt;li>偏移 (Offset)&lt;/li>
+&lt;li>格式（Format） （在OpenGL中，这一步通过分量格式和分量个数表示）&lt;/li>
+&lt;/ul>
+&lt;p>在vulkan中，上面5个属性的指定被分配在了两个结构体中。分别是&lt;code>VkVertexInputBindingDescription&lt;/code> 和 &lt;code>VkVertexInputAttributeDescription&lt;/code>其中前者指定了绑定索引(binding),这个也就是在后续进行绘制指令提交时指定的缓冲区数组的索引。以及步长(stride),即每一个被解释的元素的大小。后者指定了绑定的着色器中的变量（location）。这两个描述结构体是的参数正交地描述了顶点属性的配置。&lt;/p>
+&lt;ul>
+&lt;li>下图为Vulkan和OpenGL 中进行逐顶点属性绑定API的对比表格&lt;/li>
+&lt;/ul>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Vulkan&lt;/th>
+&lt;th>OpenGL(DSA version)&lt;/th>
+&lt;th>OpenGL(non-DSA)&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>VkVertexInputBindingDescription&lt;/td>
+&lt;td>glVertexArrayVertexBuffer&lt;/td>
+&lt;td>glVertexAttribPointer&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>VkVertexInputAttributeDescription&lt;/td>
+&lt;td>glVertexAttribFormat&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h2 id="gpu指令和指令缓冲区">GPU指令和指令缓冲区&lt;/h2>
+&lt;h3 id="简介-11">简介&lt;/h3>
+&lt;p>在Vulkan当中，&lt;code>vkCmd*&lt;/code>类型的GPU指令（比如数据传输，管线绑定，渲染通道操作，以及Drawcall）都是通过提交到指令缓冲(VkCommandBuffer)中异步执行的。
+指令缓冲需要从指令池中分配，指令池的创建需要指定队列族的索引。我们在创建逻辑设备的时候指定了这个逻辑设备所需要的队列族。因此创建指令池指定的队列族要是创建指令池的逻辑设备所包含队列族的子集。&lt;/p>
+&lt;p>下面是一些常用的GPU指令，这些指令的上下文参数就是指令缓冲。调用每个指令的时候需要指定一个指令缓冲。当最终提交命令缓冲时，调用VkQueueSubmit提交相应的指令缓冲，指令开始真正地执行。&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th style="text-align:left">Vulkan&lt;/th>
+&lt;th style="text-align:left">Render Pass Scope&lt;/th>
+&lt;th style="text-align:left">Supported Queue Types&lt;/th>
+&lt;th style="text-align:left">Pipeline Type&lt;/th>
+&lt;th style="text-align:left">Level&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td style="text-align:left">vkCmdCopyImage&lt;/td>
+&lt;td style="text-align:left">Outside&lt;/td>
+&lt;td style="text-align:left">Transfer Graphics Compute&lt;/td>
+&lt;td style="text-align:left">Transfer&lt;/td>
+&lt;td style="text-align:left">Primary Secondary&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">vkCmdCopyBuffer&lt;/td>
+&lt;td style="text-align:left">Outside&lt;/td>
+&lt;td style="text-align:left">Transfer Graphics Compute&lt;/td>
+&lt;td style="text-align:left">Transfer&lt;/td>
+&lt;td style="text-align:left">Primary Secondary&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">vkCmdCopyBufferToImage&lt;/td>
+&lt;td style="text-align:left">Outside&lt;/td>
+&lt;td style="text-align:left">Transfer Graphics Compute&lt;/td>
+&lt;td style="text-align:left">Transfer&lt;/td>
+&lt;td style="text-align:left">Primary Secondary&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">vkCmdVertexBuffer&lt;/td>
+&lt;td style="text-align:left">Both&lt;/td>
+&lt;td style="text-align:left">Graphics&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">Primary Secondary&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">vkCmdDraw&lt;/td>
+&lt;td style="text-align:left">Inside&lt;/td>
+&lt;td style="text-align:left">Graphics&lt;/td>
+&lt;td style="text-align:left">Graphics&lt;/td>
+&lt;td style="text-align:left">Primary Secondary&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">vkCmdDrawIndexed&lt;/td>
+&lt;td style="text-align:left">Inside&lt;/td>
+&lt;td style="text-align:left">Graphics&lt;/td>
+&lt;td style="text-align:left">Graphics&lt;/td>
+&lt;td style="text-align:left">Primary Secondary&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">vkCmdDrawIndirected&lt;/td>
+&lt;td style="text-align:left">Inside&lt;/td>
+&lt;td style="text-align:left">Graphics&lt;/td>
+&lt;td style="text-align:left">Graphics&lt;/td>
+&lt;td style="text-align:left">Primary Secondary&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">vkCmdBindPipeline&lt;/td>
+&lt;td style="text-align:left">Both&lt;/td>
+&lt;td style="text-align:left">Graphics Compute&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">Primary Secondary&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">vkCmdBeingRenderPass&lt;/td>
+&lt;td style="text-align:left">Outside&lt;/td>
+&lt;td style="text-align:left">Graphics&lt;/td>
+&lt;td style="text-align:left">Graphics&lt;/td>
+&lt;td style="text-align:left">Primary&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">vkCmdEndRenderPass&lt;/td>
+&lt;td style="text-align:left">Inside&lt;/td>
+&lt;td style="text-align:left">Graphics&lt;/td>
+&lt;td style="text-align:left">Graphics&lt;/td>
+&lt;td style="text-align:left">Primary&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">vkCmdNextSubpass&lt;/td>
+&lt;td style="text-align:left">Inside&lt;/td>
+&lt;td style="text-align:left">Grahpics&lt;/td>
+&lt;td style="text-align:left">Graphics&lt;/td>
+&lt;td style="text-align:left">Primary&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">vkCmdPipelineBarrier&lt;/td>
+&lt;td style="text-align:left">Both&lt;/td>
+&lt;td style="text-align:left">Transfer Graphics Compute&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">Primary Secondary&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">&lt;strong>vkQueueSubmit&lt;/strong>&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">&lt;strong>vkQueuePresentKHR&lt;/strong>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>执行指令的具体流程如下:&lt;/p>
+&lt;p>在开始执行指令之前需要做以下操作&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>创建指令池&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>从指令池中分配相应的指令缓冲，并指定指令缓冲的级别&lt;/p>
+&lt;p>指令缓冲级别表明这个指令缓冲对应的指令是否可以作为另外一个指令缓冲的子指令序列。也就是我们可以把一个标记为Secondary的指令缓冲作为标记为Primary指令缓冲的子指令序列(通过&lt;code>vkBeginCommandBuffer&lt;/code>来指定)。这样的好处是，我们可以把一些列常用的指令预定义为一个Secondary指令缓冲，然后作为一个指令序列复用。&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;p>执行指令时：
+所有&lt;code>vkCmd*&lt;/code>类型的往指令缓冲中提交指令的API需要在&lt;code>vkBeginCommandBuffer&lt;/code> 和 &lt;code>vkEndCommandBuffer&lt;/code>之间调用，用指令缓冲对象作为上下文参数。
+&lt;code>vkBeginCommandBuffer&lt;/code>为指令缓冲指定了一个很重要的参数，即指定这个指令缓冲的具体用法。其次，这个指令起到了重置指令缓冲的作用。&lt;/p>
+&lt;ul>
+&lt;li>VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT: 提交后就被用来记录新的指令。适合存储一次性的指令序列，比如数据传输。&lt;/li>
+&lt;li>VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT:在渲染通道内使用的辅助指令缓冲。&lt;/li>
+&lt;li>VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT：在等待执行的时候，仍然可以提交指令。&lt;/li>
+&lt;/ul>
+&lt;p>&lt;img src="./res/cmd.drawio.svg" alt="Command">&lt;/p>
+&lt;h2 id="资源同步">资源同步&lt;/h2>
+&lt;h3 id="简介-12">简介&lt;/h3>
+&lt;p>GPU的工作模式相对于CPU端来说是异步的，也就是当我们提交了指令缓冲的时候，API立即返回，并且执行。同时，我们CPU端也做了很多往GPU进行数据传输或者读写GPU中数据的工作。由于是异步的工作流，如果没有任何同步措施，我们无法保证GPU是否已经读取到我们传输的最新数据，或者CPU读取到GPU已经处理好的数据。因此，为了正确完成渲染工作，我们还需要让CPU和GPU之间在资源访问这一部分进行先后的配合，这就是同步。&lt;/p>
+&lt;p>除此之外，Vulkan为我们提供了一个非常重要的同步方法，那就是指令缓冲。指令缓冲中的指令是保证按提交顺序执行的，这也是指令缓冲的意义。但是提交的多个指令缓冲之间，以及每个指令缓冲中的GPU指令和CPU端的操作之间的
+逻辑上的依赖关系，是Vulkan不保证的。因为GPU要通过异步的方式实现高并发来达到最高的效率。&lt;/p>
+&lt;p>上一章介绍了Vulkan中的GPU指令的执行过程，由于Vulkan是一个完全显式的API，它的资源同步自然也需要应用程序来控制。Vulkan提供了三种不同粒度的同步方法。&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>栅栏(VkFence)
+栅栏是同步GPU和CPU之间的一种方式。一般在&lt;code>vkQueueSubmit&lt;/code>当中指定栅栏对象，CPU端负责查询栅栏状态，判断所提交的执行序列是否执行完成。是一种指令缓冲级别的同步对象。粒度较大。见而言之，栅栏就是CPU端去查询这个对象状态，然后判断伴随这个对象提交的一系列指令是否执行完成，并且栅栏可以以等待的方式判断栅栏的状态（挂起，线程切换），因此需要操作系统的支持。等待单一的栅栏和直接使用&lt;code>vkQueueWaitIdle&lt;/code>本质上是一样的。&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th style="text-align:left">Vulkan&lt;/th>
+&lt;th style="text-align:left">Render Pass Scope&lt;/th>
+&lt;th style="text-align:left">Supported Queue Types&lt;/th>
+&lt;th style="text-align:left">Pipeline Type&lt;/th>
+&lt;th style="text-align:left">Level&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td style="text-align:left">vkQueueSubmit&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">vkQueuePresentKHR&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;/li>
+&lt;li>
+&lt;p>事件(VkEvent)&lt;/p>
+&lt;p>事件是细粒度的同步方法。它可以同步一个指令缓冲内部之间的指令。因此，它除了在主机端可以查询事件状态之外，还可以在GPU端查询时间状态。同时，设备端是不能以等待的方式查询事件的状态的，只能自旋查询。
+相反，事件在设备端以挂起的方式等待事件的完成。&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th style="text-align:left">Vulkan&lt;/th>
+&lt;th style="text-align:left">Render Pass Scope&lt;/th>
+&lt;th style="text-align:left">Supported Queue Types&lt;/th>
+&lt;th style="text-align:left">Pipeline Type&lt;/th>
+&lt;th style="text-align:left">Level&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td style="text-align:left">vkCmdSetEvent&lt;/td>
+&lt;td style="text-align:left">Outside&lt;/td>
+&lt;td style="text-align:left">Graphics Compute&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">Primary Secondary&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">vkCmdResetEvent&lt;/td>
+&lt;td style="text-align:left">Outside&lt;/td>
+&lt;td style="text-align:left">Graphics Compute&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">Primary Secondary&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;/li>
+&lt;li>
+&lt;p>信号量(VkSemophore)
+信号量不能显式的设置或等待。它同步不同缓冲区之间的资源。使用&lt;code>vkQueueSubmit&lt;/code>时，指定了需要等待信号和通知信号。所提交的指令还中只有在指定的等待信号被通知时执行，执行完成后通知指定的通知信号。
+典型的应用是向不同的队列中提交指令缓冲，并且指令缓冲之间有逻辑上的先后顺序。比如绘制一些东西的时候需要依赖计算管线的结果，那么就向创建自计算队列的指令缓冲里提计算作指令，向创建自图形队列的指令缓冲里提交绘制指令。然后设置好决定先后依赖关系的信号量。然后一次性用&lt;code>vkQueueSubmit&lt;/code>提交。&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th style="text-align:left">Vulkan&lt;/th>
+&lt;th style="text-align:left">Render Pass Scope&lt;/th>
+&lt;th style="text-align:left">Supported Queue Types&lt;/th>
+&lt;th style="text-align:left">Pipeline Type&lt;/th>
+&lt;th style="text-align:left">Level&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td style="text-align:left">vkQueueSubmit&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">vkQueuePresentKHR&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td style="text-align:left">&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;/li>
+&lt;/ul>
+&lt;p>下表列出了三种同步原语的对比。&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th style="text-align:left">&lt;/th>
+&lt;th style="text-align:left">栅栏(VkFence)&lt;/th>
+&lt;th style="text-align:left">事件(VkEvent)&lt;/th>
+&lt;th style="text-align:left">信号量(VkSemophore)&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td style="text-align:left">粒度&lt;/td>
+&lt;td style="text-align:left">指令缓冲和主机端&lt;/td>
+&lt;td style="text-align:left">指令缓冲之内&lt;/td>
+&lt;td style="text-align:left">指令缓冲之间&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">是否涉及主机端同步&lt;/td>
+&lt;td style="text-align:left">是&lt;/td>
+&lt;td style="text-align:left">是&lt;/td>
+&lt;td style="text-align:left">否&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>图示：&lt;/p>
+&lt;p>&lt;img src="./res/sync.drawio.svg" alt="Sync">&lt;/p></content></item></channel></rss>
