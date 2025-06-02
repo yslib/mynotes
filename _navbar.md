@@ -1,2 +1,2 @@
 * [Home](/)
-* [Photography](https://picysl.com)
+* [Photography](https://photo.picysl.com)
